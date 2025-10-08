@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import ThemeToggle from "./ThemeToggle";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -41,6 +42,7 @@ const Navbar = () => {
                 {item.name}
               </Link>
             ))}
+            <ThemeToggle />
             <Button asChild variant="hero" size="default">
               <Link to="/reservations">Book a Table</Link>
             </Button>
@@ -71,6 +73,9 @@ const Navbar = () => {
                 {item.name}
               </Link>
             ))}
+            <div className="py-2">
+              <ThemeToggle />
+            </div>
             <Button asChild variant="hero" size="default" className="w-full">
               <Link to="/reservations" onClick={() => setIsMobileMenuOpen(false)}>
                 Book a Table
