@@ -216,14 +216,14 @@ const Menu = () => {
 
       <main className="pt-32 pb-20 px-4 bg-background">
         <div className="container mx-auto max-w-6xl">
-          <div className="flex justify-between items-start mb-12">
-            <div className="text-center flex-1">
-              <h1 className="text-5xl font-bold mb-4">Our Menu</h1>
-              <p className="text-xl text-muted-foreground">
+          <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-4 mb-12">
+            <div className="text-center md:text-left flex-1">
+              <h1 className="text-4xl md:text-5xl font-bold mb-4 font-script">Our Royal Menu</h1>
+              <p className="text-lg md:text-xl text-muted-foreground">
                 Carefully curated dishes crafted with passion and precision
               </p>
             </div>
-            <div className="ml-4">
+            <div className="shrink-0">
               <CartSheet 
                 items={cartItems}
                 onUpdateQuantity={handleUpdateQuantity}
@@ -233,16 +233,16 @@ const Menu = () => {
           </div>
 
           <Tabs defaultValue="starters" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 mb-12 bg-muted">
-              <TabsTrigger value="starters" className="text-base">Starters</TabsTrigger>
-              <TabsTrigger value="mains" className="text-base">Mains</TabsTrigger>
-              <TabsTrigger value="desserts" className="text-base">Desserts</TabsTrigger>
-              <TabsTrigger value="drinks" className="text-base">Drinks</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 mb-8 md:mb-12 bg-muted h-auto">
+              <TabsTrigger value="starters" className="text-sm md:text-base py-3">Starters</TabsTrigger>
+              <TabsTrigger value="mains" className="text-sm md:text-base py-3">Mains</TabsTrigger>
+              <TabsTrigger value="desserts" className="text-sm md:text-base py-3">Desserts</TabsTrigger>
+              <TabsTrigger value="drinks" className="text-sm md:text-base py-3">Drinks</TabsTrigger>
             </TabsList>
 
             {Object.entries(menuCategories).map(([category, items]) => (
               <TabsContent key={category} value={category} className="space-y-4">
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
                   {items.map((item, index) => (
                     <Card 
                       key={index} 
@@ -256,15 +256,15 @@ const Menu = () => {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
-                      <CardContent className="p-6">
-                        <div className="flex justify-between items-start">
+                      <CardContent className="p-4 md:p-6">
+                        <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
                           <div className="flex-1">
-                            <h3 className="text-2xl font-semibold mb-2 group-hover:text-primary transition-colors">
+                            <h3 className="text-xl md:text-2xl font-semibold mb-2 group-hover:text-primary transition-colors font-script">
                               {item.name}
                             </h3>
-                            <p className="text-muted-foreground">{item.description}</p>
+                            <p className="text-sm md:text-base text-muted-foreground">{item.description}</p>
                           </div>
-                          <span className="text-2xl font-bold text-primary ml-4">{item.price}</span>
+                          <span className="text-xl md:text-2xl font-bold text-accent shrink-0">{item.price}</span>
                         </div>
                       </CardContent>
                     </Card>
