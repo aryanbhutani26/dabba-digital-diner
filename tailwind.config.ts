@@ -14,9 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        heading: ['Cinzel', 'serif'],
-        body: ['Inter', 'sans-serif'],
-        script: ['Cormorant Garamond', 'serif'],
+        heading: ['Marcellus', 'serif'],
+        body: ['Montserrat', 'sans-serif'],
+        script: ['Bodoni Moda', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
