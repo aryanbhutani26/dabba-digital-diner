@@ -1,6 +1,9 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import aboutImage from "@/assets/about-restaurant.jpg";
+import chefMaria from "@/assets/chef-maria.jpg";
+import chefJames from "@/assets/chef-james.jpg";
+import chefSophie from "@/assets/chef-sophie.jpg";
 import { Card, CardContent } from "@/components/ui/card";
 import { Award, Users, Sparkles } from "lucide-react";
 
@@ -90,28 +93,57 @@ const About = () => {
               kitchens. Led by Executive Chef Maria Rodriguez, our kitchen is a place where creativity 
               and tradition come together to create unforgettable dishes.
             </p>
-            <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-              <div>
-                <h3 className="text-xl font-semibold mb-2">Maria Rodriguez</h3>
-                <p className="text-primary font-medium mb-1">Executive Chef</p>
-                <p className="text-sm text-muted-foreground">
-                  20+ years of culinary excellence
-                </p>
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold mb-2">James Chen</h3>
-                <p className="text-primary font-medium mb-1">Sous Chef</p>
-                <p className="text-sm text-muted-foreground">
-                  Specializing in contemporary cuisine
-                </p>
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold mb-2">Sophie Laurent</h3>
-                <p className="text-primary font-medium mb-1">Pastry Chef</p>
-                <p className="text-sm text-muted-foreground">
-                  Award-winning dessert artisan
-                </p>
-              </div>
+            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              <Card className="border-2 hover:border-primary transition-all duration-300 hover:shadow-xl overflow-hidden">
+                <div className="aspect-[4/5] overflow-hidden">
+                  <img 
+                    src={chefMaria} 
+                    alt="Maria Rodriguez - Executive Chef"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <CardContent className="pt-6 pb-6 text-center">
+                  <h3 className="text-xl font-semibold mb-2">Maria Rodriguez</h3>
+                  <p className="text-primary font-medium mb-1">Executive Chef</p>
+                  <p className="text-sm text-muted-foreground">
+                    20+ years of culinary excellence
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 hover:border-primary transition-all duration-300 hover:shadow-xl overflow-hidden">
+                <div className="aspect-[4/5] overflow-hidden">
+                  <img 
+                    src={chefJames} 
+                    alt="James Chen - Sous Chef"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <CardContent className="pt-6 pb-6 text-center">
+                  <h3 className="text-xl font-semibold mb-2">James Chen</h3>
+                  <p className="text-primary font-medium mb-1">Sous Chef</p>
+                  <p className="text-sm text-muted-foreground">
+                    Specializing in contemporary cuisine
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 hover:border-primary transition-all duration-300 hover:shadow-xl overflow-hidden">
+                <div className="aspect-[4/5] overflow-hidden">
+                  <img 
+                    src={chefSophie} 
+                    alt="Sophie Laurent - Pastry Chef"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <CardContent className="pt-6 pb-6 text-center">
+                  <h3 className="text-xl font-semibold mb-2">Sophie Laurent</h3>
+                  <p className="text-primary font-medium mb-1">Pastry Chef</p>
+                  <p className="text-sm text-muted-foreground">
+                    Award-winning dessert artisan
+                  </p>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
