@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import heroImage from "@/assets/hero-restaurant.jpg";
 import aboutRestaurant from "@/assets/about-restaurant.jpg";
-import { UtensilsCrossed, Award, Clock, Heart } from "lucide-react";
+import { UtensilsCrossed, Award, Clock, Heart, Tag, Percent, Gift } from "lucide-react";
 
 const Index = () => {
   const features = [
@@ -46,6 +46,33 @@ const Index = () => {
       name: "Lobster Linguine",
       description: "Fresh lobster in white wine sauce",
       image: "https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=800&q=80",
+    },
+  ];
+
+  const offers = [
+    {
+      icon: <Percent className="w-8 h-8" />,
+      title: "20% OFF",
+      subtitle: "Weekend Dinner",
+      description: "Valid on Fri-Sun from 6 PM onwards",
+      code: "WEEKEND20",
+      color: "from-primary to-accent",
+    },
+    {
+      icon: <Gift className="w-8 h-8" />,
+      title: "Free Dessert",
+      subtitle: "On Your Birthday",
+      description: "Show your ID and enjoy a complimentary dessert",
+      code: "BIRTHDAY",
+      color: "from-accent to-secondary",
+    },
+    {
+      icon: <Tag className="w-8 h-8" />,
+      title: "30% OFF",
+      subtitle: "First Time Visit",
+      description: "New customers get special discount on first order",
+      code: "FIRST30",
+      color: "from-secondary to-primary",
     },
   ];
 
@@ -146,6 +173,46 @@ const Index = () => {
             <Button asChild variant="hero" size="lg">
               <Link to="/menu">View Full Menu</Link>
             </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Special Offers Section */}
+      <section className="py-20 px-4 bg-gradient-to-br from-background via-primary/5 to-background">
+        <div className="container mx-auto max-w-7xl">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-4">Special Offers & Coupons</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Take advantage of our exclusive deals and make your dining experience even more special
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {offers.map((offer, index) => (
+              <Card
+                key={index}
+                className="overflow-hidden border-2 hover:border-primary transition-all duration-300 hover:shadow-2xl group"
+              >
+                <div className={`bg-gradient-to-br ${offer.color} p-8 text-primary-foreground`}>
+                  <div className="flex justify-center mb-4">{offer.icon}</div>
+                  <h3 className="text-3xl font-bold mb-2 text-center">{offer.title}</h3>
+                  <p className="text-xl text-center opacity-90">{offer.subtitle}</p>
+                </div>
+                <CardContent className="p-6">
+                  <p className="text-muted-foreground mb-4 text-center">{offer.description}</p>
+                  <div className="bg-muted rounded-lg p-4 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">Coupon Code</p>
+                    <p className="text-xl font-bold text-primary font-mono tracking-wider">{offer.code}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <p className="text-sm text-muted-foreground">
+              *Terms and conditions apply. Cannot be combined with other offers.
+            </p>
           </div>
         </div>
       </section>
