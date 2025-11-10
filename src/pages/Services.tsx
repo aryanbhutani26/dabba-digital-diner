@@ -2,7 +2,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { PackageCheck, Truck, Star } from "lucide-react";
+import { PackageCheck, Truck, Star, Users, Utensils, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 import tiffinHero from "@/assets/tiffin-hero.jpg";
 import tiffinBox1 from "@/assets/tiffin-box-1.jpg";
@@ -134,6 +134,107 @@ const Services = () => {
             </p>
             <Button asChild variant="default" size="lg" className="bg-primary text-black hover:bg-primary/90">
               <Link to="/contact">Get Custom Quote</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Catering & Banquet Section */}
+      <section className="py-20 px-4 bg-background">
+        <div className="container mx-auto max-w-7xl">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-4">Catering & Banquet Services</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Make your special occasions unforgettable with our premium catering and elegant banquet facilities
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <Card className="border-2 hover:border-primary transition-all duration-300 hover:shadow-xl">
+              <CardContent className="pt-8 pb-6 text-center">
+                <div className="flex justify-center mb-4">
+                  <Users className="w-12 h-12 text-primary" />
+                </div>
+                <h3 className="text-2xl font-semibold mb-3">Wedding Catering</h3>
+                <p className="text-muted-foreground mb-4">
+                  Complete wedding catering services with customized menus for your special day
+                </p>
+                <ul className="text-sm text-muted-foreground space-y-2 text-left">
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-primary rounded-full" />
+                    Custom menu planning
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-primary rounded-full" />
+                    Professional service staff
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-primary rounded-full" />
+                    Elegant presentation
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 hover:border-primary transition-all duration-300 hover:shadow-xl">
+              <CardContent className="pt-8 pb-6 text-center">
+                <div className="flex justify-center mb-4">
+                  <Utensils className="w-12 h-12 text-primary" />
+                </div>
+                <h3 className="text-2xl font-semibold mb-3">Corporate Events</h3>
+                <p className="text-muted-foreground mb-4">
+                  Professional catering for corporate meetings, conferences, and business events
+                </p>
+                <ul className="text-sm text-muted-foreground space-y-2 text-left">
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-primary rounded-full" />
+                    Flexible packages
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-primary rounded-full" />
+                    On-time delivery
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-primary rounded-full" />
+                    Volume discounts
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 hover:border-primary transition-all duration-300 hover:shadow-xl">
+              <CardContent className="pt-8 pb-6 text-center">
+                <div className="flex justify-center mb-4">
+                  <Calendar className="w-12 h-12 text-primary" />
+                </div>
+                <h3 className="text-2xl font-semibold mb-3">Banquet Halls</h3>
+                <p className="text-muted-foreground mb-4">
+                  Beautifully decorated banquet halls for parties, celebrations, and gatherings
+                </p>
+                <ul className="text-sm text-muted-foreground space-y-2 text-left">
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-primary rounded-full" />
+                    Multiple hall sizes
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-primary rounded-full" />
+                    Modern amenities
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-primary rounded-full" />
+                    Decoration services
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center">
+            <p className="text-muted-foreground mb-6">
+              Minimum 50 guests | Advance booking required
+            </p>
+            <Button asChild variant="hero" size="lg">
+              <Link to="/contact">Request Catering Quote</Link>
             </Button>
           </div>
         </div>

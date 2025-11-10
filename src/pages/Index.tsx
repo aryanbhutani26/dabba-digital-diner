@@ -5,7 +5,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import heroImage from "@/assets/hero-restaurant.jpg";
 import aboutRestaurant from "@/assets/about-restaurant.jpg";
-import { UtensilsCrossed, Award, Clock, Heart, Tag, Percent, Gift } from "lucide-react";
+import { UtensilsCrossed, Award, Clock, Heart, Tag, Percent, Gift, Calendar, Sparkles, ArrowRight } from "lucide-react";
+import tiffinHero from "@/assets/tiffin-hero.jpg";
 
 const Index = () => {
   const features = [
@@ -79,6 +80,29 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       <Navbar />
+
+      {/* Events Banner */}
+      <section className="relative bg-gradient-to-r from-accent via-primary to-secondary text-primary-foreground py-4 px-4 overflow-hidden mt-20">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent)]" />
+        </div>
+        <div className="container mx-auto max-w-7xl relative z-10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+            <div className="flex items-center gap-3">
+              <Sparkles className="w-6 h-6 animate-pulse" />
+              <div>
+                <h3 className="text-lg md:text-xl font-bold">Wine & Dine Festival - Dec 15-20</h3>
+                <p className="text-sm opacity-90">Live Music | Special Menu | Extra 15% Off</p>
+              </div>
+            </div>
+            <Button asChild variant="outline" size="sm" className="border-2 border-white text-white hover:bg-white hover:text-primary shrink-0">
+              <Link to="/reservations" className="flex items-center gap-2">
+                Book Now <ArrowRight className="w-4 h-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
 
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
@@ -177,6 +201,62 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Dabba Service Section */}
+      <section className="py-20 px-4 bg-gradient-to-br from-background via-accent/5 to-background">
+        <div className="container mx-auto max-w-7xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="order-2 lg:order-1">
+              <h2 className="text-4xl sm:text-5xl font-bold mb-6">Our Signature Dabba Service</h2>
+              <p className="text-lg text-muted-foreground mb-6">
+                Experience the authentic taste of home-cooked meals, delivered fresh to your doorstep. 
+                Our dabba service brings you wholesome, nutritious meals prepared daily with premium ingredients.
+              </p>
+              <div className="space-y-4 mb-8">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
+                    <Clock className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-1">Timely Delivery</h3>
+                    <p className="text-muted-foreground text-sm">Hot meals delivered right on time, every day</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
+                    <Heart className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-1">Made Fresh Daily</h3>
+                    <p className="text-muted-foreground text-sm">Traditional recipes with authentic flavors</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
+                    <Tag className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-1">Affordable Plans</h3>
+                    <p className="text-muted-foreground text-sm">Starting from ₹299/day with various options</p>
+                  </div>
+                </div>
+              </div>
+              <Button asChild variant="hero" size="lg">
+                <Link to="/services">Explore Dabba Plans</Link>
+              </Button>
+            </div>
+            <div className="order-1 lg:order-2">
+              <div className="relative rounded-lg overflow-hidden shadow-2xl">
+                <img
+                  src={tiffinHero}
+                  alt="Traditional Tiffin Dabba Service"
+                  className="w-full h-auto"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Special Offers Section */}
       <section className="py-20 px-4 bg-gradient-to-br from-background via-primary/5 to-background">
         <div className="container mx-auto max-w-7xl">
@@ -187,11 +267,12 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Desktop: Grid, Mobile: Horizontal Scroll */}
+          <div className="md:grid md:grid-cols-3 md:gap-8 flex md:flex-none overflow-x-auto gap-6 pb-4 snap-x snap-mandatory scroll-smooth -mx-4 px-4 md:mx-0 md:px-0">
             {offers.map((offer, index) => (
               <Card
                 key={index}
-                className="overflow-hidden border-2 hover:border-primary transition-all duration-300 hover:shadow-2xl group"
+                className="overflow-hidden border-2 hover:border-primary transition-all duration-300 hover:shadow-2xl group min-w-[280px] md:min-w-0 snap-center"
               >
                 <div className={`bg-gradient-to-br ${offer.color} p-8 text-primary-foreground`}>
                   <div className="flex justify-center mb-4">{offer.icon}</div>

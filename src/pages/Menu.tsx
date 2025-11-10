@@ -14,6 +14,7 @@ interface Dish {
   images?: string[];
   longDescription?: string;
   ingredients?: string[];
+  allergens?: string[];
 }
 
 interface CartItem {
@@ -41,7 +42,8 @@ const Menu = () => {
           "https://images.unsplash.com/photo-1580959375944-0be29ff8cc0c?w=800&q=80"
         ],
         longDescription: "Fresh Atlantic scallops perfectly seared and served with a delicate lemon butter sauce, garnished with microgreens and crispy prosciutto.",
-        ingredients: ["Atlantic Scallops", "Butter", "Lemon", "Garlic", "White Wine", "Prosciutto", "Microgreens"]
+        ingredients: ["Atlantic Scallops", "Butter", "Lemon", "Garlic", "White Wine", "Prosciutto", "Microgreens"],
+        allergens: ["Shellfish", "Dairy", "Pork"]
       },
       { 
         name: "Truffle Arancini", 
@@ -54,7 +56,8 @@ const Menu = () => {
           "https://images.unsplash.com/photo-1574894709920-11b28e7367e3?w=800&q=80"
         ],
         longDescription: "Golden crispy risotto balls filled with creamy arborio rice, parmesan, and shaved black truffle, served with truffle aioli.",
-        ingredients: ["Arborio Rice", "Black Truffle", "Parmesan", "Eggs", "Breadcrumbs", "Truffle Oil"]
+        ingredients: ["Arborio Rice", "Black Truffle", "Parmesan", "Eggs", "Breadcrumbs", "Truffle Oil"],
+        allergens: ["Gluten", "Dairy", "Eggs"]
       },
       { 
         name: "Beef Carpaccio", 
@@ -67,7 +70,8 @@ const Menu = () => {
           "https://images.unsplash.com/photo-1546833998-877b37c2e5c6?w=800&q=80"
         ],
         longDescription: "Paper-thin slices of premium beef tenderloin topped with fresh arugula, shaved parmesan, capers, and a drizzle of truffle oil.",
-        ingredients: ["Beef Tenderloin", "Arugula", "Parmesan", "Capers", "Lemon", "Truffle Oil", "Olive Oil"]
+        ingredients: ["Beef Tenderloin", "Arugula", "Parmesan", "Capers", "Lemon", "Truffle Oil", "Olive Oil"],
+        allergens: ["Dairy"]
       },
       { 
         name: "Burrata Caprese", 
@@ -80,7 +84,8 @@ const Menu = () => {
           "https://images.unsplash.com/photo-1623428187425-5b8e8c097d37?w=800&q=80"
         ],
         longDescription: "Creamy burrata cheese paired with colorful heirloom tomatoes, fresh basil, aged balsamic reduction, and extra virgin olive oil.",
-        ingredients: ["Burrata Cheese", "Heirloom Tomatoes", "Fresh Basil", "Balsamic Reduction", "Extra Virgin Olive Oil", "Sea Salt"]
+        ingredients: ["Burrata Cheese", "Heirloom Tomatoes", "Fresh Basil", "Balsamic Reduction", "Extra Virgin Olive Oil", "Sea Salt"],
+        allergens: ["Dairy"]
       },
     ],
     mains: [
@@ -95,7 +100,8 @@ const Menu = () => {
           "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800&q=80"
         ],
         longDescription: "16oz prime ribeye steak grilled to perfection, served with seasonal roasted vegetables and garlic herb butter.",
-        ingredients: ["Prime Ribeye", "Garlic", "Butter", "Fresh Herbs", "Seasonal Vegetables", "Sea Salt", "Black Pepper"]
+        ingredients: ["Prime Ribeye", "Garlic", "Butter", "Fresh Herbs", "Seasonal Vegetables", "Sea Salt", "Black Pepper"],
+        allergens: ["Dairy"]
       },
       { 
         name: "Pan-Seared Salmon", 
@@ -108,7 +114,8 @@ const Menu = () => {
           "https://images.unsplash.com/photo-1485921325833-c519f76c4927?w=800&q=80"
         ],
         longDescription: "Fresh Atlantic salmon fillet pan-seared with crispy skin, topped with compound herb butter and served with asparagus.",
-        ingredients: ["Atlantic Salmon", "Butter", "Dill", "Parsley", "Lemon", "Asparagus", "White Wine"]
+        ingredients: ["Atlantic Salmon", "Butter", "Dill", "Parsley", "Lemon", "Asparagus", "White Wine"],
+        allergens: ["Fish", "Dairy"]
       },
       { 
         name: "Lobster Linguine", 
@@ -121,7 +128,8 @@ const Menu = () => {
           "https://images.unsplash.com/photo-1612927601601-6638404737ce?w=800&q=80"
         ],
         longDescription: "Fresh Maine lobster tail with linguine pasta in a delicate white wine garlic sauce, finished with cherry tomatoes and basil.",
-        ingredients: ["Maine Lobster", "Linguine", "White Wine", "Garlic", "Cherry Tomatoes", "Fresh Basil", "Butter"]
+        ingredients: ["Maine Lobster", "Linguine", "White Wine", "Garlic", "Cherry Tomatoes", "Fresh Basil", "Butter"],
+        allergens: ["Shellfish", "Gluten", "Dairy"]
       },
       { 
         name: "Mushroom Risotto", 
@@ -134,7 +142,8 @@ const Menu = () => {
           "https://images.unsplash.com/photo-1595908129746-2f0fe0bf9c86?w=800&q=80"
         ],
         longDescription: "Creamy arborio risotto cooked with a medley of wild mushrooms, finished with parmesan and truffle oil.",
-        ingredients: ["Arborio Rice", "Wild Mushrooms", "Parmesan", "White Wine", "Vegetable Stock", "Truffle Oil", "Butter"]
+        ingredients: ["Arborio Rice", "Wild Mushrooms", "Parmesan", "White Wine", "Vegetable Stock", "Truffle Oil", "Butter"],
+        allergens: ["Dairy", "Mushrooms"]
       },
       { 
         name: "Duck Confit", 
@@ -147,7 +156,8 @@ const Menu = () => {
           "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80"
         ],
         longDescription: "Tender duck leg slow-cooked in its own fat, served with a citrus orange glaze and roasted fingerling potatoes.",
-        ingredients: ["Duck Leg", "Duck Fat", "Orange", "Honey", "Fresh Thyme", "Fingerling Potatoes", "Red Wine"]
+        ingredients: ["Duck Leg", "Duck Fat", "Orange", "Honey", "Fresh Thyme", "Fingerling Potatoes", "Red Wine"],
+        allergens: ["Poultry"]
       },
     ],
     desserts: [
@@ -162,7 +172,8 @@ const Menu = () => {
           "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=800&q=80"
         ],
         longDescription: "Rich chocolate cake with a molten center, served warm with vanilla bean ice cream and raspberry coulis.",
-        ingredients: ["Dark Chocolate", "Butter", "Eggs", "Sugar", "Flour", "Vanilla Ice Cream", "Raspberry Coulis"]
+        ingredients: ["Dark Chocolate", "Butter", "Eggs", "Sugar", "Flour", "Vanilla Ice Cream", "Raspberry Coulis"],
+        allergens: ["Gluten", "Dairy", "Eggs"]
       },
       { 
         name: "Crème Brûlée", 
@@ -175,7 +186,8 @@ const Menu = () => {
           "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800&q=80"
         ],
         longDescription: "Silky smooth vanilla bean custard topped with a perfectly caramelized sugar crust, served with fresh berries.",
-        ingredients: ["Heavy Cream", "Vanilla Bean", "Egg Yolks", "Sugar", "Fresh Berries"]
+        ingredients: ["Heavy Cream", "Vanilla Bean", "Egg Yolks", "Sugar", "Fresh Berries"],
+        allergens: ["Dairy", "Eggs"]
       },
       { 
         name: "Tiramisu", 
@@ -188,7 +200,8 @@ const Menu = () => {
           "https://images.unsplash.com/photo-1586041828039-1f4da3c1e4d3?w=800&q=80"
         ],
         longDescription: "Classic Italian dessert with layers of espresso-soaked ladyfingers and mascarpone cream, dusted with cocoa powder.",
-        ingredients: ["Mascarpone", "Ladyfingers", "Espresso", "Eggs", "Sugar", "Cocoa Powder", "Marsala Wine"]
+        ingredients: ["Mascarpone", "Ladyfingers", "Espresso", "Eggs", "Sugar", "Cocoa Powder", "Marsala Wine"],
+        allergens: ["Dairy", "Gluten", "Eggs", "Alcohol"]
       },
       { 
         name: "Seasonal Fruit Tart", 
@@ -201,7 +214,8 @@ const Menu = () => {
           "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=800&q=80"
         ],
         longDescription: "Buttery tart shell filled with almond cream and topped with seasonal fresh fruits and apricot glaze.",
-        ingredients: ["Tart Dough", "Almond Cream", "Seasonal Fruits", "Apricot Glaze", "Vanilla", "Butter"]
+        ingredients: ["Tart Dough", "Almond Cream", "Seasonal Fruits", "Apricot Glaze", "Vanilla", "Butter"],
+        allergens: ["Gluten", "Nuts", "Dairy", "Eggs"]
       },
     ],
     drinks: [
@@ -216,7 +230,8 @@ const Menu = () => {
           "https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=800&q=80"
         ],
         longDescription: "Carefully selected wines from our cellar, available in both red and white varieties, perfectly paired with our menu.",
-        ingredients: ["Premium Grapes", "Natural Fermentation"]
+        ingredients: ["Premium Grapes", "Natural Fermentation"],
+        allergens: ["Sulfites", "Alcohol"]
       },
       { 
         name: "Craft Cocktails", 
@@ -229,7 +244,8 @@ const Menu = () => {
           "https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=800&q=80"
         ],
         longDescription: "Our mixologists create unique cocktails using premium spirits, fresh ingredients, and house-made syrups.",
-        ingredients: ["Premium Spirits", "Fresh Fruits", "House-made Syrups", "Fresh Herbs", "Bitters"]
+        ingredients: ["Premium Spirits", "Fresh Fruits", "House-made Syrups", "Fresh Herbs", "Bitters"],
+        allergens: ["Alcohol"]
       },
       { 
         name: "Artisan Coffee", 
@@ -242,7 +258,8 @@ const Menu = () => {
           "https://images.unsplash.com/photo-1517487881594-2787fef5ebf7?w=800&q=80"
         ],
         longDescription: "Expertly crafted coffee drinks made with freshly roasted beans and steamed milk, perfect any time of day.",
-        ingredients: ["Artisan Coffee Beans", "Steamed Milk", "Espresso"]
+        ingredients: ["Artisan Coffee Beans", "Steamed Milk", "Espresso"],
+        allergens: ["Dairy", "Caffeine"]
       },
       { 
         name: "Premium Spirits", 
@@ -255,7 +272,8 @@ const Menu = () => {
           "https://images.unsplash.com/photo-1582037928769-181f2644ecb7?w=800&q=80"
         ],
         longDescription: "An extensive selection of aged whiskeys, cognacs, and premium tequilas from around the world.",
-        ingredients: ["Premium Aged Spirits"]
+        ingredients: ["Premium Aged Spirits"],
+        allergens: ["Alcohol"]
       },
     ],
   };
@@ -352,6 +370,21 @@ const Menu = () => {
                           </div>
                           <span className="text-xl md:text-2xl font-bold text-accent shrink-0">{item.price}</span>
                         </div>
+                        {item.allergens && item.allergens.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-border">
+                            <p className="text-xs text-muted-foreground mb-1.5">May contain allergens:</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {item.allergens.map((allergen, idx) => (
+                                <span 
+                                  key={idx} 
+                                  className="text-xs px-2 py-0.5 bg-destructive/10 text-destructive rounded-full border border-destructive/20"
+                                >
+                                  {allergen}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   ))}
