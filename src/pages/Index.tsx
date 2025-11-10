@@ -138,7 +138,7 @@ const Index = () => {
       <section className="py-20 px-4 bg-background">
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-4">Why Choose Savoria</h2>
+            <h2 className="text-4xl sm:text-5xl font-bold mb-4">Why Choose Indiya</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Discover what makes us the premier destination for exceptional dining
             </p>
@@ -305,7 +305,7 @@ const Index = () => {
             <div className="order-2 lg:order-1">
               <h2 className="text-4xl sm:text-5xl font-bold mb-6">About Our Restaurant</h2>
               <p className="text-lg text-muted-foreground mb-6">
-                Savoria is where culinary excellence meets elegant ambiance. For over a decade, we've been 
+                Indiya Bar & Restaurant is where culinary excellence meets elegant ambiance. For over a decade, we've been 
                 delighting guests with our innovative approach to fine dining, combining traditional 
                 techniques with modern flair.
               </p>
@@ -322,7 +322,7 @@ const Index = () => {
               <div className="relative rounded-lg overflow-hidden shadow-2xl">
                 <img
                   src={aboutRestaurant}
-                  alt="Savoria Restaurant Interior"
+                  alt="Indiya Bar & Restaurant Interior"
                   className="w-full h-auto"
                 />
               </div>
@@ -336,7 +336,7 @@ const Index = () => {
         <div className="container mx-auto max-w-4xl text-center">
           <h2 className="text-4xl sm:text-5xl font-bold mb-6">Ready for an Unforgettable Experience?</h2>
           <p className="text-xl mb-8 text-primary-foreground/90">
-            Book your table today and discover why Savoria is the talk of the town
+            Book your table today and discover why Indiya Bar & Restaurant is the talk of the town
           </p>
           <Button asChild size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-primary">
             <Link to="/reservations">Make a Reservation</Link>

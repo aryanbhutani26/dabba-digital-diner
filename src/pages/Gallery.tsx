@@ -73,7 +73,7 @@ const Gallery = () => {
           <div className="text-center mb-12">
             <h1 className="text-5xl font-bold mb-4">Our Gallery</h1>
             <p className="text-xl text-muted-foreground">
-              A visual journey through Savoria's culinary artistry and elegant ambiance
+              A visual journey through Indiya Bar & Restaurant's culinary artistry and elegant ambiance
             </p>
           </div>
 

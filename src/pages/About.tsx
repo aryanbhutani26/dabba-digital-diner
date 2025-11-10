@@ -20,7 +20,7 @@ const About = () => {
               <div>
                 <h1 className="text-5xl font-bold mb-6">Our Story</h1>
                 <p className="text-lg text-muted-foreground mb-6">
-                  Founded in 2015, Savoria has been a cornerstone of culinary excellence in our community. 
+                  Founded in 2015, Indiya Bar & Restaurant has been a cornerstone of culinary excellence in our community. 
                   Our passion for creating exceptional dining experiences drives everything we do.
                 </p>
                 <p className="text-lg text-muted-foreground mb-6">

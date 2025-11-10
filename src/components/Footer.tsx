@@ -8,7 +8,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <h3 className="text-2xl font-bold text-primary">Savoria</h3>
+            <h3 className="text-2xl font-bold text-primary">Indiya Bar & Restaurant</h3>
             <p className="text-sm text-white/80">
               Experience exceptional dining with exquisite cuisine and elegant ambiance.
             </p>
@@ -55,7 +55,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-2 text-sm">
                 <Mail size={16} />
-                <span>info@savoria.com</span>
+                <span>info@indiya.com</span>
               </li>
             </ul>
           </div>
@@ -64,9 +64,9 @@ const Footer = () => {
           <div className="space-y-4">
             <h4 className="text-lg font-semibold text-primary">Hours</h4>
             <div className="text-sm space-y-1">
-              <p>Monday - Friday: 11:00 AM - 10:00 PM</p>
-              <p>Saturday: 10:00 AM - 11:00 PM</p>
-              <p>Sunday: 10:00 AM - 9:00 PM</p>
+              <p>Monday - Friday: 12:00 - 2:30 PM, 5:30 - 10:30 PM</p>
+              <p>Saturday: 12:00 PM - 10:30 PM</p>
+              <p>Sunday: 12:00 PM - 10:00 PM</p>
             </div>
             <div className="flex gap-4 pt-4">
               <a href="#" className="hover:text-accent transition-colors">
@@ -83,7 +83,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-white/20 mt-8 pt-8 text-center text-sm text-white/70">
-          <p>&copy; {new Date().getFullYear()} Savoria. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Indiya Bar & Restaurant. All rights reserved.</p>
         </div>
       </div>
     </footer>

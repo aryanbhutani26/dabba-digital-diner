@@ -66,7 +66,7 @@ const Reservations = () => {
           <div className="text-center mb-12">
             <h1 className="text-5xl font-bold mb-4">Reserve Your Table</h1>
             <p className="text-xl text-muted-foreground">
-              Book your unforgettable dining experience at Savoria
+              Book your unforgettable dining experience at Indiya Bar & Restaurant
             </p>
           </div>
 

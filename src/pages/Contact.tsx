@@ -136,7 +136,7 @@ const Contact = () => {
                   <Mail className="w-6 h-6 text-primary flex-shrink-0 mt-1" />
                   <div>
                     <h3 className="font-semibold text-lg mb-1">Email</h3>
-                    <p className="text-muted-foreground">info@savoria.com</p>
+                    <p className="text-muted-foreground">info@indiya.com</p>
                   </div>
                 </CardContent>
               </Card>
@@ -147,9 +147,9 @@ const Contact = () => {
                   <div>
                     <h3 className="font-semibold text-lg mb-1">Hours</h3>
                     <div className="text-muted-foreground space-y-1">
-                      <p>Mon - Fri: 11:00 AM - 10:00 PM</p>
-                      <p>Saturday: 10:00 AM - 11:00 PM</p>
-                      <p>Sunday: 10:00 AM - 9:00 PM</p>
+                      <p>Mon - Fri: 12:00 - 2:30 PM, 5:30 - 10:30 PM</p>
+                      <p>Saturday: 12:00 PM - 10:30 PM</p>
+                      <p>Sunday: 12:00 PM - 10:00 PM</p>
                     </div>
                   </div>
                 </CardContent>
