@@ -14,16 +14,189 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      about_content: {
+        Row: {
+          content: Json
+          id: string
+          section: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: Json
+          id?: string
+          section: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: Json
+          id?: string
+          section?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      coupons: {
+        Row: {
+          code: string
+          color: string
+          created_at: string | null
+          description: string
+          icon: string
+          id: string
+          is_active: boolean | null
+          subtitle: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          color: string
+          created_at?: string | null
+          description: string
+          icon: string
+          id?: string
+          is_active?: boolean | null
+          subtitle: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          color?: string
+          created_at?: string | null
+          description?: string
+          icon?: string
+          id?: string
+          is_active?: boolean | null
+          subtitle?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      menu_items: {
+        Row: {
+          allergens: string[] | null
+          category: string
+          created_at: string | null
+          description: string
+          id: string
+          image: string | null
+          is_active: boolean | null
+          name: string
+          price: string
+          updated_at: string | null
+        }
+        Insert: {
+          allergens?: string[] | null
+          category: string
+          created_at?: string | null
+          description: string
+          id?: string
+          image?: string | null
+          is_active?: boolean | null
+          name: string
+          price: string
+          updated_at?: string | null
+        }
+        Update: {
+          allergens?: string[] | null
+          category?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          image?: string | null
+          is_active?: boolean | null
+          name?: string
+          price?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      navbar_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          path: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          path: string
+          sort_order: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          path?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          id: string
+          key: string
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          id?: string
+          key: string
+          updated_at?: string | null
+          value: Json
+        }
+        Update: {
+          id?: string
+          key?: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +323,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
