@@ -1,23 +1,39 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
-import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { Menu, X, Settings, LogOut } from "lucide-react";
+import { useState, useEffect } from "react";
 import indiyaLogo from "@/assets/indiya-logo.jpg";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [navItems, setNavItems] = useState<any[]>([]);
   const location = useLocation();
+  const { user, isAdmin, signOut } = useAuth();
 
-  const navItems = [
-    { name: "Home", path: "/" },
-    { name: "Menu", path: "/menu" },
-    { name: "About", path: "/about" },
-    { name: "Services", path: "/services" },
-    { name: "Gallery", path: "/gallery" },
-    { name: "Contact", path: "/contact" },
-  ];
+  useEffect(() => {
+    fetchNavItems();
+  }, []);
+
+  const fetchNavItems = async () => {
+    const { data } = await supabase
+      .from("navbar_items")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order");
+    
+    if (data) {
+      setNavItems(data);
+    }
+  };
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleSignOut = async () => {
+    await signOut();
+    window.location.href = "/";
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
@@ -32,7 +48,7 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-6">
             {navItems.map((item) => (
               <Link
                 key={item.path}
@@ -47,6 +63,25 @@ const Navbar = () => {
             <Button asChild variant="hero" size="default">
               <Link to="/reservations">Book a Table</Link>
             </Button>
+            {user && (
+              <>
+                {isAdmin && (
+                  <Button asChild variant="outline" size="icon">
+                    <Link to="/admin">
+                      <Settings className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                )}
+                <Button variant="outline" size="icon" onClick={handleSignOut}>
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+            {!user && (
+              <Button asChild variant="outline">
+                <Link to="/auth">Sign In</Link>
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -79,6 +114,32 @@ const Navbar = () => {
                 Book a Table
               </Link>
             </Button>
+            {user && (
+              <>
+                {isAdmin && (
+                  <Button asChild variant="outline" className="w-full">
+                    <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Settings className="h-4 w-4 mr-2" />
+                      Admin
+                    </Link>
+                  </Button>
+                )}
+                <Button variant="outline" className="w-full" onClick={() => {
+                  handleSignOut();
+                  setIsMobileMenuOpen(false);
+                }}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+              </>
+            )}
+            {!user && (
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
+                  Sign In
+                </Link>
+              </Button>
+            )}
           </div>
         )}
       </div>

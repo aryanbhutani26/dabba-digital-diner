@@ -7,8 +7,32 @@ import heroImage from "@/assets/hero-restaurant.jpg";
 import aboutRestaurant from "@/assets/about-restaurant.jpg";
 import { UtensilsCrossed, Award, Clock, Heart, Tag, Percent, Gift, Calendar, Sparkles, ArrowRight } from "lucide-react";
 import tiffinHero from "@/assets/tiffin-hero.jpg";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
+  const [offers, setOffers] = useState<any[]>([]);
+  const [servicesVisible, setServicesVisible] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    const [couponsRes, settingsRes] = await Promise.all([
+      supabase.from("coupons").select("*").eq("is_active", true),
+      supabase.from("site_settings").select("*").eq("key", "services_visible"),
+    ]);
+
+    if (couponsRes.data) {
+      setOffers(couponsRes.data);
+    }
+
+    if (settingsRes.data && settingsRes.data[0]) {
+      setServicesVisible(settingsRes.data[0].value === true);
+    }
+  };
+
   const features = [
     {
       icon: <UtensilsCrossed className="w-12 h-12 text-primary" />,
@@ -50,32 +74,14 @@ const Index = () => {
     },
   ];
 
-  const offers = [
-    {
-      icon: <Percent className="w-8 h-8" />,
-      title: "20% OFF",
-      subtitle: "Weekend Dinner",
-      description: "Valid on Fri-Sun from 6 PM onwards",
-      code: "WEEKEND20",
-      color: "from-primary to-accent",
-    },
-    {
-      icon: <Gift className="w-8 h-8" />,
-      title: "Free Dessert",
-      subtitle: "On Your Birthday",
-      description: "Show your ID and enjoy a complimentary dessert",
-      code: "BIRTHDAY",
-      color: "from-accent to-secondary",
-    },
-    {
-      icon: <Tag className="w-8 h-8" />,
-      title: "30% OFF",
-      subtitle: "First Time Visit",
-      description: "New customers get special discount on first order",
-      code: "FIRST30",
-      color: "from-secondary to-primary",
-    },
-  ];
+  const getIconComponent = (iconName: string) => {
+    const icons: any = {
+      Percent: <Percent className="w-8 h-8" />,
+      Gift: <Gift className="w-8 h-8" />,
+      Tag: <Tag className="w-8 h-8" />,
+    };
+    return icons[iconName] || <Tag className="w-8 h-8" />;
+  };
 
   return (
     <div className="min-h-screen">
@@ -202,60 +208,62 @@ const Index = () => {
       </section>
 
       {/* Dabba Service Section */}
-      <section className="py-20 px-4 bg-gradient-to-br from-background via-accent/5 to-background">
-        <div className="container mx-auto max-w-7xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="order-2 lg:order-1">
-              <h2 className="text-4xl sm:text-5xl font-bold mb-6">Our Signature Dabba Service</h2>
-              <p className="text-lg text-muted-foreground mb-6">
-                Experience the authentic taste of home-cooked meals, delivered fresh to your doorstep. 
-                Our dabba service brings you wholesome, nutritious meals prepared daily with premium ingredients.
-              </p>
-              <div className="space-y-4 mb-8">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
-                    <Clock className="w-4 h-4 text-primary" />
+      {servicesVisible && (
+        <section className="py-20 px-4 bg-gradient-to-br from-background via-accent/5 to-background">
+          <div className="container mx-auto max-w-7xl">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div className="order-2 lg:order-1">
+                <h2 className="text-4xl sm:text-5xl font-bold mb-6">Our Signature Dabba Service</h2>
+                <p className="text-lg text-muted-foreground mb-6">
+                  Experience the authentic taste of home-cooked meals, delivered fresh to your doorstep. 
+                  Our dabba service brings you wholesome, nutritious meals prepared daily with premium ingredients.
+                </p>
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
+                      <Clock className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Timely Delivery</h3>
+                      <p className="text-muted-foreground text-sm">Hot meals delivered right on time, every day</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Timely Delivery</h3>
-                    <p className="text-muted-foreground text-sm">Hot meals delivered right on time, every day</p>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
+                      <Heart className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Made Fresh Daily</h3>
+                      <p className="text-muted-foreground text-sm">Traditional recipes with authentic flavors</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
+                      <Tag className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Affordable Plans</h3>
+                      <p className="text-muted-foreground text-sm">Starting from ₹299/day with various options</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
-                    <Heart className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Made Fresh Daily</h3>
-                    <p className="text-muted-foreground text-sm">Traditional recipes with authentic flavors</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
-                    <Tag className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Affordable Plans</h3>
-                    <p className="text-muted-foreground text-sm">Starting from ₹299/day with various options</p>
-                  </div>
-                </div>
+                <Button asChild variant="hero" size="lg">
+                  <Link to="/services">Explore Dabba Plans</Link>
+                </Button>
               </div>
-              <Button asChild variant="hero" size="lg">
-                <Link to="/services">Explore Dabba Plans</Link>
-              </Button>
-            </div>
-            <div className="order-1 lg:order-2">
-              <div className="relative rounded-lg overflow-hidden shadow-2xl">
-                <img
-                  src={tiffinHero}
-                  alt="Traditional Tiffin Dabba Service"
-                  className="w-full h-auto"
-                />
+              <div className="order-1 lg:order-2">
+                <div className="relative rounded-lg overflow-hidden shadow-2xl">
+                  <img
+                    src={tiffinHero}
+                    alt="Traditional Tiffin Dabba Service"
+                    className="w-full h-auto"
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Special Offers Section */}
       <section className="py-20 px-4 bg-gradient-to-br from-background via-primary/5 to-background">
@@ -271,13 +279,13 @@ const Index = () => {
           <div className="md:grid md:grid-cols-3 md:gap-8 flex md:flex-none overflow-x-auto gap-6 pb-4 snap-x snap-mandatory scroll-smooth -mx-4 px-4 md:mx-0 md:px-0">
             {offers.map((offer, index) => (
               <Card
-                key={index}
+                key={offer.id || index}
                 className="overflow-hidden border-2 hover:border-primary transition-all duration-300 hover:shadow-2xl group min-w-[280px] md:min-w-0 snap-center"
               >
                 <div className={`bg-gradient-to-br ${offer.color} p-8 text-primary-foreground`}>
-                  <div className="flex justify-center mb-4">{offer.icon}</div>
-                  <h3 className="text-3xl font-bold mb-2 text-center">{offer.title}</h3>
-                  <p className="text-xl text-center opacity-90">{offer.subtitle}</p>
+                  <div className="flex justify-center mb-4">{getIconComponent(offer.icon)}</div>
+                  <h3 className="text-3xl font-bold mb-2 text-center">{offer.subtitle}</h3>
+                  <p className="text-xl text-center opacity-90">{offer.title}</p>
                 </div>
                 <CardContent className="p-6">
                   <p className="text-muted-foreground mb-4 text-center">{offer.description}</p>
