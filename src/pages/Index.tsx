@@ -284,7 +284,7 @@ const Index = () => {
               >
                 <div className={`bg-gradient-to-br ${offer.color} p-8 text-primary-foreground`}>
                   <div className="flex justify-center mb-4">{getIconComponent(offer.icon)}</div>
-                  <h3 className="text-3xl font-bold mb-2 text-center">{offer.subtitle}</h3>
+                  <h3 className="text-3xl font-bold mb-2 text-center text-accent">{offer.subtitle}</h3>
                   <p className="text-xl text-center opacity-90">{offer.title}</p>
                 </div>
                 <CardContent className="p-6">
