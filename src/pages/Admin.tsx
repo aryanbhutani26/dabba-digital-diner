@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Plus, Trash2, Edit } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
+import { EditMenuItemDialog } from "@/components/admin/EditMenuItemDialog";
+import { EditCouponDialog } from "@/components/admin/EditCouponDialog";
+import { EditNavItemDialog } from "@/components/admin/EditNavItemDialog";
 
 const Admin = () => {
   const { isAdmin, loading: authLoading } = useAuth();
@@ -190,13 +191,16 @@ const Admin = () => {
                           <h3 className="font-semibold">{coupon.title}</h3>
                           <p className="text-sm text-muted-foreground">{coupon.code}</p>
                         </div>
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          onClick={() => deleteCoupon(coupon.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-2">
+                          <EditCouponDialog coupon={coupon} onSuccess={fetchData} />
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => deleteCoupon(coupon.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -221,13 +225,16 @@ const Admin = () => {
                           <h3 className="font-semibold">{item.name}</h3>
                           <p className="text-sm text-muted-foreground">{item.path}</p>
                         </div>
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          onClick={() => deleteNavItem(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-2">
+                          <EditNavItemDialog item={item} onSuccess={fetchData} />
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => deleteNavItem(item.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -254,13 +261,16 @@ const Admin = () => {
                             {item.price} • {item.category}
                           </p>
                         </div>
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          onClick={() => deleteMenuItem(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-2">
+                          <EditMenuItemDialog item={item} onSuccess={fetchData} />
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => deleteMenuItem(item.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
