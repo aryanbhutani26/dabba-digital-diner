@@ -15,12 +15,14 @@ import Services from "./pages/Services";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
+import Delivery from "./pages/Delivery";
+import TrackOrder from "./pages/TrackOrder";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark">
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -36,6 +38,8 @@ const App = () => (
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/delivery" element={<Delivery />} />
+            <Route path="/track-order" element={<TrackOrder />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

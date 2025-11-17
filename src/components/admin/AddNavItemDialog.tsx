@@ -13,26 +13,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
-import { Edit } from "lucide-react";
+import { Plus } from "lucide-react";
 
-interface NavItem {
-  id: string;
-  name: string;
-  path: string;
-  sort_order: number;
-}
-
-interface EditNavItemDialogProps {
-  item: NavItem;
+interface AddNavItemDialogProps {
   onSuccess: () => void;
 }
 
-export const EditNavItemDialog = ({ item, onSuccess }: EditNavItemDialogProps) => {
+export const AddNavItemDialog = ({ onSuccess }: AddNavItemDialogProps) => {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
-    name: item.name,
-    path: item.path,
-    sort_order: item.sort_order,
+    name: "",
+    path: "",
+    sortOrder: 10,
+    isActive: true,
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -42,15 +35,20 @@ export const EditNavItemDialog = ({ item, onSuccess }: EditNavItemDialogProps) =
     setLoading(true);
 
     try {
-      const itemId = (item as any)._id || item.id;
-      await api.updateNavbarItem(itemId, formData);
-      toast({ title: "Success", description: "Navigation item updated" });
+      await api.createNavbarItem(formData);
+      toast({ title: "Success", description: "Navigation item created" });
       setOpen(false);
+      setFormData({
+        name: "",
+        path: "",
+        sortOrder: 10,
+        isActive: true,
+      });
       onSuccess();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update navigation item",
+        description: "Failed to create navigation item",
         variant: "destructive",
       });
     } finally {
@@ -61,14 +59,15 @@ export const EditNavItemDialog = ({ item, onSuccess }: EditNavItemDialogProps) =
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon">
-          <Edit className="h-4 w-4" />
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Nav Item
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Navigation Item</DialogTitle>
-          <DialogDescription>Update the navigation item details below</DialogDescription>
+          <DialogTitle>Add Navigation Item</DialogTitle>
+          <DialogDescription>Create a new navigation menu item</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -77,6 +76,7 @@ export const EditNavItemDialog = ({ item, onSuccess }: EditNavItemDialogProps) =
               id="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="e.g. Blog"
               required
             />
           </div>
@@ -86,26 +86,32 @@ export const EditNavItemDialog = ({ item, onSuccess }: EditNavItemDialogProps) =
               id="path"
               value={formData.path}
               onChange={(e) => setFormData({ ...formData, path: e.target.value })}
-              placeholder="/example"
+              placeholder="e.g. /blog"
               required
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              Must start with / (e.g. /about, /menu)
+            </p>
           </div>
           <div>
-            <Label htmlFor="sort_order">Sort Order</Label>
+            <Label htmlFor="sortOrder">Sort Order</Label>
             <Input
-              id="sort_order"
+              id="sortOrder"
               type="number"
-              value={formData.sort_order}
-              onChange={(e) => setFormData({ ...formData, sort_order: parseInt(e.target.value) })}
+              value={formData.sortOrder}
+              onChange={(e) => setFormData({ ...formData, sortOrder: parseInt(e.target.value) })}
               required
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              Lower numbers appear first (e.g. 1, 2, 3...)
+            </p>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : "Save Changes"}
+              {loading ? "Creating..." : "Create Item"}
             </Button>
           </DialogFooter>
         </form>

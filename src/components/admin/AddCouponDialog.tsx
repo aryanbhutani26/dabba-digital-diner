@@ -14,32 +14,22 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
-import { Edit } from "lucide-react";
+import { Plus } from "lucide-react";
 
-interface Coupon {
-  id: string;
-  title: string;
-  subtitle: string;
-  description: string;
-  code: string;
-  color: string;
-  icon: string;
-}
-
-interface EditCouponDialogProps {
-  coupon: Coupon;
+interface AddCouponDialogProps {
   onSuccess: () => void;
 }
 
-export const EditCouponDialog = ({ coupon, onSuccess }: EditCouponDialogProps) => {
+export const AddCouponDialog = ({ onSuccess }: AddCouponDialogProps) => {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
-    title: coupon.title,
-    subtitle: coupon.subtitle,
-    description: coupon.description,
-    code: coupon.code,
-    color: coupon.color,
-    icon: coupon.icon,
+    title: "",
+    subtitle: "",
+    description: "",
+    code: "",
+    color: "from-amber-500 to-amber-600",
+    icon: "Tag",
+    isActive: true,
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -49,15 +39,23 @@ export const EditCouponDialog = ({ coupon, onSuccess }: EditCouponDialogProps) =
     setLoading(true);
 
     try {
-      const couponId = (coupon as any)._id || coupon.id;
-      await api.updateCoupon(couponId, formData);
-      toast({ title: "Success", description: "Coupon updated" });
+      await api.createCoupon(formData);
+      toast({ title: "Success", description: "Coupon created" });
       setOpen(false);
+      setFormData({
+        title: "",
+        subtitle: "",
+        description: "",
+        code: "",
+        color: "from-amber-500 to-amber-600",
+        icon: "Tag",
+        isActive: true,
+      });
       onSuccess();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update coupon",
+        description: "Failed to create coupon",
         variant: "destructive",
       });
     } finally {
@@ -68,14 +66,15 @@ export const EditCouponDialog = ({ coupon, onSuccess }: EditCouponDialogProps) =
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon">
-          <Edit className="h-4 w-4" />
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Coupon
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Coupon</DialogTitle>
-          <DialogDescription>Update the coupon details below</DialogDescription>
+          <DialogTitle>Add New Coupon</DialogTitle>
+          <DialogDescription>Create a new coupon for customers</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -84,6 +83,7 @@ export const EditCouponDialog = ({ coupon, onSuccess }: EditCouponDialogProps) =
               id="title"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              placeholder="e.g. 20% OFF"
               required
             />
           </div>
@@ -93,6 +93,7 @@ export const EditCouponDialog = ({ coupon, onSuccess }: EditCouponDialogProps) =
               id="subtitle"
               value={formData.subtitle}
               onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+              placeholder="e.g. Weekend Dinner"
               required
             />
           </div>
@@ -102,25 +103,17 @@ export const EditCouponDialog = ({ coupon, onSuccess }: EditCouponDialogProps) =
               id="description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="e.g. Valid on Fri-Sun from 6 PM onwards"
               required
             />
           </div>
           <div>
-            <Label htmlFor="code">Code</Label>
+            <Label htmlFor="code">Coupon Code</Label>
             <Input
               id="code"
               value={formData.code}
-              onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="color">Color (CSS class)</Label>
-            <Input
-              id="color"
-              value={formData.color}
-              onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-              placeholder="e.g. bg-primary"
+              onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+              placeholder="e.g. WEEKEND20"
               required
             />
           </div>
@@ -130,16 +123,19 @@ export const EditCouponDialog = ({ coupon, onSuccess }: EditCouponDialogProps) =
               id="icon"
               value={formData.icon}
               onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-              placeholder="e.g. Gift"
+              placeholder="e.g. Gift, Tag, Percent"
               required
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              Common icons: Percent, Gift, Tag, Star, Sparkles
+            </p>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : "Save Changes"}
+              {loading ? "Creating..." : "Create Coupon"}
             </Button>
           </DialogFooter>
         </form>

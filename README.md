@@ -1,8 +1,24 @@
-# Welcome to your Lovable project
+# Indiya Bar & Restaurant
+
+A full-stack restaurant website with MongoDB backend.
+
+## 🚀 Quick Start
+
+**New to this project?** Start here: **[GET_STARTED.md](./GET_STARTED.md)** ⭐
+
+### 📚 Documentation
+- 🎯 **[COMPLETE_MIGRATION_SUMMARY.md](./COMPLETE_MIGRATION_SUMMARY.md)** - What was done
+- 📖 **[GET_STARTED.md](./GET_STARTED.md)** - Complete setup guide (start here!)
+- ⚡ [QUICKSTART.md](./QUICKSTART.md) - 5-minute quick reference
+- 📚 [MONGODB_MIGRATION.md](./MONGODB_MIGRATION.md) - Detailed migration guide
+- 🏗️ [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture overview
+- ✅ [MIGRATION_CHECKLIST.md](./MIGRATION_CHECKLIST.md) - Track your progress
+- 🧹 [CLEANUP_SUPABASE.md](./CLEANUP_SUPABASE.md) - Remove unused Supabase files
+- ✔️ [SUPABASE_FREE_VERIFICATION.md](./SUPABASE_FREE_VERIFICATION.md) - Verification guide
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/37f800a8-a9a1-4efb-a109-2224f9df83e2
+**Original URL**: https://lovable.dev/projects/37f800a8-a9a1-4efb-a109-2224f9df83e2
 
 ## How can I edit this code?
 
@@ -52,13 +68,21 @@ npm run dev
 
 ## What technologies are used for this project?
 
-This project is built with:
-
+### Frontend
 - Vite
 - TypeScript
 - React
 - shadcn-ui
 - Tailwind CSS
+- React Router
+- TanStack Query
+
+### Backend
+- Node.js
+- Express.js
+- MongoDB Atlas
+- JWT Authentication
+- bcryptjs
 
 ## How can I deploy this project?
 

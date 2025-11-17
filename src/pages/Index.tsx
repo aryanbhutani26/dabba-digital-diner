@@ -8,7 +8,7 @@ import aboutRestaurant from "@/assets/about-restaurant.jpg";
 import { UtensilsCrossed, Award, Clock, Heart, Tag, Percent, Gift, Calendar, Sparkles, ArrowRight } from "lucide-react";
 import tiffinHero from "@/assets/tiffin-hero.jpg";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 
 const Index = () => {
   const [offers, setOffers] = useState<any[]>([]);
@@ -19,17 +19,16 @@ const Index = () => {
   }, []);
 
   const fetchData = async () => {
-    const [couponsRes, settingsRes] = await Promise.all([
-      supabase.from("coupons").select("*").eq("is_active", true),
-      supabase.from("site_settings").select("*").eq("key", "services_visible"),
-    ]);
+    try {
+      const [couponsData, settingsData] = await Promise.all([
+        api.getCoupons(),
+        api.getSetting('services_visible').catch(() => ({ value: true })),
+      ]);
 
-    if (couponsRes.data) {
-      setOffers(couponsRes.data);
-    }
-
-    if (settingsRes.data && settingsRes.data[0]) {
-      setServicesVisible(settingsRes.data[0].value === true);
+      setOffers(couponsData);
+      setServicesVisible(settingsData.value === true);
+    } catch (error) {
+      console.error('Failed to fetch data:', error);
     }
   };
 
@@ -275,23 +274,22 @@ const Index = () => {
             </p>
           </div>
 
-          {/* Desktop: Grid, Mobile: Horizontal Scroll */}
-          <div className="md:grid md:grid-cols-3 md:gap-8 flex md:flex-none overflow-x-auto gap-6 pb-4 snap-x snap-mandatory scroll-smooth -mx-4 px-4 md:mx-0 md:px-0">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {offers.map((offer, index) => (
               <Card
-                key={offer.id || index}
-                className="overflow-hidden border-2 hover:border-primary transition-all duration-300 hover:shadow-2xl group min-w-[280px] md:min-w-0 snap-center"
+                key={index}
+                className="overflow-hidden border-2 border-amber-600/20 hover:border-amber-500 transition-all duration-300 hover:shadow-2xl hover:shadow-amber-500/20 group"
               >
-                <div className={`bg-gradient-to-br ${offer.color} p-8 text-primary-foreground`}>
+                <div className="bg-gradient-to-br from-amber-500 via-yellow-500 to-amber-600 p-8 text-gray-900">
                   <div className="flex justify-center mb-4">{getIconComponent(offer.icon)}</div>
-                  <h3 className="text-3xl font-bold mb-2 text-center">{offer.subtitle}</h3>
-                  <p className="text-xl text-center opacity-90">{offer.title}</p>
+                  <h3 className="text-3xl font-bold mb-2 text-center">{offer.title}</h3>
+                  <p className="text-xl text-center opacity-90">{offer.subtitle}</p>
                 </div>
-                <CardContent className="p-6">
+                <CardContent className="p-6 bg-card">
                   <p className="text-muted-foreground mb-4 text-center">{offer.description}</p>
-                  <div className="bg-muted rounded-lg p-4 text-center">
+                  <div className="bg-muted rounded-lg p-4 text-center border border-amber-500/20">
                     <p className="text-xs text-muted-foreground mb-1">Coupon Code</p>
-                    <p className="text-xl font-bold text-primary font-mono tracking-wider">{offer.code}</p>
+                    <p className="text-xl font-bold text-amber-500 font-mono tracking-wider">{offer.code}</p>
                   </div>
                 </CardContent>
               </Card>

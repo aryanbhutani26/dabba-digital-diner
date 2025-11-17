@@ -14,32 +14,22 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
-import { Edit } from "lucide-react";
+import { Plus } from "lucide-react";
 
-interface MenuItem {
-  id: string;
-  name: string;
-  description: string;
-  price: string;
-  category: string;
-  allergens?: string[];
-  image?: string;
-}
-
-interface EditMenuItemDialogProps {
-  item: MenuItem;
+interface AddMenuItemDialogProps {
   onSuccess: () => void;
 }
 
-export const EditMenuItemDialog = ({ item, onSuccess }: EditMenuItemDialogProps) => {
+export const AddMenuItemDialog = ({ onSuccess }: AddMenuItemDialogProps) => {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
-    name: item.name,
-    description: item.description,
-    price: item.price,
-    category: item.category,
-    allergens: item.allergens?.join(", ") || "",
-    image: item.image || "",
+    name: "",
+    description: "",
+    price: "",
+    category: "",
+    allergens: "",
+    image: "",
+    isActive: true,
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -49,22 +39,31 @@ export const EditMenuItemDialog = ({ item, onSuccess }: EditMenuItemDialogProps)
     setLoading(true);
 
     try {
-      const itemId = (item as any)._id || item.id;
-      await api.updateMenuItem(itemId, {
+      await api.createMenuItem({
         name: formData.name,
         description: formData.description,
         price: formData.price,
         category: formData.category,
         allergens: formData.allergens.split(",").map((a) => a.trim()).filter(Boolean),
         image: formData.image || null,
+        isActive: formData.isActive,
       });
-      toast({ title: "Success", description: "Menu item updated" });
+      toast({ title: "Success", description: "Menu item created" });
       setOpen(false);
+      setFormData({
+        name: "",
+        description: "",
+        price: "",
+        category: "",
+        allergens: "",
+        image: "",
+        isActive: true,
+      });
       onSuccess();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update menu item",
+        description: "Failed to create menu item",
         variant: "destructive",
       });
     } finally {
@@ -75,14 +74,15 @@ export const EditMenuItemDialog = ({ item, onSuccess }: EditMenuItemDialogProps)
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon">
-          <Edit className="h-4 w-4" />
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Menu Item
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Menu Item</DialogTitle>
-          <DialogDescription>Update the menu item details below</DialogDescription>
+          <DialogTitle>Add Menu Item</DialogTitle>
+          <DialogDescription>Create a new menu item</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -91,6 +91,7 @@ export const EditMenuItemDialog = ({ item, onSuccess }: EditMenuItemDialogProps)
               id="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="e.g. Grilled Salmon"
               required
             />
           </div>
@@ -100,26 +101,31 @@ export const EditMenuItemDialog = ({ item, onSuccess }: EditMenuItemDialogProps)
               id="description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="e.g. Fresh Atlantic salmon with herbs"
               required
             />
           </div>
-          <div>
-            <Label htmlFor="price">Price</Label>
-            <Input
-              id="price"
-              value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="category">Category</Label>
-            <Input
-              id="category"
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              required
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="price">Price</Label>
+              <Input
+                id="price"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                placeholder="e.g. 24.99"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="category">Category</Label>
+              <Input
+                id="category"
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                placeholder="e.g. Main Course"
+                required
+              />
+            </div>
           </div>
           <div>
             <Label htmlFor="allergens">Allergens (comma separated)</Label>
@@ -127,7 +133,7 @@ export const EditMenuItemDialog = ({ item, onSuccess }: EditMenuItemDialogProps)
               id="allergens"
               value={formData.allergens}
               onChange={(e) => setFormData({ ...formData, allergens: e.target.value })}
-              placeholder="e.g. Dairy, Nuts, Gluten"
+              placeholder="e.g. Fish, Dairy, Gluten"
             />
           </div>
           <div>
@@ -144,7 +150,7 @@ export const EditMenuItemDialog = ({ item, onSuccess }: EditMenuItemDialogProps)
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : "Save Changes"}
+              {loading ? "Creating..." : "Create Item"}
             </Button>
           </DialogFooter>
         </form>

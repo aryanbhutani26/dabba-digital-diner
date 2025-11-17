@@ -8,11 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { Loader2, Trash2 } from "lucide-react";
 import { EditMenuItemDialog } from "@/components/admin/EditMenuItemDialog";
 import { EditCouponDialog } from "@/components/admin/EditCouponDialog";
 import { EditNavItemDialog } from "@/components/admin/EditNavItemDialog";
+import { AddMenuItemDialog } from "@/components/admin/AddMenuItemDialog";
+import { AddCouponDialog } from "@/components/admin/AddCouponDialog";
+import { AddNavItemDialog } from "@/components/admin/AddNavItemDialog";
 
 const Admin = () => {
   const { isAdmin, loading: authLoading } = useAuth();
@@ -39,88 +42,89 @@ const Admin = () => {
   const fetchData = async () => {
     setLoading(true);
     
-    const [settingsRes, couponsRes, navRes, menuRes] = await Promise.all([
-      supabase.from("site_settings").select("*"),
-      supabase.from("coupons").select("*"),
-      supabase.from("navbar_items").select("*").order("sort_order"),
-      supabase.from("menu_items").select("*"),
-    ]);
+    try {
+      const [settingsData, couponsData, navData, menuData] = await Promise.all([
+        api.getAllSettings(),
+        api.getAllCoupons(),
+        api.getAllNavbarItems(),
+        api.getAllMenuItems(),
+      ]);
 
-    if (settingsRes.data) {
-      const servicesSetting = settingsRes.data.find(s => s.key === "services_visible");
+      const servicesSetting = settingsData.find((s: any) => s.key === "services_visible");
       setServicesVisible(servicesSetting?.value === true);
-    }
 
-    setCoupons(couponsRes.data || []);
-    setNavItems(navRes.data || []);
-    setMenuItems(menuRes.data || []);
-    setLoading(false);
+      setCoupons(couponsData || []);
+      setNavItems(navData || []);
+      setMenuItems(menuData || []);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleServicesVisibility = async () => {
     const newValue = !servicesVisible;
-    const { error } = await supabase
-      .from("site_settings")
-      .update({ value: newValue })
-      .eq("key", "services_visible");
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update services visibility",
-        variant: "destructive",
-      });
-    } else {
+    
+    try {
+      await api.updateSetting("services_visible", newValue);
       setServicesVisible(newValue);
       toast({
         title: "Success",
         description: `Services section ${newValue ? "enabled" : "disabled"}`,
       });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update services visibility",
+        variant: "destructive",
+      });
     }
   };
 
   const deleteCoupon = async (id: string) => {
-    const { error } = await supabase.from("coupons").delete().eq("id", id);
-    
-    if (error) {
+    try {
+      await api.deleteCoupon(id);
+      toast({ title: "Success", description: "Coupon deleted" });
+      fetchData();
+    } catch (error) {
       toast({
         title: "Error",
         description: "Failed to delete coupon",
         variant: "destructive",
       });
-    } else {
-      toast({ title: "Success", description: "Coupon deleted" });
-      fetchData();
     }
   };
 
   const deleteNavItem = async (id: string) => {
-    const { error } = await supabase.from("navbar_items").delete().eq("id", id);
-    
-    if (error) {
+    try {
+      await api.deleteNavbarItem(id);
+      toast({ title: "Success", description: "Navigation item deleted" });
+      fetchData();
+    } catch (error) {
       toast({
         title: "Error",
         description: "Failed to delete navigation item",
         variant: "destructive",
       });
-    } else {
-      toast({ title: "Success", description: "Navigation item deleted" });
-      fetchData();
     }
   };
 
   const deleteMenuItem = async (id: string) => {
-    const { error } = await supabase.from("menu_items").delete().eq("id", id);
-    
-    if (error) {
+    try {
+      await api.deleteMenuItem(id);
+      toast({ title: "Success", description: "Menu item deleted" });
+      fetchData();
+    } catch (error) {
       toast({
         title: "Error",
         description: "Failed to delete menu item",
         variant: "destructive",
       });
-    } else {
-      toast({ title: "Success", description: "Menu item deleted" });
-      fetchData();
     }
   };
 
@@ -177,14 +181,19 @@ const Admin = () => {
             <TabsContent value="coupons">
               <Card>
                 <CardHeader>
-                  <CardTitle>Manage Coupons</CardTitle>
-                  <CardDescription>Add, edit, or remove coupons</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Manage Coupons</CardTitle>
+                      <CardDescription>Add, edit, or remove coupons</CardDescription>
+                    </div>
+                    <AddCouponDialog onSuccess={fetchData} />
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {coupons.map((coupon) => (
                       <div
-                        key={coupon.id}
+                        key={coupon._id || coupon.id}
                         className="flex items-center justify-between p-4 border rounded-lg"
                       >
                         <div>
@@ -196,7 +205,7 @@ const Admin = () => {
                           <Button
                             variant="destructive"
                             size="icon"
-                            onClick={() => deleteCoupon(coupon.id)}
+                            onClick={() => deleteCoupon(coupon._id || coupon.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -211,14 +220,19 @@ const Admin = () => {
             <TabsContent value="navigation">
               <Card>
                 <CardHeader>
-                  <CardTitle>Navigation Items</CardTitle>
-                  <CardDescription>Manage navigation menu items</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Navigation Items</CardTitle>
+                      <CardDescription>Manage navigation menu items</CardDescription>
+                    </div>
+                    <AddNavItemDialog onSuccess={fetchData} />
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {navItems.map((item) => (
                       <div
-                        key={item.id}
+                        key={item._id || item.id}
                         className="flex items-center justify-between p-4 border rounded-lg"
                       >
                         <div>
@@ -230,7 +244,7 @@ const Admin = () => {
                           <Button
                             variant="destructive"
                             size="icon"
-                            onClick={() => deleteNavItem(item.id)}
+                            onClick={() => deleteNavItem(item._id || item.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -245,14 +259,19 @@ const Admin = () => {
             <TabsContent value="menu">
               <Card>
                 <CardHeader>
-                  <CardTitle>Menu Items</CardTitle>
-                  <CardDescription>Manage restaurant menu items</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Menu Items</CardTitle>
+                      <CardDescription>Manage restaurant menu items</CardDescription>
+                    </div>
+                    <AddMenuItemDialog onSuccess={fetchData} />
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {menuItems.map((item) => (
                       <div
-                        key={item.id}
+                        key={item._id || item.id}
                         className="flex items-center justify-between p-4 border rounded-lg"
                       >
                         <div>
@@ -266,7 +285,7 @@ const Admin = () => {
                           <Button
                             variant="destructive"
                             size="icon"
-                            onClick={() => deleteMenuItem(item.id)}
+                            onClick={() => deleteMenuItem(item._id || item.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
