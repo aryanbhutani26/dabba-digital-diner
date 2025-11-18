@@ -250,6 +250,13 @@ class ApiClient {
     });
   }
 
+  async assignDeliveryBoy(orderId: string, deliveryBoyId: string) {
+    return this.request(`/orders/${orderId}/assign`, {
+      method: 'PATCH',
+      body: JSON.stringify({ deliveryBoyId }),
+    });
+  }
+
   // Analytics
   async getTopDishes(period: string = 'week') {
     return this.request(`/analytics/top-dishes?period=${period}`);

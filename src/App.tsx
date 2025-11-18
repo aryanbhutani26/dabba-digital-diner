@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import ScrollToTop from "@/components/ScrollToTop";
+import { DeliveryBoyRedirect } from "@/components/DeliveryBoyRedirect";
 import Index from "./pages/Index";
 import Menu from "./pages/Menu";
 import About from "./pages/About";
@@ -31,19 +32,19 @@ const App = () => (
         <BrowserRouter>
           <ScrollToTop />
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/menu" element={<Menu />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/reservations" element={<Reservations />} />
-            <Route path="/gallery" element={<Gallery />} />
+            <Route path="/" element={<DeliveryBoyRedirect><Index /></DeliveryBoyRedirect>} />
+            <Route path="/menu" element={<DeliveryBoyRedirect><Menu /></DeliveryBoyRedirect>} />
+            <Route path="/about" element={<DeliveryBoyRedirect><About /></DeliveryBoyRedirect>} />
+            <Route path="/services" element={<DeliveryBoyRedirect><Services /></DeliveryBoyRedirect>} />
+            <Route path="/contact" element={<DeliveryBoyRedirect><Contact /></DeliveryBoyRedirect>} />
+            <Route path="/reservations" element={<DeliveryBoyRedirect><Reservations /></DeliveryBoyRedirect>} />
+            <Route path="/gallery" element={<DeliveryBoyRedirect><Gallery /></DeliveryBoyRedirect>} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/account" element={<Account />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/delivery" element={<Delivery />} />
-            <Route path="/track-order" element={<TrackOrder />} />
-            <Route path="/order-confirmation" element={<OrderConfirmation />} />
+            <Route path="/track-order" element={<DeliveryBoyRedirect><TrackOrder /></DeliveryBoyRedirect>} />
+            <Route path="/order-confirmation" element={<DeliveryBoyRedirect><OrderConfirmation /></DeliveryBoyRedirect>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

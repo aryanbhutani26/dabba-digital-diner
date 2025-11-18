@@ -59,14 +59,19 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      await api.signIn(email, password);
+      const response = await api.signIn(email, password);
       toast({
         title: "Welcome back!",
         description: "You've successfully signed in.",
       });
-      // Small delay to show the toast, then navigate and reload
+      // Small delay to show the toast, then navigate based on role
       setTimeout(() => {
-        window.location.href = "/";
+        // Redirect delivery boys to delivery dashboard
+        if (response.user.role === 'delivery_boy') {
+          window.location.href = "/delivery";
+        } else {
+          window.location.href = "/";
+        }
       }, 500);
     } catch (error: any) {
       toast({

@@ -46,7 +46,7 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
-            {navItems.map((item) => (
+            {!isDeliveryBoy && navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
@@ -57,9 +57,11 @@ const Navbar = () => {
                 {item.name}
               </Link>
             ))}
-            <Button asChild variant="hero" size="default">
-              <Link to="/reservations">Book a Table</Link>
-            </Button>
+            {!isDeliveryBoy && (
+              <Button asChild variant="hero" size="default">
+                <Link to="/reservations">Book a Table</Link>
+              </Button>
+            )}
             {user && (
               <>
                 {!isAdmin && (
@@ -108,7 +110,7 @@ const Navbar = () => {
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
           <div className="md:hidden py-4 space-y-3 animate-fade-in">
-            {navItems.map((item) => (
+            {!isDeliveryBoy && navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
@@ -120,11 +122,13 @@ const Navbar = () => {
                 {item.name}
               </Link>
             ))}
-            <Button asChild variant="hero" size="default" className="w-full">
-              <Link to="/reservations" onClick={() => setIsMobileMenuOpen(false)}>
-                Book a Table
-              </Link>
-            </Button>
+            {!isDeliveryBoy && (
+              <Button asChild variant="hero" size="default" className="w-full">
+                <Link to="/reservations" onClick={() => setIsMobileMenuOpen(false)}>
+                  Book a Table
+                </Link>
+              </Button>
+            )}
             {user && (
               <>
                 {!isAdmin && (
@@ -139,7 +143,7 @@ const Navbar = () => {
                   <Button asChild variant="outline" className="w-full">
                     <Link to="/delivery" onClick={() => setIsMobileMenuOpen(false)}>
                       <Package className="h-4 w-4 mr-2" />
-                      Delivery
+                      Delivery Dashboard
                     </Link>
                   </Button>
                 )}

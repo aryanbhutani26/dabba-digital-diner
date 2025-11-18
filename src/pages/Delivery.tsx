@@ -50,12 +50,27 @@ const Delivery = () => {
   }, [user]);
 
   const fetchData = async () => {
-    setLoading(true);
     try {
       const [ordersData, statsData] = await Promise.all([
         api.getMyDeliveries(),
         api.getDeliveryStats(),
       ]);
+      
+      // Check for new assigned orders
+      const newAssignedOrders = ordersData.filter((order: any) => 
+        order.status === 'assigned' && 
+        !orders.find((o: any) => o._id === order._id && o.status === 'assigned')
+      );
+      
+      if (newAssignedOrders.length > 0 && orders.length > 0) {
+        newAssignedOrders.forEach((order: any) => {
+          toast({
+            title: "New Delivery Assigned!",
+            description: `Order #${order.orderNumber} - ${order.customerName}\nAddress: ${order.deliveryAddress}`,
+          });
+        });
+      }
+      
       setOrders(ordersData || []);
       setStats(statsData);
     } catch (error) {

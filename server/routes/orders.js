@@ -79,6 +79,48 @@ router.get('/delivery-stats', authenticate, isAdminOrDeliveryBoy, async (req, re
   }
 });
 
+// Assign delivery boy to order (admin only)
+router.patch('/:id/assign', authenticate, isAdmin, async (req, res) => {
+  try {
+    const { deliveryBoyId } = req.body;
+    const db = getDB();
+
+    // Verify delivery boy exists
+    const deliveryBoy = await db.collection('users').findOne({
+      _id: new ObjectId(deliveryBoyId),
+      role: 'delivery_boy'
+    });
+
+    if (!deliveryBoy) {
+      return res.status(404).json({ error: 'Delivery boy not found' });
+    }
+
+    // Update order
+    const result = await db.collection('orders').updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { 
+        $set: { 
+          deliveryBoyId,
+          status: 'assigned',
+          assignedAt: new Date(),
+          updatedAt: new Date()
+        } 
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.json({ 
+      message: 'Order assigned successfully',
+      deliveryBoyName: deliveryBoy.name 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Update order status
 router.patch('/:id/status', authenticate, async (req, res) => {
   try {
