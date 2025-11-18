@@ -11,6 +11,7 @@ interface User {
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isDeliveryBoy, setIsDeliveryBoy] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,6 +29,7 @@ export const useAuth = () => {
       const data = await api.getMe();
       setUser(data.user);
       setIsAdmin(data.user.role === 'admin');
+      setIsDeliveryBoy(data.user.role === 'delivery_boy');
     } catch (error) {
       console.error('Auth check failed:', error);
       api.clearToken();
@@ -40,7 +42,8 @@ export const useAuth = () => {
     api.signOut();
     setUser(null);
     setIsAdmin(false);
+    setIsDeliveryBoy(false);
   };
 
-  return { user, isAdmin, loading, signOut };
+  return { user, isAdmin, isDeliveryBoy, loading, signOut };
 };

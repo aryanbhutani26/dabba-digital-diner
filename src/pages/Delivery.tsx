@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 const Delivery = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, isAdmin, isDeliveryBoy, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [orders, setOrders] = useState<any[]>([]);
@@ -30,10 +30,15 @@ const Delivery = () => {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/auth");
+    if (!authLoading && (!user || (!isAdmin && !isDeliveryBoy))) {
+      toast({
+        title: "Access Denied",
+        description: "You don't have permission to access this page",
+        variant: "destructive",
+      });
+      navigate("/");
     }
-  }, [user, authLoading, navigate]);
+  }, [user, isAdmin, isDeliveryBoy, authLoading, navigate, toast]);
 
   useEffect(() => {
     if (user) {

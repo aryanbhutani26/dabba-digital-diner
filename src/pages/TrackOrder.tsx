@@ -40,21 +40,17 @@ const TrackOrder = () => {
 
   const fetchOrder = async () => {
     try {
-      // In a real app, this would be a public endpoint or require order token
-      const orders = await api.getMyDeliveries();
-      const foundOrder = orders.find((o: any) => o._id === orderId);
-      
-      if (foundOrder) {
-        setOrder(foundOrder);
-      } else {
+      const data = await api.getOrder(orderId!);
+      setOrder(data);
+    } catch (error: any) {
+      console.error('Failed to fetch order:', error);
+      if (loading) {
         toast({
           title: "Order not found",
-          description: "Unable to find this order",
+          description: error.message || "Unable to find this order",
           variant: "destructive",
         });
       }
-    } catch (error) {
-      console.error('Failed to fetch order:', error);
     } finally {
       setLoading(false);
     }
@@ -122,7 +118,7 @@ const TrackOrder = () => {
             <div>
               <h1 className="text-4xl font-bold mb-2">Track Your Order</h1>
               <p className="text-muted-foreground">
-                Order #{order.orderNumber || order._id.slice(-6)}
+                Order #{order.orderNumber}
               </p>
             </div>
             <Button variant="outline" onClick={fetchOrder}>
@@ -225,11 +221,19 @@ const TrackOrder = () => {
                     {order.items?.map((item: any, idx: number) => (
                       <div key={idx} className="flex justify-between text-sm">
                         <span>{item.quantity}x {item.name}</span>
-                        <span className="font-medium">₹{item.price}</span>
+                        <span className="font-medium">₹{(item.price * item.quantity).toFixed(2)}</span>
                       </div>
                     ))}
-                    <div className="pt-3 border-t">
-                      <div className="flex justify-between font-semibold">
+                    <div className="pt-3 border-t space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Subtotal</span>
+                        <span>₹{(order.totalAmount - order.deliveryFee).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Delivery Fee</span>
+                        <span>₹{order.deliveryFee}</span>
+                      </div>
+                      <div className="flex justify-between font-semibold pt-2 border-t">
                         <span>Total</span>
                         <span className="text-primary">₹{order.totalAmount}</span>
                       </div>

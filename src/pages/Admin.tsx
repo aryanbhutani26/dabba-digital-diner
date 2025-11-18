@@ -16,6 +16,15 @@ import { EditNavItemDialog } from "@/components/admin/EditNavItemDialog";
 import { AddMenuItemDialog } from "@/components/admin/AddMenuItemDialog";
 import { AddCouponDialog } from "@/components/admin/AddCouponDialog";
 import { AddNavItemDialog } from "@/components/admin/AddNavItemDialog";
+import { AddDeliveryBoyDialog } from "@/components/admin/AddDeliveryBoyDialog";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Admin = () => {
   const { isAdmin, loading: authLoading } = useAuth();
@@ -25,13 +34,19 @@ const Admin = () => {
   const [coupons, setCoupons] = useState<any[]>([]);
   const [navItems, setNavItems] = useState<any[]>([]);
   const [menuItems, setMenuItems] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
-      navigate("/auth");
+      toast({
+        title: "Access Denied",
+        description: "You need admin privileges to access this page",
+        variant: "destructive",
+      });
+      navigate("/");
     }
-  }, [isAdmin, authLoading, navigate]);
+  }, [isAdmin, authLoading, navigate, toast]);
 
   useEffect(() => {
     if (isAdmin) {
@@ -43,11 +58,12 @@ const Admin = () => {
     setLoading(true);
     
     try {
-      const [settingsData, couponsData, navData, menuData] = await Promise.all([
+      const [settingsData, couponsData, navData, menuData, usersData] = await Promise.all([
         api.getAllSettings(),
         api.getAllCoupons(),
         api.getAllNavbarItems(),
         api.getAllMenuItems(),
+        api.getAllUsers(),
       ]);
 
       const servicesSetting = settingsData.find((s: any) => s.key === "services_visible");
@@ -56,6 +72,7 @@ const Admin = () => {
       setCoupons(couponsData || []);
       setNavItems(navData || []);
       setMenuItems(menuData || []);
+      setUsers(usersData || []);
     } catch (error) {
       toast({
         title: "Error",
@@ -128,6 +145,34 @@ const Admin = () => {
     }
   };
 
+  const updateUserRole = async (userId: string, newRole: string) => {
+    try {
+      await api.updateUserRole(userId, newRole);
+      toast({ title: "Success", description: "User role updated" });
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update user role",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteUser = async (userId: string) => {
+    try {
+      await api.deleteUser(userId);
+      toast({ title: "Success", description: "User deleted" });
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete user",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -153,6 +198,7 @@ const Admin = () => {
           <Tabs defaultValue="general" className="space-y-6">
             <TabsList>
               <TabsTrigger value="general">General</TabsTrigger>
+              <TabsTrigger value="users">Users</TabsTrigger>
               <TabsTrigger value="coupons">Coupons</TabsTrigger>
               <TabsTrigger value="navigation">Navigation</TabsTrigger>
               <TabsTrigger value="menu">Menu</TabsTrigger>
@@ -173,6 +219,70 @@ const Admin = () => {
                       </p>
                     </div>
                     <Switch checked={servicesVisible} onCheckedChange={toggleServicesVisibility} />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="users">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>User Management</CardTitle>
+                      <CardDescription>Manage users and delivery boys</CardDescription>
+                    </div>
+                    <AddDeliveryBoyDialog onSuccess={fetchData} />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {users.map((user) => (
+                      <div
+                        key={user._id}
+                        className="flex items-center justify-between p-4 border rounded-lg"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            <h3 className="font-semibold">{user.name}</h3>
+                            <Badge variant={
+                              user.role === 'admin' ? 'default' : 
+                              user.role === 'delivery_boy' ? 'secondary' : 
+                              'outline'
+                            }>
+                              {user.role === 'delivery_boy' ? 'Delivery Boy' : 
+                               user.role === 'admin' ? 'Admin' : 'User'}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                          {user.phone && (
+                            <p className="text-sm text-muted-foreground">{user.phone}</p>
+                          )}
+                        </div>
+                        <div className="flex gap-2 items-center">
+                          <Select
+                            value={user.role}
+                            onValueChange={(value) => updateUserRole(user._id, value)}
+                          >
+                            <SelectTrigger className="w-[150px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="user">User</SelectItem>
+                              <SelectItem value="delivery_boy">Delivery Boy</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => deleteUser(user._id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>

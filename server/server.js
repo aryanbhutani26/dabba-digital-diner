@@ -26,6 +26,8 @@ app.get('/health', (req, res) => {
 
 // Routes
 import orderRoutes from './routes/orders.js';
+import userRoutes from './routes/users.js';
+import analyticsRoutes from './routes/analytics.js';
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -34,6 +36,8 @@ app.use('/api/navbar', navbarRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

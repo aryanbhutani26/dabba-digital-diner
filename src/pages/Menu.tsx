@@ -318,22 +318,23 @@ const Menu = () => {
     <div className="min-h-screen">
       <Navbar />
 
+      {/* Floating Cart Button */}
+      <div className="fixed bottom-8 right-8 z-50">
+        <CartSheet 
+          items={cartItems}
+          onUpdateQuantity={handleUpdateQuantity}
+          onRemoveItem={handleRemoveItem}
+          onClearCart={() => setCartItems([])}
+        />
+      </div>
+
       <main className="pt-32 pb-20 px-4 bg-background">
         <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-4 mb-12">
-            <div className="text-center md:text-left flex-1">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 font-script">Our Royal Menu</h1>
-              <p className="text-lg md:text-xl text-muted-foreground">
-                Carefully curated dishes crafted with passion and precision
-              </p>
-            </div>
-            <div className="shrink-0">
-              <CartSheet 
-                items={cartItems}
-                onUpdateQuantity={handleUpdateQuantity}
-                onRemoveItem={handleRemoveItem}
-              />
-            </div>
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 font-script">Our Royal Menu</h1>
+            <p className="text-lg md:text-xl text-muted-foreground">
+              Carefully curated dishes crafted with passion and precision
+            </p>
           </div>
 
           <Tabs defaultValue="starters" className="w-full">

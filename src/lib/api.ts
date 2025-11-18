@@ -220,6 +220,68 @@ class ApiClient {
       body: JSON.stringify(order),
     });
   }
+
+  // Users Management
+  async getAllUsers() {
+    return this.request('/users');
+  }
+
+  async getDeliveryBoys() {
+    return this.request('/users/delivery-boys');
+  }
+
+  async updateUserRole(userId: string, role: string) {
+    return this.request(`/users/${userId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+    });
+  }
+
+  async deleteUser(userId: string) {
+    return this.request(`/users/${userId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async createDeliveryBoy(data: any) {
+    return this.request('/users/delivery-boy', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Analytics
+  async getTopDishes(period: string = 'week') {
+    return this.request(`/analytics/top-dishes?period=${period}`);
+  }
+
+  async getRevenue(period: string = 'week') {
+    return this.request(`/analytics/revenue?period=${period}`);
+  }
+
+  async getDeliveryPerformance() {
+    return this.request('/analytics/delivery-performance');
+  }
+
+  // User Profile
+  async getUserProfile() {
+    return this.request('/users/profile');
+  }
+
+  async updateUserProfile(data: any) {
+    return this.request('/users/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getUserOrders() {
+    return this.request('/users/orders');
+  }
+
+  async getOrder(orderId: string) {
+    return this.request(`/orders/${orderId}`);
+  }
 }
 
 export const api = new ApiClient();

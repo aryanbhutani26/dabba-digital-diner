@@ -7,8 +7,11 @@
     "start": "node server.js",
     "seed": "node seed.js",
     "seed:orders": "node seed-orders.js",
+    "seed:navbar": "node seed-navbar.js",
+    "reset-admin": "node reset-admin.js",
     "check": "node check-setup.js",
-    "test": "node test-api.js"
+    "test": "node test-api.js",
+    "test-db": "node test-connection.js"
   },
   "dependencies": {
     "express": "^4.18.2",

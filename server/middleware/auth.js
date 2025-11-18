@@ -22,3 +22,17 @@ export const isAdmin = (req, res, next) => {
   }
   next();
 };
+
+export const isDeliveryBoy = (req, res, next) => {
+  if (req.user.role !== 'delivery_boy' && req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Delivery access required' });
+  }
+  next();
+};
+
+export const isAdminOrDeliveryBoy = (req, res, next) => {
+  if (req.user.role !== 'admin' && req.user.role !== 'delivery_boy') {
+    return res.status(403).json({ error: 'Delivery or admin access required' });
+  }
+  next();
+};

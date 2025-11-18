@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
-import { Menu, X, Settings, LogOut, Package } from "lucide-react";
+import { Menu, X, Settings, LogOut, Package, User } from "lucide-react";
 import { useState, useEffect } from "react";
 // import indiyaLogo from "@/assets/indiya-logo.jpg";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,7 +10,7 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [navItems, setNavItems] = useState<any[]>([]);
   const location = useLocation();
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin, isDeliveryBoy, signOut } = useAuth();
 
   useEffect(() => {
     fetchNavItems();
@@ -62,11 +62,20 @@ const Navbar = () => {
             </Button>
             {user && (
               <>
-                <Button asChild variant="outline" size="icon">
-                  <Link to="/delivery">
-                    <Package className="h-4 w-4" />
-                  </Link>
-                </Button>
+                {!isAdmin && (
+                  <Button asChild variant="outline" size="icon">
+                    <Link to="/account">
+                      <User className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                )}
+                {(isDeliveryBoy || isAdmin) && (
+                  <Button asChild variant="outline" size="icon">
+                    <Link to="/delivery">
+                      <Package className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                )}
                 {isAdmin && (
                   <Button asChild variant="outline" size="icon">
                     <Link to="/admin">
@@ -118,12 +127,22 @@ const Navbar = () => {
             </Button>
             {user && (
               <>
-                <Button asChild variant="outline" className="w-full">
-                  <Link to="/delivery" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Package className="h-4 w-4 mr-2" />
-                    Delivery
-                  </Link>
-                </Button>
+                {!isAdmin && (
+                  <Button asChild variant="outline" className="w-full">
+                    <Link to="/account" onClick={() => setIsMobileMenuOpen(false)}>
+                      <User className="h-4 w-4 mr-2" />
+                      My Account
+                    </Link>
+                  </Button>
+                )}
+                {(isDeliveryBoy || isAdmin) && (
+                  <Button asChild variant="outline" className="w-full">
+                    <Link to="/delivery" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Package className="h-4 w-4 mr-2" />
+                      Delivery
+                    </Link>
+                  </Button>
+                )}
                 {isAdmin && (
                   <Button asChild variant="outline" className="w-full">
                     <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)}>

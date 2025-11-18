@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import heroImage from "@/assets/hero-restaurant.jpg";
 import aboutRestaurant from "@/assets/about-restaurant.jpg";
-import { UtensilsCrossed, Award, Clock, Heart, Tag, Percent, Gift, Calendar, Sparkles, ArrowRight } from "lucide-react";
+import { UtensilsCrossed, Award, Clock, Heart, Tag, Percent, Gift, Sparkles, ArrowRight } from "lucide-react";
 import tiffinHero from "@/assets/tiffin-hero.jpg";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
@@ -132,7 +132,7 @@ const Index = () => {
             <Button asChild variant="hero" size="lg">
               <Link to="/reservations">Reserve Your Table</Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-foreground">
+            <Button asChild variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-black">
               <Link to="/menu">View Our Menu</Link>
             </Button>
           </div>

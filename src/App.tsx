@@ -17,6 +17,8 @@ import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import Delivery from "./pages/Delivery";
 import TrackOrder from "./pages/TrackOrder";
+import Account from "./pages/Account";
+import OrderConfirmation from "./pages/OrderConfirmation";
 
 const queryClient = new QueryClient();
 
@@ -37,9 +39,11 @@ const App = () => (
             <Route path="/reservations" element={<Reservations />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/account" element={<Account />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/delivery" element={<Delivery />} />
             <Route path="/track-order" element={<TrackOrder />} />
+            <Route path="/order-confirmation" element={<OrderConfirmation />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
