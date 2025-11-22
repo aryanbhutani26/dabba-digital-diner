@@ -4,7 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DishDialog from "@/components/DishDialog";
 import CartSheet from "@/components/CartSheet";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
+import { Loader2 } from "lucide-react";
 
 interface Dish {
   name: string;
@@ -28,8 +30,37 @@ const Menu = () => {
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [menuItems, setMenuItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<string[]>([]);
 
-  const menuCategories = {
+  useEffect(() => {
+    fetchMenuItems();
+  }, []);
+
+  const fetchMenuItems = async () => {
+    try {
+      const items = await api.getMenuItems();
+      setMenuItems(items);
+      
+      // Extract unique categories
+      const uniqueCategories = [...new Set(items.map((item: any) => item.category))];
+      setCategories(uniqueCategories);
+    } catch (error) {
+      console.error('Failed to fetch menu items:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Group items by category
+  const menuCategories: Record<string, any[]> = {};
+  categories.forEach(category => {
+    menuCategories[category] = menuItems.filter(item => item.category === category);
+  });
+
+  // Fallback static menu for demo
+  const staticMenuCategories = {
     starters: [
       { 
         name: "Seared Scallops", 
@@ -337,15 +368,25 @@ const Menu = () => {
             </p>
           </div>
 
-          <Tabs defaultValue="starters" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 mb-8 md:mb-12 bg-muted h-auto">
-              <TabsTrigger value="starters" className="text-sm md:text-base py-3">Starters</TabsTrigger>
-              <TabsTrigger value="mains" className="text-sm md:text-base py-3">Mains</TabsTrigger>
-              <TabsTrigger value="desserts" className="text-sm md:text-base py-3">Desserts</TabsTrigger>
-              <TabsTrigger value="drinks" className="text-sm md:text-base py-3">Drinks</TabsTrigger>
-            </TabsList>
+          {loading ? (
+            <div className="flex justify-center items-center py-20">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : menuItems.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-muted-foreground">No menu items available yet. Check back soon!</p>
+            </div>
+          ) : (
+            <Tabs defaultValue={categories[0]} className="w-full">
+              <TabsList className={`grid w-full mb-8 md:mb-12 bg-muted h-auto ${categories.length <= 4 ? `grid-cols-${categories.length}` : 'grid-cols-2 lg:grid-cols-4'}`}>
+                {categories.map((category) => (
+                  <TabsTrigger key={category} value={category} className="text-sm md:text-base py-3 capitalize">
+                    {category}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
 
-            {Object.entries(menuCategories).map(([category, items]) => (
+              {Object.entries(menuCategories).map(([category, items]) => (
               <TabsContent key={category} value={category} className="space-y-4">
                 <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
                   {items.map((item, index) => (
@@ -369,7 +410,9 @@ const Menu = () => {
                             </h3>
                             <p className="text-sm md:text-base text-muted-foreground">{item.description}</p>
                           </div>
-                          <span className="text-xl md:text-2xl font-bold text-accent shrink-0">{item.price}</span>
+                          <span className="text-xl md:text-2xl font-bold text-accent shrink-0">
+                            ₹{typeof item.price === 'number' ? item.price.toFixed(2) : item.price}
+                          </span>
                         </div>
                         {item.allergens && item.allergens.length > 0 && (
                           <div className="mt-3 pt-3 border-t border-border">
@@ -392,7 +435,8 @@ const Menu = () => {
                 </div>
               </TabsContent>
             ))}
-          </Tabs>
+            </Tabs>
+          )}
         </div>
       </main>
 

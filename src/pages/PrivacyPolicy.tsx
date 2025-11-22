@@ -74,9 +74,9 @@ const PrivacyPolicy = () => {
               <p>
                 If you have questions about this Privacy Policy, please contact us at:
                 <br />
-                Email: privacy@indiya.com
+                Email: DineIndiyaRestaurant@gmail.com
                 <br />
-                Phone: +1 (555) 123-4567
+                Phone: +44 (0)1689451403
               </p>
             </section>
           </div>

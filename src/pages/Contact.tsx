@@ -79,7 +79,7 @@ const Contact = () => {
                     <Input
                       id="phone"
                       type="tel"
-                      placeholder="+1 (555) 123-4567"
+                      placeholder="+44 (0)1689451403"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     />
@@ -114,8 +114,10 @@ const Contact = () => {
                   <div>
                     <h3 className="font-semibold text-lg mb-1">Address</h3>
                     <p className="text-muted-foreground">
-                      123 Gourmet Street<br />
-                      Culinary District, CD 12345
+                      Indiya Restaurant<br />
+                      180 High Street<br />
+                      Orpington, BR6 0JW<br />
+                      United Kingdom
                     </p>
                   </div>
                 </CardContent>
@@ -126,7 +128,7 @@ const Contact = () => {
                   <Phone className="w-6 h-6 text-primary flex-shrink-0 mt-1" />
                   <div>
                     <h3 className="font-semibold text-lg mb-1">Phone</h3>
-                    <p className="text-muted-foreground">+1 (555) 123-4567</p>
+                    <p className="text-muted-foreground">+44 (0)1689451403</p>
                   </div>
                 </CardContent>
               </Card>
@@ -136,7 +138,7 @@ const Contact = () => {
                   <Mail className="w-6 h-6 text-primary flex-shrink-0 mt-1" />
                   <div>
                     <h3 className="font-semibold text-lg mb-1">Email</h3>
-                    <p className="text-muted-foreground">info@indiya.com</p>
+                    <p className="text-muted-foreground">DineIndiyaRestaurant@gmail.com</p>
                   </div>
                 </CardContent>
               </Card>
@@ -145,11 +147,15 @@ const Contact = () => {
                 <CardContent className="p-6 flex items-start gap-4">
                   <Clock className="w-6 h-6 text-primary flex-shrink-0 mt-1" />
                   <div>
-                    <h3 className="font-semibold text-lg mb-1">Hours</h3>
+                    <h3 className="font-semibold text-lg mb-1">Opening Hours</h3>
                     <div className="text-muted-foreground space-y-1">
-                      <p>Mon - Fri: 12:00 - 2:30 PM, 5:30 - 10:30 PM</p>
-                      <p>Saturday: 12:00 PM - 10:30 PM</p>
-                      <p>Sunday: 12:00 PM - 10:00 PM</p>
+                      <p className="font-medium">Monday - Friday:</p>
+                      <p className="ml-2">12:00 PM - 2:30 PM (Lunch)</p>
+                      <p className="ml-2">5:30 PM - 10:30 PM (Dinner)</p>
+                      <p className="font-medium mt-2">Saturday:</p>
+                      <p className="ml-2">12:30 PM - 10:30 PM</p>
+                      <p className="font-medium mt-2">Sunday:</p>
+                      <p className="ml-2">12:30 PM - 10:00 PM</p>
                     </div>
                   </div>
                 </CardContent>
@@ -158,13 +164,13 @@ const Contact = () => {
               {/* Map */}
               <div className="rounded-xl overflow-hidden shadow-lg h-64">
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.9476519598093!2d-73.99185368459394!3d40.74844097932847!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c259a9b3117469%3A0xd134e199a405a163!2sEmpire%20State%20Building!5e0!3m2!1sen!2sus!4v1635959343555!5m2!1sen!2sus"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2488.0234567890123!2d0.0987654321!3d51.3765432109!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2s180%20High%20Street%2C%20Orpington%20BR6%200JW!5e0!3m2!1sen!2suk!4v1635959343555!5m2!1sen!2suk"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
                   allowFullScreen
                   loading="lazy"
-                  title="Restaurant Location"
+                  title="Indiya Restaurant Location - 180 High Street, Orpington"
                 />
               </div>
             </div>

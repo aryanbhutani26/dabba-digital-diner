@@ -113,30 +113,32 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-start gap-2 text-sm">
                 <MapPin size={16} className="mt-1 flex-shrink-0" />
-                <span>123 Gourmet Street, Culinary District, CD 12345</span>
+                <span>180 High Street, Orpington, BR6 0JW, United Kingdom</span>
               </li>
               <li className="flex items-center gap-2 text-sm">
                 <Phone size={16} />
-                <span>+1 (555) 123-4567</span>
+                <span>+44 (0)1689451403</span>
               </li>
               <li className="flex items-center gap-2 text-sm">
                 <Mail size={16} />
-                <span>info@indiya.com</span>
+                <span>DineIndiyaRestaurant@gmail.com</span>
               </li>
             </ul>
           </div>
 
           {/* Hours & Social */}
           <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-primary">Hours</h4>
+            <h4 className="text-lg font-semibold text-primary">Opening Hours</h4>
             <div className="text-sm space-y-1">
-              <p>Monday - Friday: 12:00 - 2:30 PM, 5:30 - 10:30 PM</p>
-              <p>Saturday: 12:00 PM - 10:30 PM</p>
-              <p>Sunday: 12:00 PM - 10:00 PM</p>
+              <p>Monday - Friday:</p>
+              <p className="ml-2">12:00 PM - 2:30 PM (Lunch)</p>
+              <p className="ml-2">5:30 PM - 10:30 PM (Dinner)</p>
+              <p className="mt-2">Saturday: 12:30 PM - 10:30 PM</p>
+              <p>Sunday: 12:30 PM - 10:00 PM</p>
             </div>
             <div className="flex gap-4 pt-4">
               <a 
-                href="https://facebook.com/indiyarestaurant" 
+                href="https://facebook.com/indiyaorpington" 
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-accent transition-colors"
@@ -145,22 +147,13 @@ const Footer = () => {
                 <Facebook size={20} />
               </a>
               <a 
-                href="https://instagram.com/indiyarestaurant" 
+                href="https://instagram.com/indiyaorpington" 
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-accent transition-colors"
                 aria-label="Instagram"
               >
                 <Instagram size={20} />
-              </a>
-              <a 
-                href="https://twitter.com/indiyarestaurant" 
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-accent transition-colors"
-                aria-label="Twitter"
-              >
-                <Twitter size={20} />
               </a>
             </div>
           </div>

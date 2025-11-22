@@ -117,7 +117,7 @@ export const Testimonials = () => {
             See more reviews on Google
           </p>
           <a
-            href="https://www.google.com/search?q=indiya+restaurant+reviews"
+            href="https://www.google.com/search?q=indiya+bar+%26+restaurant+restaurant+reviews&sca_esv=18cf15322796edcc&sxsrf=AE3TifOG-XFQJUXl_GIejHNkcUxR8icusg%3A1763815904532&ei=4LEhacqZIKyYseMPh5DkmQU&ved=0ahUKEwjKicGj5oWRAxUsTGwGHQcIOVMQ4dUDCBE&uact=5&oq=indiya+bar+%26+restaurant+restaurant+reviews&gs_lp=Egxnd3Mtd2l6LXNlcnAiKmluZGl5YSBiYXIgJiByZXN0YXVyYW50IHJlc3RhdXJhbnQgcmV2aWV3czIIEAAYCBgNGB4yCxAAGIAEGIYDGIoFMggQABiABBiiBDIFEAAY7wUyCBAAGIAEGKIEMgUQABjvBTIIEAAYgAQYogRI9H5Q0iBYn31wBngBkAEBmAHHAqAB9SGqAQcwLjguOC4zuAEDyAEA-AEBmAIVoAK_HMICBhAAGAoYHsICCBAAGAUYDRgewgIFEAAYgATCAgoQIRigARjDBBgKmAMA4gMFEgExIECSBwc2LjYuNi4zoAfrkAGyBwcwLjYuNi4zuAeHHMIHCDAuMS4xNy4zyAd8&sclient=gws-wiz-serp#lrd=0x47d8ad00417fcdd7:0xb63579faf0baf978,1,,,,"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-primary hover:underline"

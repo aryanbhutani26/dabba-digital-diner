@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,6 +12,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { Plus } from "lucide-react";
@@ -32,23 +39,64 @@ export const AddMenuItemDialog = ({ onSuccess }: AddMenuItemDialogProps) => {
     isActive: true,
   });
   const [loading, setLoading] = useState(false);
+  const [existingCategories, setExistingCategories] = useState<string[]>([]);
+  const [showCustomCategory, setShowCustomCategory] = useState(false);
+  const [customCategory, setCustomCategory] = useState("");
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (open) {
+      fetchCategories();
+    }
+  }, [open]);
+
+  const fetchCategories = async () => {
+    try {
+      const items = await api.getAllMenuItems();
+      const categories = [...new Set(items.map((item: any) => item.category))].filter(Boolean);
+      setExistingCategories(categories);
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+    }
+  };
+
+  const handleCategoryChange = (value: string) => {
+    if (value === "other") {
+      setShowCustomCategory(true);
+      setFormData({ ...formData, category: "" });
+    } else {
+      setShowCustomCategory(false);
+      setFormData({ ...formData, category: value });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
+    const finalCategory = showCustomCategory ? customCategory : formData.category;
+
+    if (!finalCategory) {
+      toast({
+        title: "Error",
+        description: "Please select or enter a category",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
       await api.createMenuItem({
         name: formData.name,
         description: formData.description,
-        price: formData.price,
-        category: formData.category,
+        price: parseFloat(formData.price),
+        category: finalCategory,
         allergens: formData.allergens.split(",").map((a) => a.trim()).filter(Boolean),
         image: formData.image || null,
         isActive: formData.isActive,
       });
-      toast({ title: "Success", description: "Menu item created" });
+      toast({ title: "Success", description: "Menu item created successfully" });
       setOpen(false);
       setFormData({
         name: "",
@@ -59,6 +107,8 @@ export const AddMenuItemDialog = ({ onSuccess }: AddMenuItemDialogProps) => {
         image: "",
         isActive: true,
       });
+      setShowCustomCategory(false);
+      setCustomCategory("");
       onSuccess();
     } catch (error) {
       toast({
@@ -107,26 +157,46 @@ export const AddMenuItemDialog = ({ onSuccess }: AddMenuItemDialogProps) => {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="price">Price</Label>
+              <Label htmlFor="price">Price (₹)</Label>
               <Input
                 id="price"
+                type="number"
+                step="0.01"
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                placeholder="e.g. 24.99"
+                placeholder="e.g. 299.99"
                 required
               />
             </div>
             <div>
               <Label htmlFor="category">Category</Label>
+              <Select onValueChange={handleCategoryChange} value={showCustomCategory ? "other" : formData.category}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {existingCategories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="other">+ Add New Category</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {showCustomCategory && (
+            <div>
+              <Label htmlFor="customCategory">New Category Name</Label>
               <Input
-                id="category"
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                placeholder="e.g. Main Course"
+                id="customCategory"
+                value={customCategory}
+                onChange={(e) => setCustomCategory(e.target.value)}
+                placeholder="e.g. Appetizers, Beverages"
                 required
               />
             </div>
-          </div>
+          )}
           <div>
             <Label htmlFor="allergens">Allergens (comma separated)</Label>
             <Input

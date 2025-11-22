@@ -139,7 +139,7 @@ const Reservations = () => {
                     <Input
                       id="phone"
                       type="tel"
-                      placeholder="+1 (555) 123-4567"
+                      placeholder="+44 (0)1689451403"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       required
@@ -253,8 +253,8 @@ const Reservations = () => {
           <div className="mt-12 text-center">
             <p className="text-muted-foreground">
               For parties of 9 or more, please call us directly at{" "}
-              <a href="tel:+15551234567" className="text-primary hover:underline font-medium">
-                +1 (555) 123-4567
+              <a href="tel:+441689451403" className="text-primary hover:underline font-medium">
+                +44 (0)1689451403
               </a>
             </p>
           </div>

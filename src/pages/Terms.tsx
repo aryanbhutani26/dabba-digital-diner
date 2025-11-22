@@ -92,11 +92,11 @@ const Terms = () => {
               <p>
                 For questions about these Terms & Conditions, contact us at:
                 <br />
-                Email: legal@indiya.com
+                Email: DineIndiyaRestaurant@gmail.com
                 <br />
-                Phone: +1 (555) 123-4567
+                Phone: +44 (0)1689451403
                 <br />
-                Address: 123 Gourmet Street, Culinary District, CD 12345
+                Address: Indiya Restaurant, 180 High Street, Orpington, BR6 0JW, United Kingdom
               </p>
             </section>
           </div>

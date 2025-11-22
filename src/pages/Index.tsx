@@ -36,23 +36,23 @@ const Index = () => {
   const features = [
     {
       icon: <UtensilsCrossed className="w-12 h-12 text-primary" />,
-      title: "Exquisite Cuisine",
-      description: "Crafted by award-winning chefs using the finest ingredients",
+      title: "Authentic Flavours",
+      description: "Rooted in India's rich culinary heritage with traditional recipes",
     },
     {
       icon: <Award className="w-12 h-12 text-primary" />,
-      title: "Award Winning",
-      description: "Recognized globally for culinary excellence and innovation",
-    },
-    {
-      icon: <Clock className="w-12 h-12 text-primary" />,
-      title: "Perfect Timing",
-      description: "Seamless service ensuring every moment is memorable",
+      title: "Quality Ingredients",
+      description: "High-quality ingredients sourced from trusted partners",
     },
     {
       icon: <Heart className="w-12 h-12 text-primary" />,
-      title: "Made with Love",
-      description: "Every dish is a testament to our passion for great food",
+      title: "Heartfelt Hospitality",
+      description: "Friendly service rooted in warmth, respect, and personal touch",
+    },
+    {
+      icon: <Sparkles className="w-12 h-12 text-primary" />,
+      title: "Community Connection",
+      description: "A trusted local brand supporting diverse cultures and initiatives",
     },
   ];
 
@@ -144,9 +144,10 @@ const Index = () => {
       <section className="py-20 px-4 bg-background">
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-4">Why Choose Indiya</h2>
+            <h2 className="text-4xl sm:text-5xl font-bold mb-4">Why Choose Indiya Restaurant?</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Discover what makes us the premier destination for exceptional dining
+              Bringing vibrant Indian flavours to London with exceptional food, heartfelt hospitality, 
+              and strong community connection
             </p>
           </div>
 

@@ -9,7 +9,7 @@ const createTransporter = () => {
   // For production, use real SMTP service (Gmail, SendGrid, etc.)
   
   if (process.env.EMAIL_SERVICE === 'gmail') {
-    return nodemailer.createTransporter({
+    return nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER,
@@ -30,7 +30,7 @@ export const sendOrderConfirmation = async (orderData) => {
     // If no transporter, create test account
     if (!transporter) {
       const testAccount = await nodemailer.createTestAccount();
-      transporter = nodemailer.createTransporter({
+      transporter = nodemailer.createTransport({
         host: 'smtp.ethereal.email',
         port: 587,
         secure: false,
@@ -136,7 +136,7 @@ export const sendReservationConfirmation = async (reservationData) => {
     
     if (!transporter) {
       const testAccount = await nodemailer.createTestAccount();
-      transporter = nodemailer.createTransporter({
+      transporter = nodemailer.createTransport({
         host: 'smtp.ethereal.email',
         port: 587,
         secure: false,
@@ -234,7 +234,7 @@ export const sendDeliveryAssignment = async (deliveryData) => {
     
     if (!transporter) {
       const testAccount = await nodemailer.createTestAccount();
-      transporter = nodemailer.createTransporter({
+      transporter = nodemailer.createTransport({
         host: 'smtp.ethereal.email',
         port: 587,
         secure: false,

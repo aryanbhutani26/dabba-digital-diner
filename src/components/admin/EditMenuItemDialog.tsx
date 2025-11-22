@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,6 +12,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { Edit } from "lucide-react";
@@ -53,7 +60,7 @@ export const EditMenuItemDialog = ({ item, onSuccess }: EditMenuItemDialogProps)
       await api.updateMenuItem(itemId, {
         name: formData.name,
         description: formData.description,
-        price: formData.price,
+        price: parseFloat(formData.price),
         category: formData.category,
         allergens: formData.allergens.split(",").map((a) => a.trim()).filter(Boolean),
         image: formData.image || null,
