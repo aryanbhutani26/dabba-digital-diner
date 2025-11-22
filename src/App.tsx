@@ -20,6 +20,9 @@ import Delivery from "./pages/Delivery";
 import TrackOrder from "./pages/TrackOrder";
 import Account from "./pages/Account";
 import OrderConfirmation from "./pages/OrderConfirmation";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Terms from "./pages/Terms";
+import Specials from "./pages/Specials";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +48,9 @@ const App = () => (
             <Route path="/delivery" element={<Delivery />} />
             <Route path="/track-order" element={<DeliveryBoyRedirect><TrackOrder /></DeliveryBoyRedirect>} />
             <Route path="/order-confirmation" element={<DeliveryBoyRedirect><OrderConfirmation /></DeliveryBoyRedirect>} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/specials" element={<DeliveryBoyRedirect><Specials /></DeliveryBoyRedirect>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

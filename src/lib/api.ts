@@ -257,6 +257,15 @@ class ApiClient {
     });
   }
 
+  // Promotions
+  async getAllPromotions() {
+    return this.request('/promotions/all');
+  }
+
+  async getActivePromotions() {
+    return this.request('/promotions/active');
+  }
+
   // Analytics
   async getTopDishes(period: string = 'week') {
     return this.request(`/analytics/top-dishes?period=${period}`);

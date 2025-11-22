@@ -24,7 +24,9 @@ const Reservations = () => {
     specialRequests: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!date) {
       toast({
@@ -35,20 +37,46 @@ const Reservations = () => {
       return;
     }
 
-    toast({
-      title: "Reservation Requested!",
-      description: "We'll confirm your reservation via email shortly.",
-    });
+    setLoading(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/reservations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          date: format(date, 'yyyy-MM-dd'),
+        }),
+      });
 
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      guests: "",
-      time: "",
-      specialRequests: "",
-    });
-    setDate(undefined);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create reservation');
+      }
+
+      toast({
+        title: "Reservation Confirmed!",
+        description: "Check your email for confirmation details.",
+      });
+
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        guests: "",
+        time: "",
+        specialRequests: "",
+      });
+      setDate(undefined);
+    } catch (error: any) {
+      toast({
+        title: "Reservation Failed",
+        description: error.message || "Please try again or call us directly.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const timeSlots = [
@@ -210,8 +238,8 @@ const Reservations = () => {
                 </div>
 
                 <div className="pt-4">
-                  <Button type="submit" variant="hero" size="lg" className="w-full">
-                    Confirm Reservation
+                  <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading}>
+                    {loading ? "Processing..." : "Confirm Reservation"}
                   </Button>
                 </div>
 

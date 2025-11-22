@@ -18,6 +18,7 @@ import { AddMenuItemDialog } from "@/components/admin/AddMenuItemDialog";
 import { AddCouponDialog } from "@/components/admin/AddCouponDialog";
 import { AddNavItemDialog } from "@/components/admin/AddNavItemDialog";
 import { AddDeliveryBoyDialog } from "@/components/admin/AddDeliveryBoyDialog";
+import { PromotionsManager } from "@/components/admin/PromotionsManager";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -38,6 +39,7 @@ const Admin = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [deliveryBoys, setDeliveryBoys] = useState<any[]>([]);
+  const [promotions, setPromotions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [newOrdersCount, setNewOrdersCount] = useState(0);
 
@@ -65,7 +67,7 @@ const Admin = () => {
     setLoading(true);
     
     try {
-      const [settingsData, couponsData, navData, menuData, usersData, ordersData, deliveryBoysData] = await Promise.all([
+      const [settingsData, couponsData, navData, menuData, usersData, ordersData, deliveryBoysData, promotionsData] = await Promise.all([
         api.getAllSettings(),
         api.getAllCoupons(),
         api.getAllNavbarItems(),
@@ -73,6 +75,7 @@ const Admin = () => {
         api.getAllUsers(),
         api.getAllOrders(),
         api.getDeliveryBoys(),
+        api.getAllPromotions(),
       ]);
 
       const servicesSetting = settingsData.find((s: any) => s.key === "services_visible");
@@ -84,6 +87,7 @@ const Admin = () => {
       setUsers(usersData || []);
       setOrders(ordersData || []);
       setDeliveryBoys(deliveryBoysData || []);
+      setPromotions(promotionsData || []);
       
       // Count new pending orders
       const pendingOrders = ordersData.filter((order: any) => order.status === 'pending');
@@ -224,6 +228,46 @@ const Admin = () => {
     return colors[status] || "bg-gray-500";
   };
 
+  const exportData = (type: string, data: any[]) => {
+    let csvContent = "";
+    let filename = "";
+
+    if (type === 'orders') {
+      filename = `orders_${new Date().toISOString().split('T')[0]}.csv`;
+      csvContent = "Order Number,Customer,Phone,Address,Total,Status,Date\n";
+      data.forEach(order => {
+        csvContent += `"${order.orderNumber}","${order.customerName}","${order.customerPhone}","${order.deliveryAddress}","${order.totalAmount}","${order.status}","${new Date(order.createdAt).toLocaleString()}"\n`;
+      });
+    } else if (type === 'users') {
+      filename = `users_${new Date().toISOString().split('T')[0]}.csv`;
+      csvContent = "Name,Email,Phone,Role,Created\n";
+      data.forEach(user => {
+        csvContent += `"${user.name}","${user.email}","${user.phone || 'N/A'}","${user.role}","${new Date(user.createdAt).toLocaleString()}"\n`;
+      });
+    } else if (type === 'revenue') {
+      filename = `revenue_${new Date().toISOString().split('T')[0]}.csv`;
+      csvContent = "Date,Order Number,Customer,Amount,Status\n";
+      data.forEach(order => {
+        csvContent += `"${new Date(order.createdAt).toLocaleDateString()}","${order.orderNumber}","${order.customerName}","${order.totalAmount}","${order.status}"\n`;
+      });
+    }
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Export Successful",
+      description: `${filename} has been downloaded`,
+    });
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -254,9 +298,11 @@ const Admin = () => {
                   <Badge className="ml-2 bg-red-500">{newOrdersCount}</Badge>
                 )}
               </TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
               <TabsTrigger value="general">General</TabsTrigger>
               <TabsTrigger value="users">Users</TabsTrigger>
               <TabsTrigger value="coupons">Coupons</TabsTrigger>
+              <TabsTrigger value="promotions">Promotions</TabsTrigger>
               <TabsTrigger value="navigation">Navigation</TabsTrigger>
               <TabsTrigger value="menu">Menu</TabsTrigger>
             </TabsList>
@@ -335,6 +381,110 @@ const Admin = () => {
                         </div>
                       ))
                     )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="analytics">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Total Orders</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold">{orders.length}</p>
+                    <p className="text-sm text-muted-foreground">All time</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Total Revenue</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold">
+                      ₹{orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0).toFixed(2)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">All time</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Active Users</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold">{users.filter(u => u.role === 'user').length}</p>
+                    <p className="text-sm text-muted-foreground">Registered customers</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Reports & Export</CardTitle>
+                      <CardDescription>Download detailed reports</CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button onClick={() => exportData('orders', orders)} variant="outline">
+                        Export Orders
+                      </Button>
+                      <Button onClick={() => exportData('users', users)} variant="outline">
+                        Export Users
+                      </Button>
+                      <Button onClick={() => exportData('revenue', orders)} variant="outline">
+                        Export Revenue
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="border rounded-lg p-4">
+                        <h3 className="font-semibold mb-2">Order Statistics</h3>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>Pending:</span>
+                            <span className="font-medium">{orders.filter(o => o.status === 'pending').length}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Assigned:</span>
+                            <span className="font-medium">{orders.filter(o => o.status === 'assigned').length}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Out for Delivery:</span>
+                            <span className="font-medium">{orders.filter(o => o.status === 'out_for_delivery').length}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Delivered:</span>
+                            <span className="font-medium text-green-600">{orders.filter(o => o.status === 'delivered').length}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="border rounded-lg p-4">
+                        <h3 className="font-semibold mb-2">User Statistics</h3>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>Customers:</span>
+                            <span className="font-medium">{users.filter(u => u.role === 'user').length}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Delivery Boys:</span>
+                            <span className="font-medium">{users.filter(u => u.role === 'delivery_boy').length}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Admins:</span>
+                            <span className="font-medium">{users.filter(u => u.role === 'admin').length}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Total Users:</span>
+                            <span className="font-medium">{users.length}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -422,6 +572,10 @@ const Admin = () => {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="promotions">
+              <PromotionsManager promotions={promotions} onRefresh={fetchData} />
             </TabsContent>
 
             <TabsContent value="coupons">

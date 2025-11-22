@@ -9,6 +9,7 @@ import { UtensilsCrossed, Award, Clock, Heart, Tag, Percent, Gift, Sparkles, Arr
 import tiffinHero from "@/assets/tiffin-hero.jpg";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
+import { Testimonials } from "@/components/Testimonials";
 
 const Index = () => {
   const [offers, setOffers] = useState<any[]>([]);
@@ -336,6 +337,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Testimonials Section */}
+      <Testimonials />
 
       {/* CTA Section */}
       <section className="py-20 px-4 bg-gradient-to-br from-primary via-primary to-secondary text-primary-foreground">

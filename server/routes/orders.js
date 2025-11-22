@@ -2,6 +2,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import { getDB } from '../config/db.js';
 import { authenticate, isAdmin, isAdminOrDeliveryBoy } from '../middleware/auth.js';
+import { sendOrderConfirmation, sendDeliveryAssignment } from '../services/emailService.js';
 
 const router = express.Router();
 
@@ -112,6 +113,23 @@ router.patch('/:id/assign', authenticate, isAdmin, async (req, res) => {
       return res.status(404).json({ error: 'Order not found' });
     }
 
+    // Get order details for email
+    const order = await db.collection('orders').findOne({ _id: new ObjectId(req.params.id) });
+    
+    // Send delivery assignment email
+    if (deliveryBoy.email && order) {
+      sendDeliveryAssignment({
+        orderNumber: order.orderNumber,
+        deliveryBoyName: deliveryBoy.name,
+        deliveryBoyEmail: deliveryBoy.email,
+        customerName: order.customerName,
+        customerPhone: order.customerPhone,
+        deliveryAddress: order.deliveryAddress,
+        totalAmount: order.totalAmount,
+        itemCount: order.items?.length || 0,
+      }).catch(err => console.error('Email failed:', err));
+    }
+
     res.json({ 
       message: 'Order assigned successfully',
       deliveryBoyName: deliveryBoy.name 
@@ -212,6 +230,17 @@ router.post('/', authenticate, async (req, res) => {
     };
 
     const result = await db.collection('orders').insertOne(order);
+    
+    // Send order confirmation email
+    const user = await db.collection('users').findOne({ _id: new ObjectId(req.user.userId) });
+    if (user && user.email) {
+      sendOrderConfirmation({
+        ...order,
+        _id: result.insertedId,
+        customerEmail: user.email,
+      }).catch(err => console.error('Email failed:', err));
+    }
+    
     res.status(201).json({ 
       success: true,
       orderId: result.insertedId.toString(),
