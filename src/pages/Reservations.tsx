@@ -39,18 +39,23 @@ const Reservations = () => {
 
     setLoading(true);
     try {
+      const reservationData = {
+        ...formData,
+        date: format(date, 'yyyy-MM-dd'),
+      };
+
+      console.log('Sending reservation data:', reservationData);
+
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/reservations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          date: format(date, 'yyyy-MM-dd'),
-        }),
+        body: JSON.stringify(reservationData),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
+        console.error('Reservation error:', data);
         throw new Error(data.error || 'Failed to create reservation');
       }
 

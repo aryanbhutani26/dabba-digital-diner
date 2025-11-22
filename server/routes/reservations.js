@@ -12,7 +12,21 @@ router.post('/', async (req, res) => {
 
     // Validate required fields
     if (!name || !email || !phone || !date || !time || !guests) {
-      return res.status(400).json({ error: 'All fields are required' });
+      const missing = [];
+      if (!name) missing.push('name');
+      if (!email) missing.push('email');
+      if (!phone) missing.push('phone');
+      if (!date) missing.push('date');
+      if (!time) missing.push('time');
+      if (!guests) missing.push('guests');
+      
+      console.log('Missing fields:', missing);
+      console.log('Received data:', { name, email, phone, date, time, guests });
+      
+      return res.status(400).json({ 
+        error: `Missing required fields: ${missing.join(', ')}`,
+        received: { name, email, phone, date, time, guests }
+      });
     }
 
     // Create reservation
@@ -42,6 +56,45 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Reservation error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all reservations (admin)
+router.get('/all', async (req, res) => {
+  try {
+    const db = getDB();
+    const reservations = await db.collection('reservations')
+      .find()
+      .sort({ createdAt: -1 })
+      .toArray();
+    
+    res.json(reservations);
+  } catch (error) {
+    console.error('Get reservations error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update reservation status (admin)
+router.patch('/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const db = getDB();
+    const { ObjectId } = await import('mongodb');
+
+    const result = await db.collection('reservations').updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: { status, updatedAt: new Date() } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Reservation not found' });
+    }
+
+    res.json({ success: true, message: 'Reservation status updated' });
+  } catch (error) {
+    console.error('Update reservation error:', error);
     res.status(500).json({ error: error.message });
   }
 });

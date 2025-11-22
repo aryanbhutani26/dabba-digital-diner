@@ -14,6 +14,7 @@ import { Testimonials } from "@/components/Testimonials";
 const Index = () => {
   const [offers, setOffers] = useState<any[]>([]);
   const [servicesVisible, setServicesVisible] = useState(true);
+  const [activePromotion, setActivePromotion] = useState<any>(null);
 
   useEffect(() => {
     fetchData();
@@ -21,13 +22,19 @@ const Index = () => {
 
   const fetchData = async () => {
     try {
-      const [couponsData, settingsData] = await Promise.all([
+      const [couponsData, settingsData, promotionsData] = await Promise.all([
         api.getCoupons(),
         api.getSetting('services_visible').catch(() => ({ value: true })),
+        api.getActivePromotions().catch(() => []),
       ]);
 
       setOffers(couponsData);
       setServicesVisible(settingsData.value === true);
+      
+      // Get the first active promotion for the banner
+      if (promotionsData && promotionsData.length > 0) {
+        setActivePromotion(promotionsData[0]);
+      }
     } catch (error) {
       console.error('Failed to fetch data:', error);
     }
@@ -87,28 +94,34 @@ const Index = () => {
     <div className="min-h-screen">
       <Navbar />
 
-      {/* Events Banner */}
-      <section className="relative bg-gradient-to-r from-accent via-primary to-secondary text-primary-foreground py-4 px-4 overflow-hidden mt-20">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent)]" />
-        </div>
-        <div className="container mx-auto max-w-7xl relative z-10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
-            <div className="flex items-center gap-3">
-              <Sparkles className="w-6 h-6 animate-pulse" />
-              <div>
-                <h3 className="text-lg md:text-xl font-bold">Wine & Dine Festival - Dec 15-20</h3>
-                <p className="text-sm opacity-90">Live Music | Special Menu | Extra 15% Off</p>
-              </div>
-            </div>
-            <Button asChild variant="outline" size="sm" className="border-2 border-white text-white hover:bg-white hover:text-primary shrink-0">
-              <Link to="/reservations" className="flex items-center gap-2">
-                Book Now <ArrowRight className="w-4 h-4" />
-              </Link>
-            </Button>
+      {/* Promotions Banner - Only shows if there's an active promotion */}
+      {activePromotion && (
+        <section className="relative bg-gradient-to-r from-accent via-primary to-secondary text-primary-foreground py-4 px-4 overflow-hidden mt-20">
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent)]" />
           </div>
-        </div>
-      </section>
+          <div className="container mx-auto max-w-7xl relative z-10">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-6 h-6 animate-pulse" />
+                <div>
+                  <h3 className="text-lg md:text-xl font-bold">
+                    {activePromotion.title} - {new Date(activePromotion.startDate).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })} to {new Date(activePromotion.endDate).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
+                  </h3>
+                  <p className="text-sm opacity-90">
+                    {activePromotion.description} | {activePromotion.discountType === 'percentage' ? `${activePromotion.discountValue}% Off` : `£${activePromotion.discountValue} Off`}
+                  </p>
+                </div>
+              </div>
+              <Button asChild variant="outline" size="sm" className="border-2 border-white text-white hover:bg-white hover:text-primary shrink-0">
+                <Link to="/reservations" className="flex items-center gap-2">
+                  Book Now <ArrowRight className="w-4 h-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">

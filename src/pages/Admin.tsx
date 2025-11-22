@@ -40,8 +40,13 @@ const Admin = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [deliveryBoys, setDeliveryBoys] = useState<any[]>([]);
   const [promotions, setPromotions] = useState<any[]>([]);
+  const [vouchers, setVouchers] = useState<any[]>([]);
+  const [reservations, setReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [newOrdersCount, setNewOrdersCount] = useState(0);
+  const [newReservationsCount, setNewReservationsCount] = useState(0);
+  const [hasShownNewOrdersToast, setHasShownNewOrdersToast] = useState(false);
+  const [hasShownNewReservationsToast, setHasShownNewReservationsToast] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -52,22 +57,25 @@ const Admin = () => {
       });
       navigate("/");
     }
-  }, [isAdmin, authLoading, navigate, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, authLoading, navigate]);
 
   useEffect(() => {
     if (isAdmin) {
       fetchData();
-      // Auto-refresh every 30 seconds to check for new orders
-      const interval = setInterval(fetchData, 30000);
+      // Auto-refresh every 30 seconds to check for new orders (silent mode)
+      const interval = setInterval(() => fetchData(true), 30000);
       return () => clearInterval(interval);
     }
   }, [isAdmin]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+    }
     
     try {
-      const [settingsData, couponsData, navData, menuData, usersData, ordersData, deliveryBoysData, promotionsData] = await Promise.all([
+      const [settingsData, couponsData, navData, menuData, usersData, ordersData, deliveryBoysData, promotionsData, vouchersData, reservationsData] = await Promise.all([
         api.getAllSettings(),
         api.getAllCoupons(),
         api.getAllNavbarItems(),
@@ -76,6 +84,8 @@ const Admin = () => {
         api.getAllOrders(),
         api.getDeliveryBoys(),
         api.getAllPromotions(),
+        api.getAllVouchers(),
+        api.getAllReservations(),
       ]);
 
       const servicesSetting = settingsData.find((s: any) => s.key === "services_visible");
@@ -88,26 +98,50 @@ const Admin = () => {
       setOrders(ordersData || []);
       setDeliveryBoys(deliveryBoysData || []);
       setPromotions(promotionsData || []);
+      setVouchers(vouchersData || []);
+      setReservations(reservationsData || []);
       
       // Count new pending orders
       const pendingOrders = ordersData.filter((order: any) => order.status === 'pending');
-      setNewOrdersCount(pendingOrders.length);
+      const newPendingCount = pendingOrders.length;
       
-      // Show notification for new orders
-      if (pendingOrders.length > 0) {
+      // Only show notification if there are NEW orders (count increased) and we haven't shown it yet
+      if (newPendingCount > newOrdersCount && !hasShownNewOrdersToast) {
         toast({
           title: "New Orders!",
-          description: `You have ${pendingOrders.length} new order${pendingOrders.length > 1 ? 's' : ''} waiting for assignment`,
+          description: `You have ${newPendingCount} new order${newPendingCount > 1 ? 's' : ''} waiting for assignment`,
+        });
+        setHasShownNewOrdersToast(true);
+      }
+      
+      setNewOrdersCount(newPendingCount);
+      
+      // Count new pending reservations
+      const pendingReservations = reservationsData.filter((res: any) => res.status === 'pending');
+      const newReservationsCount = pendingReservations.length;
+      
+      // Show notification for new reservations
+      if (newReservationsCount > newReservationsCount && !hasShownNewReservationsToast) {
+        toast({
+          title: "New Reservations!",
+          description: `You have ${newReservationsCount} new reservation${newReservationsCount > 1 ? 's' : ''} to review`,
+        });
+        setHasShownNewReservationsToast(true);
+      }
+      
+      setNewReservationsCount(newReservationsCount);
+    } catch (error) {
+      if (!silent) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch data",
+          variant: "destructive",
         });
       }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch data",
-        variant: "destructive",
-      });
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
 
@@ -303,6 +337,12 @@ const Admin = () => {
               <TabsTrigger value="users">Users</TabsTrigger>
               <TabsTrigger value="coupons">Coupons</TabsTrigger>
               <TabsTrigger value="promotions">Promotions</TabsTrigger>
+              <TabsTrigger value="reservations" className="relative">
+                Reservations
+                {newReservationsCount > 0 && (
+                  <Badge className="ml-2 bg-red-500">{newReservationsCount}</Badge>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="navigation">Navigation</TabsTrigger>
               <TabsTrigger value="menu">Menu</TabsTrigger>
             </TabsList>
@@ -612,6 +652,87 @@ const Admin = () => {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="reservations">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Reservations Management</CardTitle>
+                  <CardDescription>View and manage table reservations</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {reservations.length === 0 ? (
+                      <p className="text-center text-muted-foreground py-8">No reservations yet</p>
+                    ) : (
+                      reservations.map((reservation) => (
+                        <div key={reservation._id} className="border rounded-lg p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="space-y-2 flex-1">
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-semibold text-lg">{reservation.name}</h3>
+                                <Badge className={
+                                  reservation.status === 'confirmed' ? 'bg-green-500' :
+                                  reservation.status === 'cancelled' ? 'bg-red-500' :
+                                  'bg-yellow-500'
+                                }>
+                                  {reservation.status}
+                                </Badge>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 text-sm">
+                                <p><strong>Email:</strong> {reservation.email}</p>
+                                <p><strong>Phone:</strong> {reservation.phone}</p>
+                                <p><strong>Date:</strong> {new Date(reservation.date).toLocaleDateString()}</p>
+                                <p><strong>Time:</strong> {reservation.time}</p>
+                                <p><strong>Guests:</strong> {reservation.guests} people</p>
+                                <p><strong>Created:</strong> {new Date(reservation.createdAt).toLocaleString()}</p>
+                              </div>
+                              {reservation.specialRequests && (
+                                <p className="text-sm"><strong>Special Requests:</strong> {reservation.specialRequests}</p>
+                              )}
+                            </div>
+                            <div className="flex gap-2">
+                              {reservation.status === 'pending' && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    onClick={async () => {
+                                      try {
+                                        await api.updateReservationStatus(reservation._id, 'confirmed');
+                                        toast({ title: "Reservation confirmed" });
+                                        fetchData();
+                                      } catch (error) {
+                                        toast({ title: "Error", variant: "destructive" });
+                                      }
+                                    }}
+                                  >
+                                    Confirm
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={async () => {
+                                      try {
+                                        await api.updateReservationStatus(reservation._id, 'cancelled');
+                                        toast({ title: "Reservation cancelled" });
+                                        fetchData();
+                                      } catch (error) {
+                                        toast({ title: "Error", variant: "destructive" });
+                                      }
+                                    }}
+                                  >
+                                    Cancel
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </CardContent>
               </Card>

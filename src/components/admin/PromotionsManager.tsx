@@ -154,7 +154,7 @@ export const PromotionsManager = ({ promotions, onRefresh }: PromotionsManagerPr
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => { setEditingPromotion(null); setFormData({
+              <Button type="button" onClick={() => { setEditingPromotion(null); setFormData({
                 title: "",
                 description: "",
                 discountType: "percentage",
@@ -213,8 +213,8 @@ export const PromotionsManager = ({ promotions, onRefresh }: PromotionsManagerPr
                     <Label>Discount Value</Label>
                     <Input
                       type="number"
-                      value={formData.discountValue}
-                      onChange={(e) => setFormData({ ...formData, discountValue: parseFloat(e.target.value) })}
+                      value={formData.discountValue || ''}
+                      onChange={(e) => setFormData({ ...formData, discountValue: parseFloat(e.target.value) || 0 })}
                       placeholder={formData.discountType === 'percentage' ? '20' : '100'}
                       required
                     />
@@ -241,8 +241,8 @@ export const PromotionsManager = ({ promotions, onRefresh }: PromotionsManagerPr
                     <Label>Min Order Value (₹)</Label>
                     <Input
                       type="number"
-                      value={formData.minOrderValue}
-                      onChange={(e) => setFormData({ ...formData, minOrderValue: parseFloat(e.target.value) })}
+                      value={formData.minOrderValue || ''}
+                      onChange={(e) => setFormData({ ...formData, minOrderValue: parseFloat(e.target.value) || 0 })}
                       placeholder="0"
                     />
                   </div>
@@ -250,8 +250,8 @@ export const PromotionsManager = ({ promotions, onRefresh }: PromotionsManagerPr
                     <Label>Max Discount (₹)</Label>
                     <Input
                       type="number"
-                      value={formData.maxDiscount}
-                      onChange={(e) => setFormData({ ...formData, maxDiscount: parseFloat(e.target.value) })}
+                      value={formData.maxDiscount || ''}
+                      onChange={(e) => setFormData({ ...formData, maxDiscount: parseFloat(e.target.value) || 0 })}
                       placeholder="0 for unlimited"
                     />
                   </div>
@@ -259,8 +259,8 @@ export const PromotionsManager = ({ promotions, onRefresh }: PromotionsManagerPr
                     <Label>Priority</Label>
                     <Input
                       type="number"
-                      value={formData.priority}
-                      onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) })}
+                      value={formData.priority || ''}
+                      onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })}
                       placeholder="0"
                     />
                   </div>

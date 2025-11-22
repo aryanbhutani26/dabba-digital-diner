@@ -279,6 +279,50 @@ class ApiClient {
     return this.request('/analytics/delivery-performance');
   }
 
+  // Vouchers
+  async getAllVouchers() {
+    return this.request('/vouchers/all');
+  }
+
+  async createVoucher(data: any) {
+    return this.request('/vouchers', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteVoucher(id: string) {
+    return this.request(`/vouchers/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async validateVoucher(code: string) {
+    return this.request('/vouchers/validate', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+  }
+
+  async useVoucher(code: string, orderId: string) {
+    return this.request('/vouchers/use', {
+      method: 'POST',
+      body: JSON.stringify({ code, orderId }),
+    });
+  }
+
+  // Reservations
+  async getAllReservations() {
+    return this.request('/reservations/all');
+  }
+
+  async updateReservationStatus(id: string, status: string) {
+    return this.request(`/reservations/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
+
   // User Profile
   async getUserProfile() {
     return this.request('/users/profile');

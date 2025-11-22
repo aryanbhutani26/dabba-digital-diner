@@ -38,7 +38,8 @@ const Delivery = () => {
       });
       navigate("/");
     }
-  }, [user, isAdmin, isDeliveryBoy, authLoading, navigate, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, isAdmin, isDeliveryBoy, authLoading, navigate]);
 
   useEffect(() => {
     if (user) {

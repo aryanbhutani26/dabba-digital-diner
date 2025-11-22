@@ -49,7 +49,7 @@ const DishDialog = ({ dish, open, onOpenChange, onAddToCart }: DishDialogProps) 
     setCurrentImageIndex((prev) => (prev - 1 + displayImages.length) % displayImages.length);
   };
 
-  const priceValue = parseFloat(dish.price.replace(/[$+]/g, ''));
+  const priceValue = typeof dish.price === 'number' ? dish.price : parseFloat(String(dish.price).replace(/[^0-9.]/g, ''));
   const totalPrice = (priceValue * quantity).toFixed(2);
 
   return (
@@ -150,7 +150,7 @@ const DishDialog = ({ dish, open, onOpenChange, onAddToCart }: DishDialogProps) 
                     </Button>
                   </div>
                 </div>
-                <span className="text-2xl sm:text-3xl font-bold text-accent">${totalPrice}</span>
+                <span className="text-2xl sm:text-3xl font-bold text-accent">₹{totalPrice}</span>
               </div>
 
               <Button
