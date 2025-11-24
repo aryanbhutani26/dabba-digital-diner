@@ -136,15 +136,6 @@ npm run dev
 
 ### Fix 3: Verify Environment Variables
 
-**Frontend (.env):**
-```env
-VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
-```
-
-**Backend (server/.env):**
-```env
-STRIPE_SECRET_KEY=sk_test_your_secret_key_here
-```
 
 ---
 
