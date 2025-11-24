@@ -138,12 +138,12 @@ npm run dev
 
 **Frontend (.env):**
 ```env
-VITE_STRIPE_PUBLISHABLE_KEY=pk_test_51SRv7G7G0s7d6TeRISvEKpg3vyJQpxVYbhfV6442Yhwz55TLDtItnw6zYqc3HPYRBkkZiVdjYO7dgWo31IEbev7500dmKW6irn
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
 ```
 
 **Backend (server/.env):**
 ```env
-STRIPE_SECRET_KEY=sk_test_51SRv7G7G0s7d6TeRKTQ4Ez9tHfrhqwKtXSEvZsEmXqGQOeuic4ARv3rlND0HP2XEPynncBzW7klHElCabf6VAE0800TwgaQk2p
+STRIPE_SECRET_KEY=sk_test_your_secret_key_here
 ```
 
 ---
