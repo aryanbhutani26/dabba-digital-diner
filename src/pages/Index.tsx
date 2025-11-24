@@ -257,7 +257,7 @@ const Index = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold mb-1">Affordable Plans</h3>
-                      <p className="text-muted-foreground text-sm">Starting from ₹299/day with various options</p>
+                      <p className="text-muted-foreground text-sm">Starting from £299/day with various options</p>
                     </div>
                   </div>
                 </div>

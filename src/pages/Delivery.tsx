@@ -231,7 +231,7 @@ const Delivery = () => {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-primary">₹{stats.totalEarnings}</div>
+                <div className="text-3xl font-bold text-primary">£{stats.totalEarnings}</div>
                 <p className="text-xs text-muted-foreground mt-1">
                   From delivery fees
                 </p>
@@ -291,7 +291,7 @@ const Delivery = () => {
                               </div>
                               <div className="flex items-center gap-2">
                                 <DollarSign className="h-4 w-4" />
-                                <span>Total: ₹{order.totalAmount} | Delivery Fee: ₹{order.deliveryFee}</span>
+                                <span>Total: £{order.totalAmount} | Delivery Fee: £{order.deliveryFee}</span>
                               </div>
                             </div>
                           </div>
@@ -304,7 +304,7 @@ const Delivery = () => {
                               <ul className="space-y-1 text-sm">
                                 {order.items?.map((item: any, idx: number) => (
                                   <li key={idx}>
-                                    {item.quantity}x {item.name} - ₹{item.price}
+                                    {item.quantity}x {item.name} - £{item.price}
                                   </li>
                                 ))}
                               </ul>

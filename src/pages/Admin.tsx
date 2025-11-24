@@ -317,35 +317,60 @@ const Admin = () => {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <main className="pt-32 pb-20 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2">Admin Panel</h1>
-            <p className="text-muted-foreground">Manage your restaurant's content</p>
+      <main className="pt-24 md:pt-32 pb-20 px-2 sm:px-4">
+        <div className="container mx-auto max-w-7xl">
+          <div className="mb-6 md:mb-8">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">Admin Panel</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Manage your restaurant's content</p>
           </div>
 
-          <Tabs defaultValue="orders" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="orders" className="relative">
-                Orders
-                {newOrdersCount > 0 && (
-                  <Badge className="ml-2 bg-red-500">{newOrdersCount}</Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
-              <TabsTrigger value="general">General</TabsTrigger>
-              <TabsTrigger value="users">Users</TabsTrigger>
-              <TabsTrigger value="coupons">Coupons</TabsTrigger>
-              <TabsTrigger value="promotions">Promotions</TabsTrigger>
-              <TabsTrigger value="reservations" className="relative">
-                Reservations
-                {newReservationsCount > 0 && (
-                  <Badge className="ml-2 bg-red-500">{newReservationsCount}</Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="navigation">Navigation</TabsTrigger>
-              <TabsTrigger value="menu">Menu</TabsTrigger>
-            </TabsList>
+          <Tabs defaultValue="orders" className="space-y-4 md:space-y-6">
+            <div className="overflow-x-auto -mx-2 sm:mx-0">
+              <TabsList className="inline-flex w-full sm:w-auto min-w-full sm:min-w-0 flex-nowrap sm:flex-wrap justify-start sm:justify-center px-2 sm:px-0">
+                <TabsTrigger value="orders" className="relative whitespace-nowrap text-xs sm:text-sm">
+                  <span className="hidden sm:inline">Orders</span>
+                  <span className="sm:hidden">📦</span>
+                  {newOrdersCount > 0 && (
+                    <Badge className="ml-1 sm:ml-2 bg-red-500 text-xs px-1 sm:px-2">{newOrdersCount}</Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="analytics" className="whitespace-nowrap text-xs sm:text-sm">
+                  <span className="hidden sm:inline">Analytics</span>
+                  <span className="sm:hidden">📊</span>
+                </TabsTrigger>
+                <TabsTrigger value="general" className="whitespace-nowrap text-xs sm:text-sm">
+                  <span className="hidden sm:inline">General</span>
+                  <span className="sm:hidden">⚙️</span>
+                </TabsTrigger>
+                <TabsTrigger value="users" className="whitespace-nowrap text-xs sm:text-sm">
+                  <span className="hidden sm:inline">Users</span>
+                  <span className="sm:hidden">👥</span>
+                </TabsTrigger>
+                <TabsTrigger value="coupons" className="whitespace-nowrap text-xs sm:text-sm">
+                  <span className="hidden sm:inline">Coupons</span>
+                  <span className="sm:hidden">🎫</span>
+                </TabsTrigger>
+                <TabsTrigger value="promotions" className="whitespace-nowrap text-xs sm:text-sm">
+                  <span className="hidden sm:inline">Promotions</span>
+                  <span className="sm:hidden">🎉</span>
+                </TabsTrigger>
+                <TabsTrigger value="reservations" className="relative whitespace-nowrap text-xs sm:text-sm">
+                  <span className="hidden sm:inline">Reservations</span>
+                  <span className="sm:hidden">📅</span>
+                  {newReservationsCount > 0 && (
+                    <Badge className="ml-1 sm:ml-2 bg-red-500 text-xs px-1 sm:px-2">{newReservationsCount}</Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="navigation" className="whitespace-nowrap text-xs sm:text-sm">
+                  <span className="hidden sm:inline">Navigation</span>
+                  <span className="sm:hidden">🧭</span>
+                </TabsTrigger>
+                <TabsTrigger value="menu" className="whitespace-nowrap text-xs sm:text-sm">
+                  <span className="hidden sm:inline">Menu</span>
+                  <span className="sm:hidden">🍽️</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="orders">
               <Card>
@@ -382,7 +407,7 @@ const Admin = () => {
                                 <p><strong>Phone:</strong> {order.customerPhone}</p>
                                 <p><strong>Address:</strong> {order.deliveryAddress}</p>
                                 <p><strong>Items:</strong> {order.items?.length} items</p>
-                                <p><strong>Total:</strong> ₹{order.totalAmount}</p>
+                                <p><strong>Total:</strong> £{order.totalAmount}</p>
                                 <p><strong>Ordered:</strong> {new Date(order.createdAt).toLocaleString()}</p>
                               </div>
                             </div>
@@ -443,7 +468,7 @@ const Admin = () => {
                   </CardHeader>
                   <CardContent>
                     <p className="text-3xl font-bold">
-                      ₹{orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0).toFixed(2)}
+                      £{orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0).toFixed(2)}
                     </p>
                     <p className="text-sm text-muted-foreground">All time</p>
                   </CardContent>
@@ -553,63 +578,93 @@ const Admin = () => {
             <TabsContent value="users">
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <CardTitle>User Management</CardTitle>
-                      <CardDescription>Manage users and delivery boys</CardDescription>
+                      <CardTitle className="text-xl sm:text-2xl">User Management</CardTitle>
+                      <CardDescription className="text-sm">Manage users and delivery boys</CardDescription>
                     </div>
                     <AddDeliveryBoyDialog onSuccess={fetchData} />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {users.map((user) => (
                       <div
                         key={user._id}
-                        className="flex items-center justify-between p-4 border rounded-lg"
+                        className="group relative bg-gradient-to-br from-background to-muted/20 border-2 rounded-xl p-5 hover:border-primary/50 hover:shadow-lg transition-all duration-200"
                       >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3">
-                            <h3 className="font-semibold">{user.name}</h3>
-                            <Badge variant={
-                              user.role === 'admin' ? 'default' : 
-                              user.role === 'delivery_boy' ? 'secondary' : 
-                              'outline'
-                            }>
+                        {/* User Avatar */}
+                        <div className="flex items-start gap-4 mb-4">
+                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg shrink-0">
+                            {user.name?.charAt(0).toUpperCase() || 'U'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-base truncate mb-1">{user.name}</h3>
+                            <Badge 
+                              variant={
+                                user.role === 'admin' ? 'default' : 
+                                user.role === 'delivery_boy' ? 'secondary' : 
+                                'outline'
+                              }
+                              className="text-xs"
+                            >
                               {user.role === 'delivery_boy' ? 'Delivery Boy' : 
                                user.role === 'admin' ? 'Admin' : 'User'}
                             </Badge>
                           </div>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                        </div>
+
+                        {/* User Details */}
+                        <div className="space-y-2 mb-4">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span className="text-xs">📧</span>
+                            <span className="truncate">{user.email}</span>
+                          </div>
                           {user.phone && (
-                            <p className="text-sm text-muted-foreground">{user.phone}</p>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <span className="text-xs">📞</span>
+                              <span>{user.phone}</span>
+                            </div>
                           )}
                         </div>
-                        <div className="flex gap-2 items-center">
+
+                        {/* Actions */}
+                        <div className="flex flex-col gap-2 pt-4 border-t">
                           <Select
                             value={user.role}
                             onValueChange={(value) => updateUserRole(user._id, value)}
                           >
-                            <SelectTrigger className="w-[150px]">
-                              <SelectValue />
+                            <SelectTrigger className="w-full text-sm">
+                              <SelectValue placeholder="Change role" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="user">User</SelectItem>
-                              <SelectItem value="delivery_boy">Delivery Boy</SelectItem>
-                              <SelectItem value="admin">Admin</SelectItem>
+                              <SelectItem value="user">👤 User</SelectItem>
+                              <SelectItem value="delivery_boy">🚚 Delivery Boy</SelectItem>
+                              <SelectItem value="admin">👑 Admin</SelectItem>
                             </SelectContent>
                           </Select>
                           <Button
                             variant="destructive"
-                            size="icon"
+                            size="sm"
                             onClick={() => deleteUser(user._id)}
+                            className="w-full"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete User
                           </Button>
                         </div>
                       </div>
                     ))}
                   </div>
+                  
+                  {users.length === 0 && (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-3xl">👥</span>
+                      </div>
+                      <p className="text-muted-foreground">No users yet</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -621,38 +676,73 @@ const Admin = () => {
             <TabsContent value="coupons">
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <CardTitle>Manage Coupons</CardTitle>
-                      <CardDescription>Add, edit, or remove coupons</CardDescription>
+                      <CardTitle className="text-xl sm:text-2xl">Manage Coupons</CardTitle>
+                      <CardDescription className="text-sm">Add, edit, or remove discount coupons</CardDescription>
                     </div>
                     <AddCouponDialog onSuccess={fetchData} />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {coupons.map((coupon) => (
                       <div
                         key={coupon._id || coupon.id}
-                        className="flex items-center justify-between p-4 border rounded-lg"
+                        className="group relative bg-gradient-to-br from-primary/5 to-transparent border-2 rounded-xl p-5 hover:border-primary/50 hover:shadow-lg transition-all duration-200"
                       >
-                        <div>
-                          <h3 className="font-semibold">{coupon.title}</h3>
-                          <p className="text-sm text-muted-foreground">{coupon.code}</p>
+                        {/* Coupon Icon */}
+                        <div className="absolute top-4 right-4 text-3xl opacity-20 group-hover:opacity-40 transition-opacity">
+                          🎫
                         </div>
-                        <div className="flex gap-2">
+
+                        {/* Coupon Details */}
+                        <div className="mb-4">
+                          <Badge variant="secondary" className="mb-3 font-mono font-bold">
+                            {coupon.code}
+                          </Badge>
+                          <h3 className="font-semibold text-lg mb-1">{coupon.title}</h3>
+                          {coupon.subtitle && (
+                            <p className="text-sm text-muted-foreground">{coupon.subtitle}</p>
+                          )}
+                          {coupon.description && (
+                            <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{coupon.description}</p>
+                          )}
+                        </div>
+
+                        {/* Status Badge */}
+                        <div className="mb-4">
+                          <Badge variant={coupon.isActive ? "default" : "secondary"}>
+                            {coupon.isActive ? '✓ Active' : '✗ Inactive'}
+                          </Badge>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-2 pt-4 border-t">
                           <EditCouponDialog coupon={coupon} onSuccess={fetchData} />
                           <Button
                             variant="destructive"
-                            size="icon"
+                            size="sm"
                             onClick={() => deleteCoupon(coupon._id || coupon.id)}
+                            className="flex-1"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
                           </Button>
                         </div>
                       </div>
                     ))}
                   </div>
+                  
+                  {coupons.length === 0 && (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-3xl">🎫</span>
+                      </div>
+                      <p className="text-muted-foreground mb-2">No coupons yet</p>
+                      <p className="text-sm text-muted-foreground">Create your first coupon to offer discounts</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -660,80 +750,146 @@ const Admin = () => {
             <TabsContent value="reservations">
               <Card>
                 <CardHeader>
-                  <CardTitle>Reservations Management</CardTitle>
-                  <CardDescription>View and manage table reservations</CardDescription>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-xl sm:text-2xl">Reservations Management</CardTitle>
+                      <CardDescription className="text-sm">View and manage table reservations</CardDescription>
+                    </div>
+                    {newReservationsCount > 0 && (
+                      <Badge className="bg-red-500 text-white">
+                        {newReservationsCount} New
+                      </Badge>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {reservations.length === 0 ? (
-                      <p className="text-center text-muted-foreground py-8">No reservations yet</p>
-                    ) : (
-                      reservations.map((reservation) => (
-                        <div key={reservation._id} className="border rounded-lg p-4">
-                          <div className="flex items-start justify-between">
-                            <div className="space-y-2 flex-1">
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-semibold text-lg">{reservation.name}</h3>
-                                <Badge className={
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {reservations.map((reservation) => (
+                      <div
+                        key={reservation._id}
+                        className={`group relative bg-gradient-to-br ${
+                          reservation.status === 'confirmed' ? 'from-green-500/10 via-green-500/5 to-background/50 border-green-500/20' :
+                          reservation.status === 'cancelled' ? 'from-red-500/10 via-red-500/5 to-background/50 border-red-500/20' :
+                          'from-yellow-500/10 via-yellow-500/5 to-background/50 border-yellow-500/20'
+                        } border-2 rounded-xl p-5 hover:shadow-lg hover:border-opacity-40 transition-all duration-200 backdrop-blur-sm`}
+                      >
+                        {/* Reservation Icon */}
+                        <div className="absolute top-4 right-4 text-3xl opacity-20 group-hover:opacity-40 transition-opacity">
+                          📅
+                        </div>
+
+                        {/* Guest Info */}
+                        <div className="mb-4">
+                          <div className="flex items-start gap-3 mb-3">
+                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg shrink-0">
+                              {reservation.name?.charAt(0).toUpperCase() || 'G'}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-base truncate mb-1">{reservation.name}</h3>
+                              <Badge 
+                                className={`text-xs ${
                                   reservation.status === 'confirmed' ? 'bg-green-500' :
                                   reservation.status === 'cancelled' ? 'bg-red-500' :
                                   'bg-yellow-500'
-                                }>
-                                  {reservation.status}
-                                </Badge>
-                              </div>
-                              <div className="grid grid-cols-2 gap-2 text-sm">
-                                <p><strong>Email:</strong> {reservation.email}</p>
-                                <p><strong>Phone:</strong> {reservation.phone}</p>
-                                <p><strong>Date:</strong> {new Date(reservation.date).toLocaleDateString()}</p>
-                                <p><strong>Time:</strong> {reservation.time}</p>
-                                <p><strong>Guests:</strong> {reservation.guests} people</p>
-                                <p><strong>Created:</strong> {new Date(reservation.createdAt).toLocaleString()}</p>
-                              </div>
-                              {reservation.specialRequests && (
-                                <p className="text-sm"><strong>Special Requests:</strong> {reservation.specialRequests}</p>
-                              )}
-                            </div>
-                            <div className="flex gap-2">
-                              {reservation.status === 'pending' && (
-                                <>
-                                  <Button
-                                    size="sm"
-                                    onClick={async () => {
-                                      try {
-                                        await api.updateReservationStatus(reservation._id, 'confirmed');
-                                        toast({ title: "Reservation confirmed" });
-                                        fetchData();
-                                      } catch (error) {
-                                        toast({ title: "Error", variant: "destructive" });
-                                      }
-                                    }}
-                                  >
-                                    Confirm
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={async () => {
-                                      try {
-                                        await api.updateReservationStatus(reservation._id, 'cancelled');
-                                        toast({ title: "Reservation cancelled" });
-                                        fetchData();
-                                      } catch (error) {
-                                        toast({ title: "Error", variant: "destructive" });
-                                      }
-                                    }}
-                                  >
-                                    Cancel
-                                  </Button>
-                                </>
-                              )}
+                                }`}
+                              >
+                                {reservation.status === 'confirmed' ? '✓ Confirmed' :
+                                 reservation.status === 'cancelled' ? '✗ Cancelled' :
+                                 '⏳ Pending'}
+                              </Badge>
                             </div>
                           </div>
                         </div>
-                      ))
-                    )}
+
+                        {/* Contact Details */}
+                        <div className="space-y-2 mb-4">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span className="text-xs">📧</span>
+                            <span className="truncate">{reservation.email}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span className="text-xs">📞</span>
+                            <span>{reservation.phone}</span>
+                          </div>
+                        </div>
+
+                        {/* Reservation Details */}
+                        <div className="space-y-2 mb-4 pb-4 border-b">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">📆 Date:</span>
+                            <span className="font-medium">{new Date(reservation.date).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">🕐 Time:</span>
+                            <span className="font-medium">{reservation.time}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">👥 Guests:</span>
+                            <span className="font-medium">{reservation.guests} people</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">📝 Created:</span>
+                            <span className="font-medium text-xs">{new Date(reservation.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+
+                        {/* Special Requests */}
+                        {reservation.specialRequests && (
+                          <div className="mb-4 p-3 bg-muted/30 backdrop-blur-sm rounded-lg border border-border/50">
+                            <p className="text-xs font-semibold mb-1 text-foreground/80">Special Requests:</p>
+                            <p className="text-xs text-muted-foreground line-clamp-2">{reservation.specialRequests}</p>
+                          </div>
+                        )}
+
+                        {/* Actions */}
+                        {reservation.status === 'pending' && (
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              className="flex-1"
+                              onClick={async () => {
+                                try {
+                                  await api.updateReservationStatus(reservation._id, 'confirmed');
+                                  toast({ title: "Reservation confirmed" });
+                                  fetchData();
+                                } catch (error) {
+                                  toast({ title: "Error", variant: "destructive" });
+                                }
+                              }}
+                            >
+                              ✓ Confirm
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="flex-1"
+                              onClick={async () => {
+                                try {
+                                  await api.updateReservationStatus(reservation._id, 'cancelled');
+                                  toast({ title: "Reservation cancelled" });
+                                  fetchData();
+                                } catch (error) {
+                                  toast({ title: "Error", variant: "destructive" });
+                                }
+                              }}
+                            >
+                              ✗ Cancel
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
+                  
+                  {reservations.length === 0 && (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-3xl">📅</span>
+                      </div>
+                      <p className="text-muted-foreground mb-2">No reservations yet</p>
+                      <p className="text-sm text-muted-foreground">Reservations will appear here when customers book tables</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -780,40 +936,80 @@ const Admin = () => {
             <TabsContent value="menu">
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <CardTitle>Menu Items</CardTitle>
-                      <CardDescription>Manage restaurant menu items</CardDescription>
+                      <CardTitle className="text-xl sm:text-2xl">Menu Items</CardTitle>
+                      <CardDescription className="text-sm">Manage restaurant menu items</CardDescription>
                     </div>
                     <AddMenuItemDialog onSuccess={fetchData} />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {menuItems.map((item) => (
                       <div
                         key={item._id || item.id}
-                        className="flex items-center justify-between p-4 border rounded-lg"
+                        className="group relative bg-gradient-to-br from-background to-muted/20 border-2 rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all duration-200"
                       >
-                        <div>
-                          <h3 className="font-semibold">{item.name}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {item.price} • {item.category}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <EditMenuItemDialog item={item} onSuccess={fetchData} />
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => deleteMenuItem(item._id || item.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                        {/* Menu Item Image */}
+                        {item.image && (
+                          <div className="relative h-40 overflow-hidden">
+                            <img 
+                              src={item.image} 
+                              alt={item.name}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
+                            <div className="absolute top-2 right-2">
+                              <Badge variant="secondary" className="bg-background/90 backdrop-blur">
+                                {item.category}
+                              </Badge>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Menu Item Details */}
+                        <div className="p-5">
+                          <h3 className="font-semibold text-lg mb-2 line-clamp-1">{item.name}</h3>
+                          {item.description && (
+                            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{item.description}</p>
+                          )}
+                          
+                          <div className="flex items-center justify-between mb-4">
+                            <span className="text-2xl font-bold text-primary">£{item.price}</span>
+                            {item.isVeg !== undefined && (
+                              <Badge variant={item.isVeg ? "default" : "secondary"} className="text-xs">
+                                {item.isVeg ? '🌱 Veg' : '🍖 Non-Veg'}
+                              </Badge>
+                            )}
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex gap-2 pt-4 border-t">
+                            <EditMenuItemDialog item={item} onSuccess={fetchData} />
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => deleteMenuItem(item._id || item.id)}
+                              className="flex-1"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ))}
                   </div>
+                  
+                  {menuItems.length === 0 && (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-3xl">🍽️</span>
+                      </div>
+                      <p className="text-muted-foreground mb-2">No menu items yet</p>
+                      <p className="text-sm text-muted-foreground">Add your first dish to get started</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

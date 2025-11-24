@@ -150,7 +150,7 @@ const DishDialog = ({ dish, open, onOpenChange, onAddToCart }: DishDialogProps) 
                     </Button>
                   </div>
                 </div>
-                <span className="text-2xl sm:text-3xl font-bold text-accent">₹{totalPrice}</span>
+                <span className="text-2xl sm:text-3xl font-bold text-accent">£{totalPrice}</span>
               </div>
 
               <Button

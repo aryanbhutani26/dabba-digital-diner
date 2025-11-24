@@ -26,7 +26,7 @@ router.post('/', authenticate, isAdmin, async (req, res) => {
       const voucher = {
         code: generateVoucherCode(),
         amount: parseFloat(amount),
-        description: description || `Gift Voucher - ₹${amount}`,
+        description: description || `Gift Voucher - £${amount}`,
         expiryDate: new Date(expiryDate),
         isGift: isGift || false,
         isUsed: false,

@@ -411,7 +411,7 @@ const Menu = () => {
                             <p className="text-sm md:text-base text-muted-foreground">{item.description}</p>
                           </div>
                           <span className="text-xl md:text-2xl font-bold text-accent shrink-0">
-                            ₹{typeof item.price === 'number' ? item.price.toFixed(2) : item.price}
+                            £{typeof item.price === 'number' ? item.price.toFixed(2) : item.price}
                           </span>
                         </div>
                         {item.allergens && item.allergens.length > 0 && (

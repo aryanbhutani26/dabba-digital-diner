@@ -238,7 +238,7 @@ export const PromotionsManager = ({ promotions, onRefresh }: PromotionsManagerPr
                     />
                   </div>
                   <div>
-                    <Label>Min Order Value (₹)</Label>
+                    <Label>Min Order Value (£)</Label>
                     <Input
                       type="number"
                       value={formData.minOrderValue || ''}
@@ -247,7 +247,7 @@ export const PromotionsManager = ({ promotions, onRefresh }: PromotionsManagerPr
                     />
                   </div>
                   <div>
-                    <Label>Max Discount (₹)</Label>
+                    <Label>Max Discount (£)</Label>
                     <Input
                       type="number"
                       value={formData.maxDiscount || ''}
@@ -306,10 +306,10 @@ export const PromotionsManager = ({ promotions, onRefresh }: PromotionsManagerPr
                     </div>
                     <p className="text-sm text-muted-foreground mb-2">{promo.description}</p>
                     <div className="text-sm space-y-1">
-                      <p><strong>Discount:</strong> {promo.discountType === 'percentage' ? `${promo.discountValue}%` : `₹${promo.discountValue}`}</p>
+                      <p><strong>Discount:</strong> {promo.discountType === 'percentage' ? `${promo.discountValue}%` : `£${promo.discountValue}`}</p>
                       <p><strong>Period:</strong> {new Date(promo.startDate).toLocaleDateString()} - {new Date(promo.endDate).toLocaleDateString()}</p>
-                      {promo.minOrderValue > 0 && <p><strong>Min Order:</strong> ₹{promo.minOrderValue}</p>}
-                      {promo.maxDiscount && promo.maxDiscount > 0 && <p><strong>Max Discount:</strong> ₹{promo.maxDiscount}</p>}
+                      {promo.minOrderValue > 0 && <p><strong>Min Order:</strong> £{promo.minOrderValue}</p>}
+                      {promo.maxDiscount && promo.maxDiscount > 0 && <p><strong>Max Discount:</strong> £{promo.maxDiscount}</p>}
                     </div>
                   </div>
                   <div className="flex gap-2">

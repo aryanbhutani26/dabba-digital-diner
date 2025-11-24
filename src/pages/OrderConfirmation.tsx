@@ -158,21 +158,21 @@ const OrderConfirmation = () => {
                       <span>
                         {item.quantity}x {item.name}
                       </span>
-                      <span className="font-medium">₹{item.price * item.quantity}</span>
+                      <span className="font-medium">£{item.price * item.quantity}</span>
                     </div>
                   ))}
                   <div className="pt-3 border-t space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Subtotal</span>
-                      <span>₹{order.totalAmount - order.deliveryFee}</span>
+                      <span>£{order.totalAmount - order.deliveryFee}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Delivery Fee</span>
-                      <span>₹{order.deliveryFee}</span>
+                      <span>£{order.deliveryFee}</span>
                     </div>
                     <div className="flex justify-between font-bold text-lg pt-2 border-t">
                       <span>Total</span>
-                      <span className="text-primary">₹{order.totalAmount}</span>
+                      <span className="text-primary">£{order.totalAmount}</span>
                     </div>
                   </div>
                 </div>

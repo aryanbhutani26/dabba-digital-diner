@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { Loader2, User, MapPin, Package, Plus, Trash2, Truck, FileText, IdCard } from "lucide-react";
+import { AddressInput } from "@/components/AddressInput";
 
 const Account = () => {
   const { user, loading: authLoading, isDeliveryBoy } = useAuth();
@@ -30,6 +31,7 @@ const Account = () => {
     vehicleModel: '',
   });
   const [newAddress, setNewAddress] = useState('');
+  const [addressCoordinates, setAddressCoordinates] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -88,13 +90,18 @@ const Account = () => {
     if (!newAddress.trim()) return;
 
     try {
-      const addresses = [...(profile.addresses || []), newAddress];
+      const addressData = {
+        address: newAddress,
+        coordinates: addressCoordinates
+      };
+      const addresses = [...(profile.addresses || []), addressData];
       await api.updateUserProfile({ addresses });
       toast({
         title: "Success",
         description: "Address added successfully",
       });
       setNewAddress('');
+      setAddressCoordinates(null);
       fetchData();
     } catch (error) {
       toast({
@@ -203,14 +210,19 @@ const Account = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="phone">Phone Number</Label>
+                    <Label htmlFor="phone">Phone Number *</Label>
                     <Input
                       id="phone"
+                      type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       disabled={!editMode}
-                      placeholder="+91 98765 43210"
+                      placeholder="+44 7700 900000"
+                      required
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Required for order delivery and communication
+                    </p>
                   </div>
                   {isDeliveryBoy && (
                     <div className="pt-4 border-t">
@@ -337,35 +349,49 @@ const Account = () => {
                   <CardDescription>Manage your saved addresses</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {profile?.addresses?.map((address: string, index: number) => (
-                    <div
-                      key={index}
-                      className="flex items-start justify-between p-4 border rounded-lg"
-                    >
-                      <div className="flex items-start gap-3">
-                        <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                        <p>{address}</p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteAddress(index)}
+                  {profile?.addresses?.map((address: any, index: number) => {
+                    const addressText = typeof address === 'string' ? address : address.address;
+                    const hasCoordinates = typeof address === 'object' && address.coordinates;
+                    
+                    return (
+                      <div
+                        key={index}
+                        className="flex items-start justify-between p-4 border rounded-lg hover:border-primary/50 transition-colors"
                       >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
+                        <div className="flex items-start gap-3 flex-1">
+                          <MapPin className="h-5 w-5 text-primary mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-sm">{addressText}</p>
+                            {hasCoordinates && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                📍 GPS: {address.coordinates.lat.toFixed(6)}, {address.coordinates.lng.toFixed(6)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteAddress(index)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    );
+                  })}
 
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Enter new address"
+                  <div className="pt-4 border-t">
+                    <AddressInput
                       value={newAddress}
-                      onChange={(e) => setNewAddress(e.target.value)}
+                      onChange={(value, coordinates) => {
+                        setNewAddress(value);
+                        setAddressCoordinates(coordinates || null);
+                      }}
+                      onAdd={handleAddAddress}
+                      placeholder="Enter your delivery address"
+                      showAddButton={true}
                     />
-                    <Button onClick={handleAddAddress}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -409,7 +435,7 @@ const Account = () => {
                           </div>
                           <div className="space-y-1 text-sm">
                             <p>{order.items?.length} items</p>
-                            <p className="font-semibold">Total: ₹{order.totalAmount}</p>
+                            <p className="font-semibold">Total: £{order.totalAmount}</p>
                           </div>
                         </div>
                       ))}

@@ -221,21 +221,21 @@ const TrackOrder = () => {
                     {order.items?.map((item: any, idx: number) => (
                       <div key={idx} className="flex justify-between text-sm">
                         <span>{item.quantity}x {item.name}</span>
-                        <span className="font-medium">₹{(item.price * item.quantity).toFixed(2)}</span>
+                        <span className="font-medium">£{(item.price * item.quantity).toFixed(2)}</span>
                       </div>
                     ))}
                     <div className="pt-3 border-t space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>Subtotal</span>
-                        <span>₹{(order.totalAmount - order.deliveryFee).toFixed(2)}</span>
+                        <span>£{(order.totalAmount - order.deliveryFee).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Delivery Fee</span>
-                        <span>₹{order.deliveryFee}</span>
+                        <span>£{order.deliveryFee}</span>
                       </div>
                       <div className="flex justify-between font-semibold pt-2 border-t">
                         <span>Total</span>
-                        <span className="text-primary">₹{order.totalAmount}</span>
+                        <span className="text-primary">£{order.totalAmount}</span>
                       </div>
                     </div>
                   </div>

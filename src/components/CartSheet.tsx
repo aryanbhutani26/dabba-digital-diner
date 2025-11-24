@@ -8,6 +8,9 @@ import { api } from "@/lib/api";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { Elements } from '@stripe/react-stripe-js';
+import stripePromise from '@/lib/stripe';
+import { PaymentForm } from '@/components/PaymentForm';
 
 interface CartItem {
   name: string;
@@ -36,6 +39,9 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
   const [discount, setDiscount] = useState(0);
   const [showCoupons, setShowCoupons] = useState(false);
   const [availableCoupons, setAvailableCoupons] = useState<any[]>([]);
+  const [showPayment, setShowPayment] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [currentOrder, setCurrentOrder] = useState<any>(null);
 
   useEffect(() => {
     if (user) {
@@ -150,6 +156,8 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
   };
 
   const handleCheckout = async () => {
+    console.log('🚀 handleCheckout called');
+    
     if (!user) {
       toast({
         title: "Sign in required",
@@ -157,6 +165,38 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
         variant: "destructive",
       });
       navigate("/auth");
+      return;
+    }
+
+    // Get user profile to check phone number
+    try {
+      const profile = await api.getUserProfile();
+      
+      if (!profile.phone || profile.phone.trim() === '') {
+        toast({
+          title: "Phone number required",
+          description: "Please add your phone number in your account settings",
+          variant: "destructive",
+        });
+        navigate("/account");
+        return;
+      }
+
+      if (!profile.addresses || profile.addresses.length === 0) {
+        toast({
+          title: "Address required",
+          description: "Please add a delivery address first",
+          variant: "destructive",
+        });
+        navigate("/account");
+        return;
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to verify account details",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -172,51 +212,114 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
 
     try {
       setProcessingOrder(true);
+      console.log('💳 Creating payment intent...');
 
       // Get user profile for customer details
       const profile = await api.getUserProfile();
+      const finalAmount = totalPrice - discount + 50; // Subtract discount, add delivery fee
+      
+      console.log('💰 Final amount:', finalAmount);
+      console.log('📧 Customer email:', profile.email || user.email);
 
-      // Create order with mock payment
-      const orderData = {
+      // Create payment intent
+      const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/payment/create-payment-intent`;
+      console.log('🌐 API URL:', apiUrl);
+      
+      const paymentResponse = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({
+          amount: finalAmount,
+          customerEmail: profile.email || user.email,
+        }),
+      });
+
+      console.log('📡 Payment response status:', paymentResponse.status);
+      const paymentData = await paymentResponse.json();
+      console.log('📦 Payment data:', paymentData);
+      
+      if (!paymentResponse.ok) {
+        throw new Error(paymentData.error || 'Failed to create payment');
+      }
+
+      // Store order data for after payment
+      setCurrentOrder({
         items: items.map(item => ({
           name: item.name,
           price: typeof item.price === 'number' ? item.price : parseFloat(String(item.price).replace(/[^0-9.]/g, '')),
           quantity: item.quantity,
           image: item.image,
         })),
-        totalAmount: totalPrice - discount + 50, // Subtract discount, add delivery fee
+        totalAmount: finalAmount,
         discount: discount,
         couponCode: appliedCoupon?.code || null,
         deliveryAddress: addresses[selectedAddress],
         customerName: profile.name || user.name,
         customerPhone: profile.phone || 'Not provided',
-        paymentMethod: 'mock',
-        paymentStatus: 'completed',
-      };
-
-      const order = await api.createOrder(orderData);
-
-      toast({
-        title: "Order placed successfully!",
-        description: `Order #${order.orderNumber} is being prepared`,
+        paymentMethod: 'stripe',
+        paymentStatus: 'pending',
+        paymentIntentId: paymentData.paymentIntentId,
       });
 
-      // Clear cart
-      if (onClearCart) {
-        onClearCart();
-      }
-
-      // Navigate to order confirmation
-      navigate(`/order-confirmation?id=${order.orderId}`);
+      console.log('✅ Setting client secret and showing payment form');
+      setClientSecret(paymentData.clientSecret);
+      setShowPayment(true);
     } catch (error: any) {
+      console.error('❌ Payment initialization error:', error);
       toast({
-        title: "Order failed",
-        description: error.message || "Failed to place order. Please try again.",
+        title: "Failed to initialize payment",
+        description: error.message || "Something went wrong",
         variant: "destructive",
       });
     } finally {
       setProcessingOrder(false);
     }
+  };
+
+  const handlePaymentSuccess = async (paymentIntentId: string) => {
+    try {
+      // Create the order after successful payment
+      const order = await api.createOrder({
+        ...currentOrder,
+        paymentIntentId,
+        paymentStatus: 'completed',
+      });
+
+      toast({
+        title: "Order placed successfully!",
+        description: `Order #${order.orderNumber} has been confirmed and paid`,
+      });
+
+      // Clear cart and payment state
+      if (onClearCart) {
+        onClearCart();
+      }
+      setShowPayment(false);
+      setClientSecret(null);
+      setCurrentOrder(null);
+
+      // Navigate to order confirmation
+      navigate(`/order-confirmation?id=${order.orderId}`);
+    } catch (error: any) {
+      toast({
+        title: "Order creation failed",
+        description: "Payment succeeded but order creation failed. Please contact support.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePaymentError = (error: string) => {
+    toast({
+      title: "Payment Failed",
+      description: error,
+      variant: "destructive",
+    });
+    setShowPayment(false);
+    setClientSecret(null);
   };
 
   return (
@@ -234,9 +337,11 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-full sm:max-w-lg">
+      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader>
-          <SheetTitle className="text-2xl">Your Cart</SheetTitle>
+          <SheetTitle className="text-2xl">
+            {showPayment ? "Complete Payment" : "Your Cart"}
+          </SheetTitle>
         </SheetHeader>
         
         <div className="mt-8 space-y-4">
@@ -400,49 +505,67 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                   
                   {/* Available Coupons Modal */}
                   {showCoupons && (
-                    <div className="mt-4 p-4 border rounded-lg bg-muted/50 max-h-64 overflow-y-auto">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-semibold">Available Coupons</h4>
-                        <Button 
-                          onClick={() => setShowCoupons(false)} 
-                          variant="ghost" 
-                          size="sm"
-                          type="button"
-                        >
-                          Close
-                        </Button>
-                      </div>
-                      <div className="space-y-2">
-                        {availableCoupons.length === 0 ? (
-                          <p className="text-sm text-muted-foreground text-center py-4">
-                            No coupons available at the moment
-                          </p>
-                        ) : (
-                          availableCoupons.map((coupon) => (
-                            <div 
-                              key={coupon._id}
-                              className="p-3 border rounded-lg bg-white hover:border-primary cursor-pointer transition-colors"
-                              onClick={() => selectCoupon(coupon)}
-                            >
-                              <div className="flex items-center justify-between mb-1">
-                                <Badge variant="outline" className="font-mono">
-                                  {coupon.code}
-                                </Badge>
-                                <span className="text-sm font-semibold text-primary">
-                                  {coupon.title}
-                                </span>
+                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowCoupons(false)}>
+                      <div className="bg-background rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        <div className="sticky top-0 bg-background border-b px-6 py-4 flex items-center justify-between">
+                          <h3 className="text-lg font-semibold">Available Coupons</h3>
+                          <Button 
+                            onClick={() => setShowCoupons(false)} 
+                            variant="ghost" 
+                            size="icon"
+                            type="button"
+                            className="h-8 w-8"
+                          >
+                            <span className="sr-only">Close</span>
+                            ✕
+                          </Button>
+                        </div>
+                        <div className="p-6 overflow-y-auto max-h-[calc(80vh-80px)]">
+                          {availableCoupons.length === 0 ? (
+                            <div className="text-center py-12">
+                              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span className="text-3xl">🎫</span>
                               </div>
-                              <p className="text-xs text-muted-foreground">
-                                {coupon.subtitle}
-                              </p>
-                              {coupon.description && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {coupon.description}
-                                </p>
-                              )}
+                              <p className="text-muted-foreground">No coupons available at the moment</p>
+                              <p className="text-sm text-muted-foreground mt-1">Check back later for exciting offers!</p>
                             </div>
-                          ))
-                        )}
+                          ) : (
+                            <div className="space-y-3">
+                              {availableCoupons.map((coupon) => (
+                                <div 
+                                  key={coupon._id}
+                                  className="group relative p-4 border-2 rounded-xl bg-gradient-to-br from-primary/5 to-transparent hover:from-primary/10 hover:border-primary cursor-pointer transition-all duration-200 hover:shadow-md"
+                                  onClick={() => selectCoupon(coupon)}
+                                >
+                                  <div className="flex items-start justify-between gap-3 mb-2">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <Badge variant="secondary" className="font-mono font-bold text-sm px-3 py-1">
+                                          {coupon.code}
+                                        </Badge>
+                                      </div>
+                                      <h4 className="font-semibold text-base text-primary group-hover:text-primary/80 transition-colors">
+                                        {coupon.title}
+                                      </h4>
+                                    </div>
+                                    <div className="text-2xl">🎉</div>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground mb-2">
+                                    {coupon.subtitle}
+                                  </p>
+                                  {coupon.description && (
+                                    <p className="text-xs text-muted-foreground border-t pt-2 mt-2">
+                                      {coupon.description}
+                                    </p>
+                                  )}
+                                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span className="text-xs font-medium text-primary">Click to apply →</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -471,14 +594,54 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
               </div>
               
               <div className="space-y-4">
-                <Button 
-                  className="w-full" 
-                  size="lg"
-                  onClick={handleCheckout}
-                  disabled={processingOrder}
-                >
-                  {processingOrder ? "Processing..." : "Proceed to Checkout"}
-                </Button>
+                {!showPayment ? (
+                  <Button 
+                    className="w-full" 
+                    size="lg"
+                    onClick={handleCheckout}
+                    disabled={processingOrder}
+                  >
+                    {processingOrder ? "Processing..." : "Proceed to Payment"}
+                  </Button>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold">Complete Payment</h3>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => {
+                          setShowPayment(false);
+                          setClientSecret(null);
+                        }}
+                      >
+                        Back to Cart
+                      </Button>
+                    </div>
+                    {!clientSecret ? (
+                      <div className="text-center py-8">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-sm text-muted-foreground">Loading payment form...</p>
+                      </div>
+                    ) : (
+                      <Elements 
+                        stripe={stripePromise} 
+                        options={{
+                          clientSecret,
+                          appearance: {
+                            theme: 'stripe',
+                          },
+                        }}
+                      >
+                        <PaymentForm
+                          amount={totalPrice - discount + 50}
+                          onSuccess={handlePaymentSuccess}
+                          onError={handlePaymentError}
+                        />
+                      </Elements>
+                    )}
+                  </div>
+                )}
               </div>
             </>
           )}

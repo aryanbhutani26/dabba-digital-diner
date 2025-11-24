@@ -80,19 +80,19 @@ export const sendOrderConfirmation = async (orderData) => {
                 ${orderData.items.map(item => `
                   <div class="item">
                     <span>${item.quantity}x ${item.name}</span>
-                    <span>₹${(item.price * item.quantity).toFixed(2)}</span>
+                    <span>£${(item.price * item.quantity).toFixed(2)}</span>
                   </div>
                 `).join('')}
                 
                 <div class="item">
                   <span>Delivery Fee</span>
-                  <span>₹${orderData.deliveryFee}</span>
+                  <span>£${orderData.deliveryFee}</span>
                 </div>
                 
                 <div class="total">
                   <div class="item" style="border: none;">
                     <span>Total</span>
-                    <span>₹${orderData.totalAmount}</span>
+                    <span>£${orderData.totalAmount}</span>
                   </div>
                 </div>
               </div>
@@ -286,7 +286,7 @@ export const sendDeliveryAssignment = async (deliveryData) => {
                   <strong>Address:</strong><br>${deliveryData.deliveryAddress}
                 </div>
                 <div class="detail-row">
-                  <strong>Order Total:</strong> ₹${deliveryData.totalAmount}
+                  <strong>Order Total:</strong> £${deliveryData.totalAmount}
                 </div>
                 <div class="detail-row">
                   <strong>Items:</strong> ${deliveryData.itemCount} items

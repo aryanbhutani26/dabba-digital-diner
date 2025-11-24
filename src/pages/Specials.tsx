@@ -43,7 +43,7 @@ const Specials = () => {
                     <Badge className="bg-white text-primary">
                       {promo.discountType === 'percentage' 
                         ? `${promo.discountValue}% OFF` 
-                        : `₹${promo.discountValue} OFF`}
+                        : `£${promo.discountValue} OFF`}
                     </Badge>
                   </div>
                   <h2 className="text-2xl font-bold mb-2">{promo.title}</h2>
@@ -58,13 +58,13 @@ const Specials = () => {
                     {promo.minOrderValue > 0 && (
                       <div className="flex items-center gap-2">
                         <Tag className="w-4 h-4 text-muted-foreground" />
-                        <span>Min order: ₹{promo.minOrderValue}</span>
+                        <span>Min order: £{promo.minOrderValue}</span>
                       </div>
                     )}
                     {promo.maxDiscount && promo.maxDiscount > 0 && (
                       <div className="flex items-center gap-2">
                         <TrendingDown className="w-4 h-4 text-muted-foreground" />
-                        <span>Max discount: ₹{promo.maxDiscount}</span>
+                        <span>Max discount: £{promo.maxDiscount}</span>
                       </div>
                     )}
                   </div>
