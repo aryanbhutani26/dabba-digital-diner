@@ -452,107 +452,218 @@ const Admin = () => {
             </TabsContent>
 
             <TabsContent value="analytics">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Total Orders</CardTitle>
+              {/* Key Metrics Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                {/* Total Orders */}
+                <Card className="relative overflow-hidden bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-background border-blue-500/20 hover:border-blue-500/40 transition-all">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full -mr-16 -mt-16"></div>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Total Orders</CardTitle>
+                      <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                        <span className="text-xl">📦</span>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-3xl font-bold">{orders.length}</p>
-                    <p className="text-sm text-muted-foreground">All time</p>
+                    <p className="text-3xl font-bold text-blue-600">{orders.length}</p>
+                    <p className="text-xs text-muted-foreground mt-1">All time orders</p>
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Total Revenue</CardTitle>
+
+                {/* Total Revenue */}
+                <Card className="relative overflow-hidden bg-gradient-to-br from-green-500/10 via-green-500/5 to-background border-green-500/20 hover:border-green-500/40 transition-all">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full -mr-16 -mt-16"></div>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
+                      <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                        <span className="text-xl">💰</span>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-3xl font-bold">
+                    <p className="text-3xl font-bold text-green-600">
                       £{orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0).toFixed(2)}
                     </p>
-                    <p className="text-sm text-muted-foreground">All time</p>
+                    <p className="text-xs text-muted-foreground mt-1">Total earnings</p>
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Active Users</CardTitle>
+
+                {/* Active Customers */}
+                <Card className="relative overflow-hidden bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-background border-purple-500/20 hover:border-purple-500/40 transition-all">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full -mr-16 -mt-16"></div>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Customers</CardTitle>
+                      <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+                        <span className="text-xl">👥</span>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-3xl font-bold">{users.filter(u => u.role === 'user').length}</p>
-                    <p className="text-sm text-muted-foreground">Registered customers</p>
+                    <p className="text-3xl font-bold text-purple-600">{users.filter(u => u.role === 'user').length}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Registered users</p>
+                  </CardContent>
+                </Card>
+
+                {/* Delivery Boys */}
+                <Card className="relative overflow-hidden bg-gradient-to-br from-orange-500/10 via-orange-500/5 to-background border-orange-500/20 hover:border-orange-500/40 transition-all">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full -mr-16 -mt-16"></div>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Delivery Boys</CardTitle>
+                      <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
+                        <span className="text-xl">🚚</span>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-orange-600">{users.filter(u => u.role === 'delivery_boy').length}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Active drivers</p>
                   </CardContent>
                 </Card>
               </div>
 
-              <Card>
+              {/* Export Section */}
+              <Card className="mb-6">
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <CardTitle>Reports & Export</CardTitle>
-                      <CardDescription>Download detailed reports</CardDescription>
+                      <CardTitle className="text-xl flex items-center gap-2">
+                        <span>📊</span> Reports & Export
+                      </CardTitle>
+                      <CardDescription className="text-sm">Download detailed reports in CSV format</CardDescription>
                     </div>
-                    <div className="flex gap-2">
-                      <Button onClick={() => exportData('orders', orders)} variant="outline">
-                        Export Orders
+                    <div className="flex flex-wrap gap-2">
+                      <Button onClick={() => exportData('orders', orders)} variant="outline" size="sm" className="border-primary/20 hover:border-primary/40">
+                        <span className="mr-2">📦</span> Export Orders
                       </Button>
-                      <Button onClick={() => exportData('users', users)} variant="outline">
-                        Export Users
+                      <Button onClick={() => exportData('users', users)} variant="outline" size="sm" className="border-primary/20 hover:border-primary/40">
+                        <span className="mr-2">👥</span> Export Users
                       </Button>
-                      <Button onClick={() => exportData('revenue', orders)} variant="outline">
-                        Export Revenue
+                      <Button onClick={() => exportData('revenue', orders)} variant="outline" size="sm" className="border-primary/20 hover:border-primary/40">
+                        <span className="mr-2">💰</span> Export Revenue
                       </Button>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="border rounded-lg p-4">
-                        <h3 className="font-semibold mb-2">Order Statistics</h3>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span>Pending:</span>
-                            <span className="font-medium">{orders.filter(o => o.status === 'pending').length}</span>
+              </Card>
+
+              {/* Statistics Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Order Statistics */}
+                <Card className="bg-gradient-to-br from-background to-muted/20">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <span>📊</span> Order Statistics
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {/* Pending */}
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                            <span className="text-lg">⏳</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span>Assigned:</span>
-                            <span className="font-medium">{orders.filter(o => o.status === 'assigned').length}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Out for Delivery:</span>
-                            <span className="font-medium">{orders.filter(o => o.status === 'out_for_delivery').length}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Delivered:</span>
-                            <span className="font-medium text-green-600">{orders.filter(o => o.status === 'delivered').length}</span>
-                          </div>
+                          <span className="font-medium">Pending</span>
                         </div>
+                        <span className="text-2xl font-bold text-yellow-600">{orders.filter(o => o.status === 'pending').length}</span>
                       </div>
-                      <div className="border rounded-lg p-4">
-                        <h3 className="font-semibold mb-2">User Statistics</h3>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span>Customers:</span>
-                            <span className="font-medium">{users.filter(u => u.role === 'user').length}</span>
+
+                      {/* Assigned */}
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                            <span className="text-lg">📋</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span>Delivery Boys:</span>
-                            <span className="font-medium">{users.filter(u => u.role === 'delivery_boy').length}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Admins:</span>
-                            <span className="font-medium">{users.filter(u => u.role === 'admin').length}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Total Users:</span>
-                            <span className="font-medium">{users.length}</span>
-                          </div>
+                          <span className="font-medium">Assigned</span>
                         </div>
+                        <span className="text-2xl font-bold text-blue-600">{orders.filter(o => o.status === 'assigned').length}</span>
+                      </div>
+
+                      {/* Out for Delivery */}
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
+                            <span className="text-lg">🚚</span>
+                          </div>
+                          <span className="font-medium">Out for Delivery</span>
+                        </div>
+                        <span className="text-2xl font-bold text-orange-600">{orders.filter(o => o.status === 'out_for_delivery').length}</span>
+                      </div>
+
+                      {/* Delivered */}
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                            <span className="text-lg">✅</span>
+                          </div>
+                          <span className="font-medium">Delivered</span>
+                        </div>
+                        <span className="text-2xl font-bold text-green-600">{orders.filter(o => o.status === 'delivered').length}</span>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+
+                {/* User Statistics */}
+                <Card className="bg-gradient-to-br from-background to-muted/20">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <span>👥</span> User Statistics
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {/* Customers */}
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+                            <span className="text-lg">👤</span>
+                          </div>
+                          <span className="font-medium">Customers</span>
+                        </div>
+                        <span className="text-2xl font-bold text-purple-600">{users.filter(u => u.role === 'user').length}</span>
+                      </div>
+
+                      {/* Delivery Boys */}
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
+                            <span className="text-lg">🚚</span>
+                          </div>
+                          <span className="font-medium">Delivery Boys</span>
+                        </div>
+                        <span className="text-2xl font-bold text-orange-600">{users.filter(u => u.role === 'delivery_boy').length}</span>
+                      </div>
+
+                      {/* Admins */}
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                            <span className="text-lg">👑</span>
+                          </div>
+                          <span className="font-medium">Admins</span>
+                        </div>
+                        <span className="text-2xl font-bold text-red-600">{users.filter(u => u.role === 'admin').length}</span>
+                      </div>
+
+                      {/* Total Users */}
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-primary/10 border border-primary/20">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                            <span className="text-lg">📊</span>
+                          </div>
+                          <span className="font-medium">Total Users</span>
+                        </div>
+                        <span className="text-2xl font-bold text-primary">{users.length}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
 
             <TabsContent value="general">

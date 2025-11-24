@@ -130,7 +130,7 @@ export const AddCouponDialog = ({ onSuccess }: AddCouponDialogProps) => {
               Common icons: Percent, Gift, Tag, Star, Sparkles
             </p>
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
