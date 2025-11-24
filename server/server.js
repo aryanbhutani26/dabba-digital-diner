@@ -34,6 +34,7 @@ import promotionRoutes from './routes/promotions.js';
 import voucherRoutes from './routes/vouchers.js';
 import blogRoutes from './routes/blog.js';
 import paymentRoutes from './routes/payment.js';
+import dabbaServicesRoutes from './routes/dabbaServices.js';
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -50,6 +51,7 @@ app.use('/api/promotions', promotionRoutes);
 app.use('/api/vouchers', voucherRoutes);
 app.use('/api/blog', blogRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/dabba-services', dabbaServicesRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

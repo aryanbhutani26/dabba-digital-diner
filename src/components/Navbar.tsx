@@ -9,11 +9,13 @@ import { api } from "@/lib/api";
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [navItems, setNavItems] = useState<any[]>([]);
+  const [servicesEnabled, setServicesEnabled] = useState(false);
   const location = useLocation();
   const { user, isAdmin, isDeliveryBoy, signOut } = useAuth();
 
   useEffect(() => {
     fetchNavItems();
+    fetchServicesVisibility();
   }, []);
 
   const fetchNavItems = async () => {
@@ -22,6 +24,16 @@ const Navbar = () => {
       setNavItems(data);
     } catch (error) {
       console.error('Failed to fetch navbar items:', error);
+    }
+  };
+
+  const fetchServicesVisibility = async () => {
+    try {
+      const { enabled } = await api.getServicesVisibility();
+      setServicesEnabled(enabled);
+    } catch (error) {
+      console.error('Failed to fetch services visibility:', error);
+      setServicesEnabled(false);
     }
   };
 
@@ -46,17 +58,25 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
-            {!isDeliveryBoy && navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`text-base font-medium transition-colors hover:text-primary ${
-                  isActive(item.path) ? "text-primary" : "text-foreground"
-                }`}
-              >
-                {item.name}
-              </Link>
-            ))}
+            {!isDeliveryBoy && navItems
+              .filter(item => {
+                // Hide Services link if services are disabled
+                if (item.path === '/services' && !servicesEnabled) {
+                  return false;
+                }
+                return true;
+              })
+              .map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`text-base font-medium transition-colors hover:text-primary ${
+                    isActive(item.path) ? "text-primary" : "text-foreground"
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              ))}
             {!isDeliveryBoy && (
               <Button asChild variant="hero" size="default">
                 <Link to="/reservations">Book a Table</Link>
@@ -71,7 +91,7 @@ const Navbar = () => {
                     </Link>
                   </Button>
                 )}
-                {(isDeliveryBoy || isAdmin) && (
+                {isDeliveryBoy && !isAdmin && (
                   <Button asChild variant="outline" size="icon">
                     <Link to="/delivery">
                       <Package className="h-4 w-4" />
@@ -110,18 +130,26 @@ const Navbar = () => {
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
           <div className="md:hidden py-4 space-y-3 animate-fade-in">
-            {!isDeliveryBoy && navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`block py-2 text-base font-medium transition-colors hover:text-primary ${
-                  isActive(item.path) ? "text-primary" : "text-foreground"
-                }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {item.name}
-              </Link>
-            ))}
+            {!isDeliveryBoy && navItems
+              .filter(item => {
+                // Hide Services link if services are disabled
+                if (item.path === '/services' && !servicesEnabled) {
+                  return false;
+                }
+                return true;
+              })
+              .map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`block py-2 text-base font-medium transition-colors hover:text-primary ${
+                    isActive(item.path) ? "text-primary" : "text-foreground"
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              ))}
             {!isDeliveryBoy && (
               <Button asChild variant="hero" size="default" className="w-full">
                 <Link to="/reservations" onClick={() => setIsMobileMenuOpen(false)}>
@@ -139,7 +167,7 @@ const Navbar = () => {
                     </Link>
                   </Button>
                 )}
-                {(isDeliveryBoy || isAdmin) && (
+                {isDeliveryBoy && !isAdmin && (
                   <Button asChild variant="outline" className="w-full">
                     <Link to="/delivery" onClick={() => setIsMobileMenuOpen(false)}>
                       <Package className="h-4 w-4 mr-2" />

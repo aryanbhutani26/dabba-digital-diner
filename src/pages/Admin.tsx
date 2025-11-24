@@ -19,6 +19,8 @@ import { AddCouponDialog } from "@/components/admin/AddCouponDialog";
 import { AddNavItemDialog } from "@/components/admin/AddNavItemDialog";
 import { AddDeliveryBoyDialog } from "@/components/admin/AddDeliveryBoyDialog";
 import { PromotionsManager } from "@/components/admin/PromotionsManager";
+import { AddDabbaServiceDialog } from "@/components/admin/AddDabbaServiceDialog";
+import { EditDabbaServiceDialog } from "@/components/admin/EditDabbaServiceDialog";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -32,10 +34,11 @@ const Admin = () => {
   const { isAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [servicesVisible, setServicesVisible] = useState(true);
   const [coupons, setCoupons] = useState<any[]>([]);
   const [navItems, setNavItems] = useState<any[]>([]);
   const [menuItems, setMenuItems] = useState<any[]>([]);
+  const [dabbaServices, setDabbaServices] = useState<any[]>([]);
+  const [servicesEnabled, setServicesEnabled] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [deliveryBoys, setDeliveryBoys] = useState<any[]>([]);
@@ -69,14 +72,15 @@ const Admin = () => {
     }
   }, [isAdmin]);
 
+  // Note: Dashboard is now the default tab, no redirect needed
+
   const fetchData = async (silent = false) => {
     if (!silent) {
       setLoading(true);
     }
     
     try {
-      const [settingsData, couponsData, navData, menuData, usersData, ordersData, deliveryBoysData, promotionsData, vouchersData, reservationsData] = await Promise.all([
-        api.getAllSettings(),
+      const [couponsData, navData, menuData, usersData, ordersData, deliveryBoysData, promotionsData, vouchersData, reservationsData, dabbaServicesData, servicesVisibilityData] = await Promise.all([
         api.getAllCoupons(),
         api.getAllNavbarItems(),
         api.getAllMenuItems(),
@@ -86,14 +90,15 @@ const Admin = () => {
         api.getAllPromotions(),
         api.getAllVouchers(),
         api.getAllReservations(),
+        api.getDabbaServicesAdmin().catch(() => []),
+        api.getServicesVisibility().catch(() => ({ enabled: false })),
       ]);
-
-      const servicesSetting = settingsData.find((s: any) => s.key === "services_visible");
-      setServicesVisible(servicesSetting?.value === true);
 
       setCoupons(couponsData || []);
       setNavItems(navData || []);
       setMenuItems(menuData || []);
+      setDabbaServices(dabbaServicesData || []);
+      setServicesEnabled(servicesVisibilityData?.enabled || false);
       setUsers(usersData || []);
       setOrders(ordersData || []);
       setDeliveryBoys(deliveryBoysData || []);
@@ -145,24 +150,7 @@ const Admin = () => {
     }
   };
 
-  const toggleServicesVisibility = async () => {
-    const newValue = !servicesVisible;
-    
-    try {
-      await api.updateSetting("services_visible", newValue);
-      setServicesVisible(newValue);
-      toast({
-        title: "Success",
-        description: `Services section ${newValue ? "enabled" : "disabled"}`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update services visibility",
-        variant: "destructive",
-      });
-    }
-  };
+
 
   const deleteCoupon = async (id: string) => {
     try {
@@ -201,6 +189,38 @@ const Admin = () => {
       toast({
         title: "Error",
         description: "Failed to delete menu item",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteDabbaService = async (id: string) => {
+    try {
+      await api.deleteDabbaService(id);
+      toast({ title: "Success", description: "Dabba service deleted" });
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete dabba service",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const toggleServicesVisibility = async () => {
+    try {
+      const newEnabled = !servicesEnabled;
+      await api.toggleServicesVisibility(newEnabled);
+      setServicesEnabled(newEnabled);
+      toast({
+        title: "Success",
+        description: `Services ${newEnabled ? 'enabled' : 'disabled'} successfully`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update services visibility",
         variant: "destructive",
       });
     }
@@ -324,9 +344,13 @@ const Admin = () => {
             <p className="text-sm sm:text-base text-muted-foreground">Manage your restaurant's content</p>
           </div>
 
-          <Tabs defaultValue="orders" className="space-y-4 md:space-y-6">
+          <Tabs defaultValue="dashboard" className="space-y-4 md:space-y-6">
             <div className="overflow-x-auto -mx-2 sm:mx-0">
               <TabsList className="inline-flex w-full sm:w-auto min-w-full sm:min-w-0 flex-nowrap sm:flex-wrap justify-start sm:justify-center px-2 sm:px-0">
+                <TabsTrigger value="dashboard" className="whitespace-nowrap text-xs sm:text-sm">
+                  <span className="hidden sm:inline">Dashboard</span>
+                  <span className="sm:hidden">🏠</span>
+                </TabsTrigger>
                 <TabsTrigger value="orders" className="relative whitespace-nowrap text-xs sm:text-sm">
                   <span className="hidden sm:inline">Orders</span>
                   <span className="sm:hidden">📦</span>
@@ -369,8 +393,131 @@ const Admin = () => {
                   <span className="hidden sm:inline">Menu</span>
                   <span className="sm:hidden">🍽️</span>
                 </TabsTrigger>
+                <TabsTrigger value="services" className="whitespace-nowrap text-xs sm:text-sm">
+                  <span className="hidden sm:inline">Services</span>
+                  <span className="sm:hidden">🥡</span>
+                </TabsTrigger>
               </TabsList>
             </div>
+
+            {/* Dashboard Tab */}
+            <TabsContent value="dashboard">
+              <div className="space-y-6">
+                {/* Welcome Header */}
+                <div>
+                  <h2 className="text-2xl font-bold">Dashboard</h2>
+                  <p className="text-muted-foreground">Welcome back! Here's an overview of your restaurant.</p>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Total Orders */}
+                  <Card className="relative overflow-hidden bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-background border-blue-500/20">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Total Orders</CardTitle>
+                        <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                          <span className="text-xl">📦</span>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold text-blue-600">{orders.length}</p>
+                      <p className="text-xs text-muted-foreground mt-1">All time orders</p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Total Revenue */}
+                  <Card className="relative overflow-hidden bg-gradient-to-br from-green-500/10 via-green-500/5 to-background border-green-500/20">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
+                        <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                          <span className="text-xl">💰</span>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold text-green-600">
+                        £{orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0).toFixed(2)}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Total earnings</p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Total Users */}
+                  <Card className="relative overflow-hidden bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-background border-purple-500/20">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Total Users</CardTitle>
+                        <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+                          <span className="text-xl">👥</span>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold text-purple-600">{users.length}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Registered users</p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Pending Orders */}
+                  <Card className="relative overflow-hidden bg-gradient-to-br from-yellow-500/10 via-yellow-500/5 to-background border-yellow-500/20">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Pending Orders</CardTitle>
+                        <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center">
+                          <span className="text-xl">⏳</span>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold text-yellow-600">{orders.filter(o => o.status === 'pending').length}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Awaiting assignment</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Quick Actions */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Quick Actions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <button
+                        onClick={() => document.querySelector('[value="orders"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))}
+                        className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed hover:border-primary hover:bg-accent transition-colors"
+                      >
+                        <Package className="h-8 w-8 mb-2 text-primary" />
+                        <span className="text-sm font-medium">Manage Orders</span>
+                      </button>
+                      <button
+                        onClick={() => document.querySelector('[value="menu"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))}
+                        className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed hover:border-primary hover:bg-accent transition-colors"
+                      >
+                        <span className="text-3xl mb-2">🍽️</span>
+                        <span className="text-sm font-medium">Edit Menu</span>
+                      </button>
+                      <button
+                        onClick={() => document.querySelector('[value="users"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))}
+                        className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed hover:border-primary hover:bg-accent transition-colors"
+                      >
+                        <span className="text-3xl mb-2">👥</span>
+                        <span className="text-sm font-medium">Manage Users</span>
+                      </button>
+                      <button
+                        onClick={() => document.querySelector('[value="analytics"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))}
+                        className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed hover:border-primary hover:bg-accent transition-colors"
+                      >
+                        <span className="text-3xl mb-2">📊</span>
+                        <span className="text-sm font-medium">View Analytics</span>
+                      </button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
 
             <TabsContent value="orders">
               <Card>
@@ -673,15 +820,9 @@ const Admin = () => {
                   <CardDescription>Configure site-wide settings</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold">Services Section Visibility</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Toggle the services section on the homepage
-                      </p>
-                    </div>
-                    <Switch checked={servicesVisible} onCheckedChange={toggleServicesVisibility} />
-                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    General settings will be added here. For now, manage Services visibility in the Services tab.
+                  </p>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -1119,6 +1260,124 @@ const Admin = () => {
                       </div>
                       <p className="text-muted-foreground mb-2">No menu items yet</p>
                       <p className="text-sm text-muted-foreground">Add your first dish to get started</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="services">
+              <Card>
+                <CardHeader>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-xl sm:text-2xl">Dabba Services Management</CardTitle>
+                      <CardDescription className="text-sm">Manage tiffin/dabba service packages</CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="services-enabled"
+                          checked={servicesEnabled}
+                          onCheckedChange={toggleServicesVisibility}
+                        />
+                        <Label htmlFor="services-enabled" className="text-sm">
+                          {servicesEnabled ? 'Services Enabled' : 'Services Disabled'}
+                        </Label>
+                      </div>
+                      <AddDabbaServiceDialog onSuccess={fetchData} />
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {!servicesEnabled && (
+                    <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                      <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                        <strong>Services are currently disabled.</strong> Enable the toggle above to show the Services section in the navigation menu.
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {dabbaServices.map((service) => (
+                      <div
+                        key={service._id}
+                        className="group relative bg-gradient-to-br from-background to-muted/20 border-2 rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all duration-200"
+                      >
+                        {/* Service Image */}
+                        {service.image && (
+                          <div className="relative h-40 overflow-hidden">
+                            <img 
+                              src={service.image} 
+                              alt={service.title}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
+                            <div className="absolute top-2 right-2">
+                              <Badge variant={service.isActive ? "default" : "secondary"} className="bg-background/90 backdrop-blur">
+                                {service.isActive ? 'Active' : 'Inactive'}
+                              </Badge>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Service Details */}
+                        <div className="p-5">
+                          <h3 className="font-semibold text-lg mb-2 line-clamp-1">{service.title}</h3>
+                          {service.description && (
+                            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{service.description}</p>
+                          )}
+                          
+                          <div className="flex items-center justify-between mb-4">
+                            <span className="text-2xl font-bold text-primary">£{service.price?.toFixed(2)}</span>
+                            <Badge variant="outline" className="text-xs">
+                              Order: {service.order || 0}
+                            </Badge>
+                          </div>
+
+                          {/* Features */}
+                          {service.features && service.features.length > 0 && (
+                            <div className="mb-4">
+                              <p className="text-xs font-semibold mb-2">Features:</p>
+                              <div className="flex flex-wrap gap-1">
+                                {service.features.slice(0, 3).map((feature: string, idx: number) => (
+                                  <Badge key={idx} variant="secondary" className="text-xs">
+                                    {feature}
+                                  </Badge>
+                                ))}
+                                {service.features.length > 3 && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    +{service.features.length - 3} more
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Actions */}
+                          <div className="flex gap-2 pt-4 border-t">
+                            <EditDabbaServiceDialog service={service} onSuccess={fetchData} />
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => deleteDabbaService(service._id)}
+                              className="flex-1"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {dabbaServices.length === 0 && (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-3xl">🥡</span>
+                      </div>
+                      <p className="text-muted-foreground mb-2">No dabba services yet</p>
+                      <p className="text-sm text-muted-foreground">Create your first dabba/tiffin service package</p>
                     </div>
                   )}
                 </CardContent>

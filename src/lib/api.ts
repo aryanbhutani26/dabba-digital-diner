@@ -342,6 +342,46 @@ class ApiClient {
   async getOrder(orderId: string) {
     return this.request(`/orders/${orderId}`);
   }
+
+  // Dabba Services
+  async getDabbaServices() {
+    return this.request('/dabba-services');
+  }
+
+  async getDabbaServicesAdmin() {
+    return this.request('/dabba-services/admin');
+  }
+
+  async getServicesVisibility() {
+    return this.request('/dabba-services/visibility');
+  }
+
+  async createDabbaService(data: any) {
+    return this.request('/dabba-services', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateDabbaService(id: string, data: any) {
+    return this.request(`/dabba-services/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteDabbaService(id: string) {
+    return this.request(`/dabba-services/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async toggleServicesVisibility(enabled: boolean) {
+    return this.request('/dabba-services/toggle-visibility', {
+      method: 'POST',
+      body: JSON.stringify({ enabled }),
+    });
+  }
 }
 
 export const api = new ApiClient();
