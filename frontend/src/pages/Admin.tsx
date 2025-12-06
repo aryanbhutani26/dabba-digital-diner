@@ -53,6 +53,7 @@ const Admin = () => {
   const [hasShownNewReservationsToast, setHasShownNewReservationsToast] = useState(false);
   const [menuSearchQuery, setMenuSearchQuery] = useState("");
   const [signatureDishes, setSignatureDishes] = useState<string[]>([]);
+  const [deliveryFee, setDeliveryFee] = useState<number>(50);
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -83,7 +84,7 @@ const Admin = () => {
     }
     
     try {
-      const [couponsData, navData, menuData, usersData, ordersData, deliveryBoysData, promotionsData, vouchersData, reservationsData, dabbaServicesData, servicesVisibilityData, signatureDishesData] = await Promise.all([
+      const [couponsData, navData, menuData, usersData, ordersData, deliveryBoysData, promotionsData, vouchersData, reservationsData, dabbaServicesData, servicesVisibilityData, signatureDishesData, deliveryFeeData] = await Promise.all([
         api.getAllCoupons(),
         api.getAllNavbarItems(),
         api.getAllMenuItems(),
@@ -96,6 +97,7 @@ const Admin = () => {
         api.getDabbaServicesAdmin().catch(() => []),
         api.getServicesVisibility().catch(() => ({ enabled: false })),
         api.getSetting('signature_dishes').catch(() => ({ value: [] })),
+        api.getSetting('delivery_fee').catch(() => ({ value: 50 })),
       ]);
 
       setCoupons(couponsData || []);
@@ -110,6 +112,7 @@ const Admin = () => {
       setVouchers(vouchersData || []);
       setReservations(reservationsData || []);
       setSignatureDishes(signatureDishesData?.value || []);
+      setDeliveryFee(deliveryFeeData?.value || 50);
       
       // Count new pending orders
       const pendingOrders = ordersData.filter((order: any) => order.status === 'pending');
@@ -909,6 +912,57 @@ const Admin = () => {
                     >
                       Save Signature Dishes
                     </Button>
+                  </div>
+
+                  {/* Delivery Fee Section */}
+                  <div className="space-y-4 pt-6 border-t">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Delivery Fee</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Set the delivery fee that will be applied to all orders. This fee will be displayed in the cart and checkout.
+                      </p>
+                    </div>
+                    
+                    <div className="max-w-md">
+                      <Label htmlFor="delivery-fee">Delivery Fee (£)</Label>
+                      <div className="flex gap-4 items-end mt-2">
+                        <div className="flex-1">
+                          <Input
+                            id="delivery-fee"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={deliveryFee}
+                            onChange={(e) => setDeliveryFee(parseFloat(e.target.value) || 0)}
+                            placeholder="e.g. 50.00"
+                            className="text-lg"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Current fee: £{deliveryFee.toFixed(2)}
+                          </p>
+                        </div>
+                        <Button 
+                          onClick={async () => {
+                            try {
+                              await api.updateSetting('delivery_fee', deliveryFee);
+                              toast({
+                                title: "Success",
+                                description: `Delivery fee updated to £${deliveryFee.toFixed(2)}`,
+                              });
+                              fetchData();
+                            } catch (error) {
+                              toast({
+                                title: "Error",
+                                description: "Failed to update delivery fee",
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                        >
+                          Update Delivery Fee
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
