@@ -15,6 +15,7 @@ const Index = () => {
   const [offers, setOffers] = useState<any[]>([]);
   const [servicesVisible, setServicesVisible] = useState(true);
   const [activePromotion, setActivePromotion] = useState<any>(null);
+  const [signatureDishes, setSignatureDishes] = useState<any[]>([]);
 
   useEffect(() => {
     fetchData();
@@ -22,10 +23,12 @@ const Index = () => {
 
   const fetchData = async () => {
     try {
-      const [couponsData, settingsData, promotionsData] = await Promise.all([
+      const [couponsData, settingsData, promotionsData, signatureDishesData, menuItemsData] = await Promise.all([
         api.getCoupons(),
         api.getSetting('services_visible').catch(() => ({ value: true })),
         api.getActivePromotions().catch(() => []),
+        api.getSetting('signature_dishes').catch(() => ({ value: [] })),
+        api.getMenuItems().catch(() => []),
       ]);
 
       setOffers(couponsData);
@@ -34,6 +37,15 @@ const Index = () => {
       // Get the first active promotion for the banner
       if (promotionsData && promotionsData.length > 0) {
         setActivePromotion(promotionsData[0]);
+      }
+
+      // Get signature dishes from menu items
+      if (signatureDishesData.value && signatureDishesData.value.length > 0) {
+        const dishes = signatureDishesData.value
+          .map((dishId: string) => menuItemsData.find((item: any) => (item._id || item.id) === dishId))
+          .filter(Boolean)
+          .slice(0, 3);
+        setSignatureDishes(dishes);
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -192,7 +204,7 @@ const Index = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            {featuredDishes.map((dish, index) => (
+            {(signatureDishes.length > 0 ? signatureDishes : featuredDishes).map((dish, index) => (
               <Card
                 key={index}
                 className="overflow-hidden group hover:shadow-2xl transition-all duration-300"
@@ -208,6 +220,9 @@ const Index = () => {
                 <CardContent className="p-6 text-center">
                   <h3 className="text-2xl font-bold mb-2">{dish.name}</h3>
                   <p className="text-muted-foreground mb-4">{dish.description}</p>
+                  {dish.price && (
+                    <p className="text-xl font-bold text-primary">£{typeof dish.price === 'number' ? dish.price.toFixed(2) : dish.price}</p>
+                  )}
                 </CardContent>
               </Card>
             ))}

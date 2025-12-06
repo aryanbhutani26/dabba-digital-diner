@@ -382,6 +382,24 @@ class ApiClient {
       body: JSON.stringify({ enabled }),
     });
   }
+
+  // Image Upload
+  async getImageKitAuth() {
+    return this.request('/upload/auth');
+  }
+
+  async uploadImage(file: string, fileName: string, folder?: string) {
+    return this.request('/upload/image', {
+      method: 'POST',
+      body: JSON.stringify({ file, fileName, folder }),
+    });
+  }
+
+  async deleteImage(fileId: string) {
+    return this.request(`/upload/image/${fileId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const api = new ApiClient();

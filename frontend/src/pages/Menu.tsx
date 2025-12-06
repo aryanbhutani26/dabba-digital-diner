@@ -2,11 +2,13 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import DishDialog from "@/components/DishDialog";
 import CartSheet from "@/components/CartSheet";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { Loader2 } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 
 interface Dish {
   name: string;
@@ -33,6 +35,7 @@ const Menu = () => {
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchMenuItems();
@@ -53,10 +56,17 @@ const Menu = () => {
     }
   };
 
+  // Filter items by search query
+  const filteredMenuItems = menuItems.filter(item => 
+    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   // Group items by category
   const menuCategories: Record<string, any[]> = {};
   categories.forEach(category => {
-    menuCategories[category] = menuItems.filter(item => item.category === category);
+    menuCategories[category] = filteredMenuItems.filter(item => item.category === category);
   });
 
   // Fallback static menu for demo
@@ -361,11 +371,23 @@ const Menu = () => {
 
       <main className="pt-32 pb-20 px-4 bg-background">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-bold mb-4 font-script">Our Royal Menu</h1>
-            <p className="text-lg md:text-xl text-muted-foreground">
+            <p className="text-lg md:text-xl text-muted-foreground mb-6">
               Carefully curated dishes crafted with passion and precision
             </p>
+            
+            {/* Search Bar */}
+            <div className="max-w-md mx-auto relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+              <Input
+                type="text"
+                placeholder="Search dishes, categories..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-6 text-base"
+              />
+            </div>
           </div>
 
           {loading ? (
@@ -376,7 +398,79 @@ const Menu = () => {
             <div className="text-center py-20">
               <p className="text-muted-foreground">No menu items available yet. Check back soon!</p>
             </div>
+          ) : searchQuery ? (
+            // Show all search results across categories when searching
+            <div className="space-y-4">
+              {filteredMenuItems.length === 0 ? (
+                <div className="text-center py-20">
+                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Search className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-muted-foreground mb-2">No dishes found</p>
+                  <p className="text-sm text-muted-foreground">Try searching with different keywords</p>
+                </div>
+              ) : (
+                <>
+                  <div className="mb-6">
+                    <p className="text-sm text-muted-foreground text-center">
+                      Found {filteredMenuItems.length} dish{filteredMenuItems.length !== 1 ? 'es' : ''} matching "{searchQuery}"
+                    </p>
+                  </div>
+                  <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
+                    {filteredMenuItems.map((item, index) => (
+                      <Card 
+                        key={index} 
+                        className="hover:shadow-lg transition-all cursor-pointer group overflow-hidden"
+                        onClick={() => handleDishClick(item)}
+                      >
+                        <div className="aspect-video w-full overflow-hidden">
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                        <CardContent className="p-4 md:p-6">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant="secondary" className="text-xs">
+                              {item.category}
+                            </Badge>
+                          </div>
+                          <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
+                            <div className="flex-1">
+                              <h3 className="text-xl md:text-2xl font-semibold mb-2 group-hover:text-primary transition-colors font-script">
+                                {item.name}
+                              </h3>
+                              <p className="text-sm md:text-base text-muted-foreground">{item.description}</p>
+                            </div>
+                            <span className="text-xl md:text-2xl font-bold text-accent shrink-0">
+                              £{typeof item.price === 'number' ? item.price.toFixed(2) : item.price}
+                            </span>
+                          </div>
+                          {item.allergens && item.allergens.length > 0 && (
+                            <div className="mt-3 pt-3 border-t border-border">
+                              <p className="text-xs text-muted-foreground mb-1.5">May contain allergens:</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {item.allergens.map((allergen: string, idx: number) => (
+                                  <span 
+                                    key={idx} 
+                                    className="text-xs px-2 py-0.5 bg-destructive/10 text-destructive rounded-full border border-destructive/20"
+                                  >
+                                    {allergen}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           ) : (
+            // Show tabs when not searching
             <Tabs defaultValue={categories[0]} className="w-full">
               <TabsList className={`grid w-full mb-8 md:mb-12 bg-muted h-auto ${categories.length <= 4 ? `grid-cols-${categories.length}` : 'grid-cols-2 lg:grid-cols-4'}`}>
                 {categories.map((category) => (
