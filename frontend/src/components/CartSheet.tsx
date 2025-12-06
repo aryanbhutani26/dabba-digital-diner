@@ -42,12 +42,24 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
   const [showPayment, setShowPayment] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [currentOrder, setCurrentOrder] = useState<any>(null);
+  const [deliveryFee, setDeliveryFee] = useState<number>(50);
 
   useEffect(() => {
     if (user) {
       fetchAddresses();
     }
+    fetchDeliveryFee();
   }, [user]);
+
+  const fetchDeliveryFee = async () => {
+    try {
+      const response = await api.getSetting('delivery_fee');
+      setDeliveryFee(response.value || 50);
+    } catch (error) {
+      console.error('Failed to fetch delivery fee:', error);
+      setDeliveryFee(50); // Default fallback
+    }
+  };
 
   const fetchAddresses = async () => {
     try {
@@ -146,13 +158,30 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
     }
   };
 
-  const selectCoupon = (coupon: any) => {
-    setCouponCode(coupon.code);
-    setShowCoupons(false);
-    // Auto-apply the selected coupon
-    setTimeout(() => {
-      applyCoupon();
-    }, 100);
+  const selectCoupon = async (coupon: any) => {
+    // Directly apply the selected coupon without validation
+    try {
+      // Calculate discount
+      const discountMatch = coupon.title.match(/(\d+)%/);
+      const discountPercent = discountMatch ? parseInt(discountMatch[1]) : 10;
+      const discountAmount = (totalPrice * discountPercent) / 100;
+
+      setAppliedCoupon(coupon);
+      setDiscount(discountAmount);
+      setCouponCode(coupon.code);
+      setShowCoupons(false);
+      
+      toast({
+        title: "Coupon applied!",
+        description: `You saved £${discountAmount.toFixed(2)} with ${coupon.code}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to apply coupon",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCheckout = async () => {
@@ -216,7 +245,7 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
 
       // Get user profile for customer details
       const profile = await api.getUserProfile();
-      const finalAmount = totalPrice - discount + 50; // Subtract discount, add delivery fee
+      const finalAmount = totalPrice - discount + deliveryFee; // Subtract discount, add delivery fee
       
       console.log('💰 Final amount:', finalAmount);
       console.log('📧 Customer email:', profile.email || user.email);
@@ -585,11 +614,11 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                 )}
                 <div className="flex justify-between text-sm">
                   <span>Delivery Fee:</span>
-                  <span>£50.00</span>
+                  <span>£{deliveryFee.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center text-lg font-bold pt-2 border-t">
                   <span>Total:</span>
-                  <span className="text-2xl text-primary">£{(totalPrice - discount + 50).toFixed(2)}</span>
+                  <span className="text-2xl text-primary">£{(totalPrice - discount + deliveryFee).toFixed(2)}</span>
                 </div>
               </div>
               
@@ -634,7 +663,7 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                         }}
                       >
                         <PaymentForm
-                          amount={totalPrice - discount + 50}
+                          amount={totalPrice - discount + deliveryFee}
                           onSuccess={handlePaymentSuccess}
                           onError={handlePaymentError}
                         />
