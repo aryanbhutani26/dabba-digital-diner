@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
-import { Edit } from "lucide-react";
+import { Edit, Upload, X, Loader2 } from "lucide-react";
 
 interface MenuItem {
   id: string;
@@ -49,7 +49,89 @@ export const EditMenuItemDialog = ({ item, onSuccess }: EditMenuItemDialogProps)
     image: item.image || "",
   });
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(item.image || null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Error",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "Image size should be less than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      
+      reader.onload = async () => {
+        try {
+          const base64 = reader.result as string;
+          const result = await api.uploadImage(base64, file.name, '/menu-items');
+
+          setFormData({ ...formData, image: result.url });
+          setImagePreview(result.url);
+          
+          toast({
+            title: "Success",
+            description: "Image uploaded successfully",
+          });
+        } catch (error) {
+          console.error('Upload error:', error);
+          toast({
+            title: "Error",
+            description: "Failed to upload image. Please try again.",
+            variant: "destructive",
+          });
+        } finally {
+          setUploading(false);
+        }
+      };
+
+      reader.onerror = () => {
+        toast({
+          title: "Error",
+          description: "Failed to read file",
+          variant: "destructive",
+        });
+        setUploading(false);
+      };
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload image",
+        variant: "destructive",
+      });
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData({ ...formData, image: "" });
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,13 +220,76 @@ export const EditMenuItemDialog = ({ item, onSuccess }: EditMenuItemDialogProps)
             />
           </div>
           <div>
-            <Label htmlFor="image">Image URL</Label>
-            <Input
-              id="image"
-              value={formData.image}
-              onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-              placeholder="https://..."
-            />
+            <Label>Dish Image</Label>
+            <div className="space-y-4">
+              {/* Image Preview */}
+              {(imagePreview || formData.image) && (
+                <div className="relative w-full h-48 border-2 border-dashed rounded-lg overflow-hidden">
+                  <img
+                    src={imagePreview || formData.image}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2"
+                    onClick={handleRemoveImage}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+
+              {/* Upload Button */}
+              {!formData.image && (
+                <div className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg hover:border-primary transition-colors cursor-pointer bg-muted/20">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="image-upload-edit"
+                  />
+                  <label
+                    htmlFor="image-upload-edit"
+                    className="flex flex-col items-center justify-center cursor-pointer w-full h-full"
+                  >
+                    {uploading ? (
+                      <>
+                        <Loader2 className="h-10 w-10 text-primary animate-spin mb-2" />
+                        <p className="text-sm text-muted-foreground">Uploading...</p>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-10 w-10 text-muted-foreground mb-2" />
+                        <p className="text-sm font-medium mb-1">Click to upload image</p>
+                        <p className="text-xs text-muted-foreground">PNG, JPG, WEBP up to 5MB</p>
+                      </>
+                    )}
+                  </label>
+                </div>
+              )}
+
+              {/* Manual URL Input (Optional) */}
+              <div className="space-y-2">
+                <Label htmlFor="image-url-edit" className="text-xs text-muted-foreground">
+                  Or paste image URL
+                </Label>
+                <Input
+                  id="image-url-edit"
+                  value={formData.image}
+                  onChange={(e) => {
+                    setFormData({ ...formData, image: e.target.value });
+                    setImagePreview(e.target.value);
+                  }}
+                  placeholder="https://..."
+                  disabled={uploading}
+                />
+              </div>
+            </div>
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>

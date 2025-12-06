@@ -30,20 +30,20 @@ const Contact = () => {
     <div className="min-h-screen">
       <Navbar />
 
-      <main className="pt-32 pb-20 px-4">
+      <main className="pt-24 sm:pt-32 pb-12 sm:pb-20 px-4">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12">
-            <h1 className="text-5xl font-bold mb-4">Get in Touch</h1>
-            <p className="text-xl text-muted-foreground">
+          <div className="text-center mb-8 sm:mb-12">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4">Get in Touch</h1>
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground px-2">
               We'd love to hear from you. Reach out with any questions or comments.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-12">
             {/* Contact Form */}
             <Card>
-              <CardContent className="p-8">
-                <form onSubmit={handleSubmit} className="space-y-6">
+              <CardContent className="p-4 sm:p-6 md:p-8">
+                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium mb-2">
                       Name
@@ -107,13 +107,13 @@ const Contact = () => {
             </Card>
 
             {/* Contact Information */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <Card>
-                <CardContent className="p-6 flex items-start gap-4">
-                  <MapPin className="w-6 h-6 text-primary flex-shrink-0 mt-1" />
+                <CardContent className="p-4 sm:p-6 flex items-start gap-3 sm:gap-4">
+                  <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0 mt-1" />
                   <div>
-                    <h3 className="font-semibold text-lg mb-1">Address</h3>
-                    <p className="text-muted-foreground">
+                    <h3 className="font-semibold text-base sm:text-lg mb-1">Address</h3>
+                    <p className="text-sm sm:text-base text-muted-foreground">
                       Indiya Restaurant<br />
                       180 High Street<br />
                       Orpington, BR6 0JW<br />
@@ -124,45 +124,45 @@ const Contact = () => {
               </Card>
 
               <Card>
-                <CardContent className="p-6 flex items-start gap-4">
-                  <Phone className="w-6 h-6 text-primary flex-shrink-0 mt-1" />
+                <CardContent className="p-4 sm:p-6 flex items-start gap-3 sm:gap-4">
+                  <Phone className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0 mt-1" />
                   <div>
-                    <h3 className="font-semibold text-lg mb-1">Phone</h3>
-                    <p className="text-muted-foreground">+44 (0)1689451403</p>
+                    <h3 className="font-semibold text-base sm:text-lg mb-1">Phone</h3>
+                    <p className="text-sm sm:text-base text-muted-foreground break-all">+44 (0)1689451403</p>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-6 flex items-start gap-4">
-                  <Mail className="w-6 h-6 text-primary flex-shrink-0 mt-1" />
+                <CardContent className="p-4 sm:p-6 flex items-start gap-3 sm:gap-4">
+                  <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0 mt-1" />
                   <div>
-                    <h3 className="font-semibold text-lg mb-1">Email</h3>
-                    <p className="text-muted-foreground">DineIndiyaRestaurant@gmail.com</p>
+                    <h3 className="font-semibold text-base sm:text-lg mb-1">Email</h3>
+                    <p className="text-sm sm:text-base text-muted-foreground break-all">DineIndiyaRestaurant@gmail.com</p>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-6 flex items-start gap-4">
-                  <Clock className="w-6 h-6 text-primary flex-shrink-0 mt-1" />
+                <CardContent className="p-4 sm:p-6 flex items-start gap-3 sm:gap-4">
+                  <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0 mt-1" />
                   <div>
-                    <h3 className="font-semibold text-lg mb-1">Opening Hours</h3>
-                    <div className="text-muted-foreground space-y-1">
+                    <h3 className="font-semibold text-base sm:text-lg mb-1">Opening Hours</h3>
+                    <div className="text-sm sm:text-base text-muted-foreground space-y-1">
                       <p className="font-medium">Monday - Friday:</p>
-                      <p className="ml-2">12:00 PM - 2:30 PM (Lunch)</p>
-                      <p className="ml-2">5:30 PM - 10:30 PM (Dinner)</p>
+                      <p className="ml-2 text-xs sm:text-sm">12:00 PM - 2:30 PM (Lunch)</p>
+                      <p className="ml-2 text-xs sm:text-sm">5:30 PM - 10:30 PM (Dinner)</p>
                       <p className="font-medium mt-2">Saturday:</p>
-                      <p className="ml-2">12:30 PM - 10:30 PM</p>
+                      <p className="ml-2 text-xs sm:text-sm">12:30 PM - 10:30 PM</p>
                       <p className="font-medium mt-2">Sunday:</p>
-                      <p className="ml-2">12:30 PM - 10:00 PM</p>
+                      <p className="ml-2 text-xs sm:text-sm">12:30 PM - 10:00 PM</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               {/* Map */}
-              <div className="rounded-xl overflow-hidden shadow-lg h-64">
+              <div className="rounded-xl overflow-hidden shadow-lg h-48 sm:h-56 md:h-64">
                 <iframe
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2488.0234567890123!2d0.0987654321!3d51.3765432109!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2s180%20High%20Street%2C%20Orpington%20BR6%200JW!5e0!3m2!1sen!2suk!4v1635959343555!5m2!1sen!2suk"
                   width="100%"

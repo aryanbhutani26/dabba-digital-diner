@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
-import { Loader2, Trash2, Package } from "lucide-react";
+import { Loader2, Trash2, Package, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EditMenuItemDialog } from "@/components/admin/EditMenuItemDialog";
 import { EditCouponDialog } from "@/components/admin/EditCouponDialog";
@@ -50,6 +51,8 @@ const Admin = () => {
   const [newReservationsCount, setNewReservationsCount] = useState(0);
   const [hasShownNewOrdersToast, setHasShownNewOrdersToast] = useState(false);
   const [hasShownNewReservationsToast, setHasShownNewReservationsToast] = useState(false);
+  const [menuSearchQuery, setMenuSearchQuery] = useState("");
+  const [signatureDishes, setSignatureDishes] = useState<string[]>([]);
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -80,7 +83,7 @@ const Admin = () => {
     }
     
     try {
-      const [couponsData, navData, menuData, usersData, ordersData, deliveryBoysData, promotionsData, vouchersData, reservationsData, dabbaServicesData, servicesVisibilityData] = await Promise.all([
+      const [couponsData, navData, menuData, usersData, ordersData, deliveryBoysData, promotionsData, vouchersData, reservationsData, dabbaServicesData, servicesVisibilityData, signatureDishesData] = await Promise.all([
         api.getAllCoupons(),
         api.getAllNavbarItems(),
         api.getAllMenuItems(),
@@ -92,6 +95,7 @@ const Admin = () => {
         api.getAllReservations(),
         api.getDabbaServicesAdmin().catch(() => []),
         api.getServicesVisibility().catch(() => ({ enabled: false })),
+        api.getSetting('signature_dishes').catch(() => ({ value: [] })),
       ]);
 
       setCoupons(couponsData || []);
@@ -105,6 +109,7 @@ const Admin = () => {
       setPromotions(promotionsData || []);
       setVouchers(vouchersData || []);
       setReservations(reservationsData || []);
+      setSignatureDishes(signatureDishesData?.value || []);
       
       // Count new pending orders
       const pendingOrders = ordersData.filter((order: any) => order.status === 'pending');
@@ -820,9 +825,91 @@ const Admin = () => {
                   <CardDescription>Configure site-wide settings</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <p className="text-sm text-muted-foreground">
-                    General settings will be added here. For now, manage Services visibility in the Services tab.
-                  </p>
+                  {/* Signature Dishes Section */}
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Our Signature Dishes</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Select 3 dishes to feature on the homepage. These will be displayed in the "Our Signature Dishes" section.
+                      </p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {[0, 1, 2].map((index) => (
+                        <div key={index} className="space-y-2">
+                          <Label>Signature Dish {index + 1}</Label>
+                          <Select
+                            value={signatureDishes[index] || ""}
+                            onValueChange={(value) => {
+                              const newDishes = [...signatureDishes];
+                              newDishes[index] = value;
+                              setSignatureDishes(newDishes);
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a dish..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {menuItems.map((item) => (
+                                <SelectItem 
+                                  key={item._id || item.id} 
+                                  value={item._id || item.id}
+                                  disabled={signatureDishes.includes(item._id || item.id) && signatureDishes[index] !== (item._id || item.id)}
+                                >
+                                  {item.name} - {item.category}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          
+                          {signatureDishes[index] && (
+                            <div className="mt-2 p-3 border rounded-lg bg-muted/50">
+                              {(() => {
+                                const dish = menuItems.find(item => (item._id || item.id) === signatureDishes[index]);
+                                return dish ? (
+                                  <div className="flex gap-3">
+                                    {dish.image && (
+                                      <img 
+                                        src={dish.image} 
+                                        alt={dish.name}
+                                        className="w-16 h-16 object-cover rounded"
+                                      />
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-medium text-sm truncate">{dish.name}</p>
+                                      <p className="text-xs text-muted-foreground truncate">{dish.description}</p>
+                                      <p className="text-sm font-semibold text-primary mt-1">£{dish.price}</p>
+                                    </div>
+                                  </div>
+                                ) : null;
+                              })()}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <Button 
+                      onClick={async () => {
+                        try {
+                          await api.updateSetting('signature_dishes', signatureDishes.filter(Boolean));
+                          toast({
+                            title: "Success",
+                            description: "Signature dishes updated successfully",
+                          });
+                        } catch (error) {
+                          toast({
+                            title: "Error",
+                            description: "Failed to update signature dishes",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                      className="w-full md:w-auto"
+                    >
+                      Save Signature Dishes
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -1189,16 +1276,34 @@ const Admin = () => {
               <Card>
                 <CardHeader>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
+                    <div className="flex-1">
                       <CardTitle className="text-xl sm:text-2xl">Menu Items</CardTitle>
                       <CardDescription className="text-sm">Manage restaurant menu items</CardDescription>
                     </div>
                     <AddMenuItemDialog onSuccess={fetchData} />
                   </div>
+                  
+                  {/* Search Bar */}
+                  <div className="mt-4 relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                    <Input
+                      type="text"
+                      placeholder="Search menu items by name, category, or description..."
+                      value={menuSearchQuery}
+                      onChange={(e) => setMenuSearchQuery(e.target.value)}
+                      className="pl-10 pr-4"
+                    />
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {menuItems.map((item) => (
+                    {menuItems
+                      .filter(item => 
+                        item.name.toLowerCase().includes(menuSearchQuery.toLowerCase()) ||
+                        item.description?.toLowerCase().includes(menuSearchQuery.toLowerCase()) ||
+                        item.category.toLowerCase().includes(menuSearchQuery.toLowerCase())
+                      )
+                      .map((item) => (
                       <div
                         key={item._id || item.id}
                         className="group relative bg-gradient-to-br from-background to-muted/20 border-2 rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all duration-200"
@@ -1260,6 +1365,20 @@ const Admin = () => {
                       </div>
                       <p className="text-muted-foreground mb-2">No menu items yet</p>
                       <p className="text-sm text-muted-foreground">Add your first dish to get started</p>
+                    </div>
+                  )}
+                  
+                  {menuItems.length > 0 && menuItems.filter(item => 
+                    item.name.toLowerCase().includes(menuSearchQuery.toLowerCase()) ||
+                    item.description?.toLowerCase().includes(menuSearchQuery.toLowerCase()) ||
+                    item.category.toLowerCase().includes(menuSearchQuery.toLowerCase())
+                  ).length === 0 && (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-3xl">🔍</span>
+                      </div>
+                      <p className="text-muted-foreground mb-2">No items found</p>
+                      <p className="text-sm text-muted-foreground">Try adjusting your search query</p>
                     </div>
                   )}
                 </CardContent>
