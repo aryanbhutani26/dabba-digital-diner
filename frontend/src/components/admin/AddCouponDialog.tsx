@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { Plus } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface AddCouponDialogProps {
   onSuccess: () => void;
@@ -30,6 +31,9 @@ export const AddCouponDialog = ({ onSuccess }: AddCouponDialogProps) => {
     color: "from-amber-500 to-amber-600",
     icon: "Tag",
     isActive: true,
+    discountPercent: 10,
+    applicableCategories: [] as string[],
+    applyToAll: true,
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -50,6 +54,9 @@ export const AddCouponDialog = ({ onSuccess }: AddCouponDialogProps) => {
         color: "from-amber-500 to-amber-600",
         icon: "Tag",
         isActive: true,
+        discountPercent: 10,
+        applicableCategories: [],
+        applyToAll: true,
       });
       onSuccess();
     } catch (error) {
@@ -118,6 +125,19 @@ export const AddCouponDialog = ({ onSuccess }: AddCouponDialogProps) => {
             />
           </div>
           <div>
+            <Label htmlFor="discountPercent">Discount Percentage (%)</Label>
+            <Input
+              id="discountPercent"
+              type="number"
+              min="1"
+              max="100"
+              value={formData.discountPercent}
+              onChange={(e) => setFormData({ ...formData, discountPercent: parseInt(e.target.value) || 0 })}
+              placeholder="e.g. 20"
+              required
+            />
+          </div>
+          <div>
             <Label htmlFor="icon">Icon (Lucide icon name)</Label>
             <Input
               id="icon"
@@ -129,6 +149,56 @@ export const AddCouponDialog = ({ onSuccess }: AddCouponDialogProps) => {
             <p className="text-xs text-muted-foreground mt-1">
               Common icons: Percent, Gift, Tag, Star, Sparkles
             </p>
+          </div>
+          
+          {/* Category Selection */}
+          <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="applyToAll"
+                checked={formData.applyToAll}
+                onCheckedChange={(checked) => 
+                  setFormData({ 
+                    ...formData, 
+                    applyToAll: checked as boolean,
+                    applicableCategories: checked ? [] : formData.applicableCategories
+                  })
+                }
+              />
+              <Label htmlFor="applyToAll" className="text-base font-semibold cursor-pointer">
+                Apply to All Categories
+              </Label>
+            </div>
+            
+            {!formData.applyToAll && (
+              <div className="space-y-3 pl-6">
+                <Label className="text-sm text-muted-foreground">Select Applicable Categories:</Label>
+                {['Mains', 'Lunch', 'Drinks', 'Desserts'].map((category) => (
+                  <div key={category} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`category-${category}`}
+                      checked={formData.applicableCategories.includes(category)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setFormData({
+                            ...formData,
+                            applicableCategories: [...formData.applicableCategories, category]
+                          });
+                        } else {
+                          setFormData({
+                            ...formData,
+                            applicableCategories: formData.applicableCategories.filter(c => c !== category)
+                          });
+                        }
+                      }}
+                    />
+                    <Label htmlFor={`category-${category}`} className="cursor-pointer">
+                      {category}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>

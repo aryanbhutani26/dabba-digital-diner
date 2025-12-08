@@ -367,6 +367,7 @@ const Menu = () => {
         quantity,
         image: dish.image,
         selectedSize: (dish as any).selectedSize,
+        category: (dish as any).category,
       }];
     });
   };

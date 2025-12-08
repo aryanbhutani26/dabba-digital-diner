@@ -18,6 +18,7 @@ interface CartItem {
   quantity: number;
   image: string;
   selectedSize?: string;
+  category?: string;
 }
 
 interface CartSheetProps {
@@ -159,12 +160,34 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
     }
   };
 
+  // Check if coupon is applicable to current cart items
+  const isCouponApplicable = (coupon: any) => {
+    // If coupon applies to all categories, it's always applicable
+    if (coupon.applyToAll) {
+      return true;
+    }
+    
+    // Check if any cart item's category matches coupon's applicable categories
+    const cartCategories = items.map(item => (item as any).category).filter(Boolean);
+    return coupon.applicableCategories?.some((cat: string) => 
+      cartCategories.some((cartCat: string) => cartCat.toLowerCase() === cat.toLowerCase())
+    );
+  };
+
   const selectCoupon = async (coupon: any) => {
-    // Directly apply the selected coupon without validation
+    // Check if coupon is applicable
+    if (!isCouponApplicable(coupon)) {
+      toast({
+        title: "Coupon not applicable",
+        description: `This coupon is only valid for ${coupon.applicableCategories?.join(', ')} items`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      // Calculate discount
-      const discountMatch = coupon.title.match(/(\d+)%/);
-      const discountPercent = discountMatch ? parseInt(discountMatch[1]) : 10;
+      // Calculate discount using the stored discount percentage
+      const discountPercent = coupon.discountPercent || 10;
       const discountAmount = (totalPrice * discountPercent) / 100;
 
       setAppliedCoupon(coupon);
@@ -580,38 +603,59 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                             </div>
                           ) : (
                             <div className="space-y-3">
-                              {availableCoupons.map((coupon) => (
-                                <div 
-                                  key={coupon._id}
-                                  className="group relative p-4 border-2 rounded-xl bg-gradient-to-br from-primary/5 to-transparent hover:from-primary/10 hover:border-primary cursor-pointer transition-all duration-200 hover:shadow-md"
-                                  onClick={() => selectCoupon(coupon)}
-                                >
-                                  <div className="flex items-start justify-between gap-3 mb-2">
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <Badge variant="secondary" className="font-mono font-bold text-sm px-3 py-1">
-                                          {coupon.code}
-                                        </Badge>
+                              {availableCoupons.map((coupon) => {
+                                const isApplicable = isCouponApplicable(coupon);
+                                return (
+                                  <div 
+                                    key={coupon._id}
+                                    className={`group relative p-4 border-2 rounded-xl transition-all duration-200 ${
+                                      isApplicable 
+                                        ? 'bg-gradient-to-br from-primary/5 to-transparent hover:from-primary/10 hover:border-primary cursor-pointer hover:shadow-md' 
+                                        : 'bg-muted/30 border-muted opacity-50 cursor-not-allowed grayscale'
+                                    }`}
+                                    onClick={() => isApplicable && selectCoupon(coupon)}
+                                  >
+                                    <div className="flex items-start justify-between gap-3 mb-2">
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <Badge variant="secondary" className="font-mono font-bold text-sm px-3 py-1">
+                                            {coupon.code}
+                                          </Badge>
+                                          {!isApplicable && (
+                                            <Badge variant="outline" className="text-xs">
+                                              Not Applicable
+                                            </Badge>
+                                          )}
+                                        </div>
+                                        <h4 className={`font-semibold text-base transition-colors ${
+                                          isApplicable ? 'text-primary group-hover:text-primary/80' : 'text-muted-foreground'
+                                        }`}>
+                                          {coupon.title}
+                                        </h4>
                                       </div>
-                                      <h4 className="font-semibold text-base text-primary group-hover:text-primary/80 transition-colors">
-                                        {coupon.title}
-                                      </h4>
+                                      <div className="text-2xl">{isApplicable ? '🎉' : '🔒'}</div>
                                     </div>
-                                    <div className="text-2xl">🎉</div>
-                                  </div>
-                                  <p className="text-sm text-muted-foreground mb-2">
-                                    {coupon.subtitle}
-                                  </p>
-                                  {coupon.description && (
-                                    <p className="text-xs text-muted-foreground border-t pt-2 mt-2">
-                                      {coupon.description}
+                                    <p className="text-sm text-muted-foreground mb-2">
+                                      {coupon.subtitle}
                                     </p>
-                                  )}
-                                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <span className="text-xs font-medium text-primary">Click to apply →</span>
+                                    {!coupon.applyToAll && coupon.applicableCategories && (
+                                      <p className="text-xs text-muted-foreground mb-2">
+                                        Valid for: {coupon.applicableCategories.join(', ')}
+                                      </p>
+                                    )}
+                                    {coupon.description && (
+                                      <p className="text-xs text-muted-foreground border-t pt-2 mt-2">
+                                        {coupon.description}
+                                      </p>
+                                    )}
+                                    {isApplicable && (
+                                      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span className="text-xs font-medium text-primary">Click to apply →</span>
+                                      </div>
+                                    )}
                                   </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           )}
                         </div>
