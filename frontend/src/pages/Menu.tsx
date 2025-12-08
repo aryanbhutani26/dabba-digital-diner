@@ -510,17 +510,19 @@ const Menu = () => {
           ) : (
             // Show tabs when not searching
             <Tabs defaultValue={categories[0]} className="w-full">
-              <TabsList className={`grid w-full mb-8 md:mb-12 bg-gradient-to-r from-muted via-muted/80 to-muted h-auto p-2 rounded-xl shadow-lg border border-border/50 ${categories.length <= 4 ? `grid-cols-${categories.length}` : 'grid-cols-2 lg:grid-cols-4'} gap-2`}>
-                {categories.map((category) => (
-                  <TabsTrigger 
-                    key={category} 
-                    value={category} 
-                    className="text-sm md:text-base py-4 px-6 capitalize font-semibold rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted-foreground/10"
-                  >
-                    {category}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+              <div className="flex justify-center mb-8 md:mb-12">
+                <TabsList className="inline-flex h-auto p-1.5 bg-card/50 backdrop-blur-sm rounded-full shadow-lg border border-border/30 gap-1">
+                  {categories.map((category) => (
+                    <TabsTrigger 
+                      key={category} 
+                      value={category} 
+                      className="px-6 py-3 text-sm md:text-base capitalize font-medium rounded-full transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted/50 data-[state=inactive]:text-muted-foreground"
+                    >
+                      {category}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
 
               {Object.entries(menuCategories).map(([category, items]) => {
                 const isLunchCategory = category.toLowerCase() === 'lunch';
