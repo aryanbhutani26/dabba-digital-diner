@@ -3,15 +3,20 @@ import { Button } from "@/components/ui/button";
 import { Minus, Plus, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface Dish {
   name: string;
   description: string;
-  price: string;
+  price: string | number;
   image: string;
   images?: string[];
   longDescription?: string;
   ingredients?: string[];
+  allergens?: string[];
+  hasVariants?: boolean;
+  variants?: Array<{ size: string; price: number }>;
 }
 
 interface DishDialogProps {
@@ -24,6 +29,7 @@ interface DishDialogProps {
 const DishDialog = ({ dish, open, onOpenChange, onAddToCart }: DishDialogProps) => {
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [selectedVariant, setSelectedVariant] = useState<number>(0);
   const { toast } = useToast();
 
   if (!dish) return null;
@@ -31,14 +37,27 @@ const DishDialog = ({ dish, open, onOpenChange, onAddToCart }: DishDialogProps) 
   const displayImages = dish.images || [dish.image];
 
   const handleAddToCart = () => {
-    onAddToCart(dish, quantity);
+    // Create a modified dish object with selected variant info
+    const dishToAdd = dish.hasVariants && dish.variants ? {
+      ...dish,
+      selectedSize: dish.variants[selectedVariant].size,
+      price: dish.variants[selectedVariant].price,
+    } : dish;
+    
+    onAddToCart(dishToAdd, quantity);
+    
+    const sizeInfo = dish.hasVariants && dish.variants 
+      ? ` (${dish.variants[selectedVariant].size})` 
+      : '';
+    
     toast({
       title: "Added to cart",
-      description: `${quantity}x ${dish.name} added to your cart`,
+      description: `${quantity}x ${dish.name}${sizeInfo} added to your cart`,
     });
     onOpenChange(false);
     setQuantity(1);
     setCurrentImageIndex(0);
+    setSelectedVariant(0);
   };
 
   const nextImage = () => {
@@ -49,7 +68,10 @@ const DishDialog = ({ dish, open, onOpenChange, onAddToCart }: DishDialogProps) 
     setCurrentImageIndex((prev) => (prev - 1 + displayImages.length) % displayImages.length);
   };
 
-  const priceValue = typeof dish.price === 'number' ? dish.price : parseFloat(String(dish.price).replace(/[^0-9.]/g, ''));
+  // Calculate price based on whether item has variants
+  const priceValue = dish.hasVariants && dish.variants 
+    ? dish.variants[selectedVariant].price 
+    : (typeof dish.price === 'number' ? dish.price : parseFloat(String(dish.price).replace(/[^0-9.]/g, '')));
   const totalPrice = (priceValue * quantity).toFixed(2);
 
   return (
@@ -124,6 +146,31 @@ const DishDialog = ({ dish, open, onOpenChange, onAddToCart }: DishDialogProps) 
                       <li key={index}>{ingredient}</li>
                     ))}
                   </ul>
+                </div>
+              )}
+
+              {/* Size Selection for Variants */}
+              {dish.hasVariants && dish.variants && dish.variants.length > 0 && (
+                <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
+                  <Label className="text-base font-semibold">Select Size</Label>
+                  <RadioGroup 
+                    value={selectedVariant.toString()} 
+                    onValueChange={(value) => setSelectedVariant(parseInt(value))}
+                    className="space-y-2"
+                  >
+                    {dish.variants.map((variant, index) => (
+                      <div key={index} className="flex items-center space-x-3">
+                        <RadioGroupItem value={index.toString()} id={`variant-${index}`} />
+                        <Label 
+                          htmlFor={`variant-${index}`} 
+                          className="flex-1 flex items-center justify-between cursor-pointer py-2"
+                        >
+                          <span className="font-medium">{variant.size}</span>
+                          <span className="text-lg font-bold text-accent">£{variant.price.toFixed(2)}</span>
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
                 </div>
               )}
 

@@ -74,7 +74,16 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <h3 className="text-2xl font-bold text-primary">Indiya Bar & Restaurant</h3>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/30 shrink-0">
+                <img 
+                  src="/src/assets/indiya-logo.jpg" 
+                  alt="Indiya Restaurant Logo" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <h3 className="text-xl font-bold text-primary">Indiya Bar & Restaurant</h3>
+            </div>
             <p className="text-sm text-white/80">
               Experience exceptional dining with exquisite cuisine and elegant ambiance.
             </p>

@@ -17,6 +17,7 @@ interface CartItem {
   price: string;
   quantity: number;
   image: string;
+  selectedSize?: string;
 }
 
 interface CartSheetProps {
@@ -281,6 +282,7 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
           price: typeof item.price === 'number' ? item.price : parseFloat(String(item.price).replace(/[^0-9.]/g, '')),
           quantity: item.quantity,
           image: item.image,
+          selectedSize: item.selectedSize,
         })),
         totalAmount: finalAmount,
         discount: discount,
@@ -311,11 +313,18 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
   const handlePaymentSuccess = async (paymentIntentId: string) => {
     try {
       // Create the order after successful payment
-      const order = await api.createOrder({
+      // Include size information in order items
+      const orderData = {
         ...currentOrder,
+        items: currentOrder.items.map((item: any) => ({
+          ...item,
+          name: item.selectedSize ? `${item.name} (${item.selectedSize})` : item.name,
+        })),
         paymentIntentId,
         paymentStatus: 'completed',
-      });
+      };
+      
+      const order = await api.createOrder(orderData);
 
       toast({
         title: "Order placed successfully!",
@@ -454,7 +463,12 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                         className="w-20 h-20 object-cover rounded"
                       />
                       <div className="flex-1">
-                        <h4 className="font-semibold mb-2">{item.name}</h4>
+                        <h4 className="font-semibold mb-2">
+                          {item.name}
+                          {item.selectedSize && (
+                            <span className="text-sm text-muted-foreground ml-2">({item.selectedSize})</span>
+                          )}
+                        </h4>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <Button
@@ -480,10 +494,10 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8"
+                              className="h-8 w-8 hover:bg-destructive/10"
                               onClick={() => onRemoveItem(index)}
                             >
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                              <Trash2 className="h-4 w-4 text-red-600 hover:text-red-700" />
                             </Button>
                           </div>
                         </div>
@@ -526,7 +540,13 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                         <Badge className="bg-green-500">{appliedCoupon.code}</Badge>
                         <span className="text-sm text-green-700">-£{discount.toFixed(2)}</span>
                       </div>
-                      <Button onClick={removeCoupon} variant="ghost" size="sm" type="button">
+                      <Button 
+                        onClick={removeCoupon} 
+                        variant="outline" 
+                        size="sm" 
+                        type="button"
+                        className="bg-yellow-400 hover:bg-yellow-500 text-black border-yellow-500 font-semibold"
+                      >
                         Remove
                       </Button>
                     </div>
