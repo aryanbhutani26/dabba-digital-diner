@@ -346,70 +346,121 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <Navbar />
       <main className="pt-24 md:pt-32 pb-20 px-2 sm:px-4">
         <div className="container mx-auto max-w-7xl">
-          <div className="mb-6 md:mb-8">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">Admin Panel</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Manage your restaurant's content</p>
+          {/* Elegant Header */}
+          <div className="mb-6 md:mb-8 relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/5 rounded-3xl blur-3xl -z-10" />
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 md:p-6 bg-card/30 backdrop-blur-sm border rounded-2xl">
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg">
+                    <span className="text-2xl">👨‍💼</span>
+                  </div>
+                  <div>
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Admin Panel</h1>
+                    <p className="text-sm sm:text-base text-muted-foreground">Manage your restaurant's content</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-xl">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-sm font-medium text-green-600 dark:text-green-400">System Online</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <Tabs defaultValue="dashboard" className="space-y-4 md:space-y-6">
-            <div className="overflow-x-auto -mx-2 sm:mx-0">
-              <TabsList className="inline-flex w-full sm:w-auto min-w-full sm:min-w-0 flex-nowrap sm:flex-wrap justify-start sm:justify-center px-2 sm:px-0">
-                <TabsTrigger value="dashboard" className="whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">Dashboard</span>
-                  <span className="sm:hidden">🏠</span>
-                </TabsTrigger>
-                <TabsTrigger value="orders" className="relative whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">Orders</span>
-                  <span className="sm:hidden">📦</span>
-                  {newOrdersCount > 0 && (
-                    <Badge className="ml-1 sm:ml-2 bg-red-500 text-xs px-1 sm:px-2">{newOrdersCount}</Badge>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value="analytics" className="whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">Analytics</span>
-                  <span className="sm:hidden">📊</span>
-                </TabsTrigger>
-                <TabsTrigger value="general" className="whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">General</span>
-                  <span className="sm:hidden">⚙️</span>
-                </TabsTrigger>
-                <TabsTrigger value="users" className="whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">Users</span>
-                  <span className="sm:hidden">👥</span>
-                </TabsTrigger>
-                <TabsTrigger value="coupons" className="whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">Coupons</span>
-                  <span className="sm:hidden">🎫</span>
-                </TabsTrigger>
-                <TabsTrigger value="promotions" className="whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">Promotions</span>
-                  <span className="sm:hidden">🎉</span>
-                </TabsTrigger>
-                <TabsTrigger value="reservations" className="relative whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">Reservations</span>
-                  <span className="sm:hidden">📅</span>
-                  {newReservationsCount > 0 && (
-                    <Badge className="ml-1 sm:ml-2 bg-red-500 text-xs px-1 sm:px-2">{newReservationsCount}</Badge>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value="navigation" className="whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">Navigation</span>
-                  <span className="sm:hidden">🧭</span>
-                </TabsTrigger>
-                <TabsTrigger value="menu" className="whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">Menu</span>
-                  <span className="sm:hidden">🍽️</span>
-                </TabsTrigger>
-                <TabsTrigger value="services" className="whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">Services</span>
-                  <span className="sm:hidden">🥡</span>
-                </TabsTrigger>
-              </TabsList>
-            </div>
+            {/* Clean Admin Navigation - Grid Layout */}
+            <TabsList className="grid grid-cols-6 lg:grid-cols-11 gap-2 h-auto bg-card/80 backdrop-blur-sm border rounded-xl p-3 shadow-sm">
+              <TabsTrigger 
+                value="dashboard" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">🏠</span>
+                <span>Home</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="orders" 
+                className="relative flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">📦</span>
+                <span>Orders</span>
+                {newOrdersCount > 0 && (
+                  <Badge className="absolute top-1 right-1 h-5 min-w-5 flex items-center justify-center p-0 bg-red-500 text-[10px] rounded-full">{newOrdersCount}</Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="analytics" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">📊</span>
+                <span>Stats</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="general" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">⚙️</span>
+                <span>Settings</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="users" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">👥</span>
+                <span>Users</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="coupons" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">🎫</span>
+                <span>Coupons</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="promotions" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">🎉</span>
+                <span>Promos</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="reservations" 
+                className="relative flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">📅</span>
+                <span>Bookings</span>
+                {newReservationsCount > 0 && (
+                  <Badge className="absolute top-1 right-1 h-5 min-w-5 flex items-center justify-center p-0 bg-red-500 text-[10px] rounded-full">{newReservationsCount}</Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="navigation" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">🧭</span>
+                <span>Nav</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="menu" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">🍽️</span>
+                <span>Menu</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="services" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">🥡</span>
+                <span>Services</span>
+              </TabsTrigger>
+            </TabsList>
 
             {/* Dashboard Tab */}
             <TabsContent value="dashboard">

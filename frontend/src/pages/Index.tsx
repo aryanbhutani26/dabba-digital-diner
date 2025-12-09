@@ -40,7 +40,7 @@ const Index = () => {
       }
 
       // Get signature dishes from menu items
-      if (signatureDishesData.value && signatureDishesData.value.length > 0) {
+      if (signatureDishesData.value && signatureDishesData.value.length > 0 && Array.isArray(menuItemsData)) {
         const dishes = signatureDishesData.value
           .map((dishId: string) => menuItemsData.find((item: any) => (item._id || item.id) === dishId))
           .filter(Boolean)

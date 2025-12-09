@@ -15,6 +15,8 @@ export const LiveMap = ({
   orderStatus 
 }: LiveMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markersRef = useRef<any>({});
   const [mapLoaded, setMapLoaded] = useState(false);
 
   useEffect(() => {
@@ -36,14 +38,13 @@ export const LiveMap = ({
     };
   }, []);
 
+  // Initialize map only once
   useEffect(() => {
-    if (!mapLoaded || !mapRef.current) return;
+    if (!mapLoaded || !mapRef.current || mapInstanceRef.current) return;
 
     // @ts-ignore
     const L = window.L;
     
-    // Clear existing map
-    mapRef.current.innerHTML = '';
     const mapContainer = document.createElement('div');
     mapContainer.style.height = '100%';
     mapContainer.style.width = '100%';
@@ -54,6 +55,8 @@ export const LiveMap = ({
       [customerLocation.latitude, customerLocation.longitude],
       13
     );
+    
+    mapInstanceRef.current = map;
 
     // Add tile layer (OpenStreetMap)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -61,7 +64,29 @@ export const LiveMap = ({
       maxZoom: 19,
     }).addTo(map);
 
-    // Custom icons
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [mapLoaded, customerLocation.latitude, customerLocation.longitude]);
+
+  // Update markers when locations change (without recreating map)
+  useEffect(() => {
+    if (!mapLoaded || !mapInstanceRef.current) return;
+
+    // @ts-ignore
+    const L = window.L;
+    const map = mapInstanceRef.current;
+
+    console.log('🗺️ Updating map markers:', {
+      customer: customerLocation,
+      restaurant: restaurantLocation,
+      delivery: deliveryLocation
+    });
+
+    // Custom icon creator
     const createCustomIcon = (color: string, icon: string) => {
       return L.divIcon({
         className: 'custom-marker',
@@ -85,29 +110,53 @@ export const LiveMap = ({
       });
     };
 
+    // Clear existing markers and polylines (safely)
+    Object.entries(markersRef.current).forEach(([key, marker]: [string, any]) => {
+      if (marker && key !== 'boundsSet') {
+        try {
+          map.removeLayer(marker);
+        } catch (e) {
+          console.warn('Could not remove marker:', key);
+        }
+      }
+    });
+    
+    // Keep boundsSet flag, clear everything else
+    const wasBoundsSet = markersRef.current.boundsSet;
+    markersRef.current = { boundsSet: wasBoundsSet };
+
+    // Collect all locations for bounds calculation
+    const allLocations: [number, number][] = [];
+
     // Add customer marker
-    const customerMarker = L.marker(
+    console.log('📍 Adding customer marker at:', customerLocation);
+    markersRef.current.customer = L.marker(
       [customerLocation.latitude, customerLocation.longitude],
       { icon: createCustomIcon('#10b981', '🏠') }
     ).addTo(map);
-    customerMarker.bindPopup('<b>Delivery Location</b><br>Your address');
+    markersRef.current.customer.bindPopup('<b>Delivery Location</b><br>Your address');
+    allLocations.push([customerLocation.latitude, customerLocation.longitude]);
 
     // Add restaurant marker if provided
     if (restaurantLocation) {
-      const restaurantMarker = L.marker(
+      console.log('🍽️ Adding restaurant marker at:', restaurantLocation);
+      markersRef.current.restaurant = L.marker(
         [restaurantLocation.latitude, restaurantLocation.longitude],
         { icon: createCustomIcon('#f59e0b', '🍽️') }
       ).addTo(map);
-      restaurantMarker.bindPopup('<b>Restaurant</b><br>Indiya Bar & Restaurant');
+      markersRef.current.restaurant.bindPopup('<b>Restaurant</b><br>Indiya Bar & Restaurant<br>180 High Street, Orpington');
+      allLocations.push([restaurantLocation.latitude, restaurantLocation.longitude]);
     }
 
     // Add delivery person marker if location available
     if (deliveryLocation) {
-      const deliveryMarker = L.marker(
+      console.log('🏍️ Adding delivery marker at:', deliveryLocation);
+      markersRef.current.delivery = L.marker(
         [deliveryLocation.latitude, deliveryLocation.longitude],
         { icon: createCustomIcon('#3b82f6', '🏍️') }
       ).addTo(map);
-      deliveryMarker.bindPopup('<b>Delivery Partner</b><br>On the way!');
+      markersRef.current.delivery.bindPopup('<b>Delivery Partner</b><br>On the way!');
+      allLocations.push([deliveryLocation.latitude, deliveryLocation.longitude]);
 
       // Draw route line
       const routePoints = [
@@ -115,27 +164,24 @@ export const LiveMap = ({
         [customerLocation.latitude, customerLocation.longitude],
       ];
       
-      L.polyline(routePoints, {
+      markersRef.current.route = L.polyline(routePoints, {
         color: '#3b82f6',
         weight: 4,
         opacity: 0.7,
         dashArray: '10, 10',
       }).addTo(map);
-
-      // Fit bounds to show all markers
-      const bounds = L.latLngBounds([
-        [deliveryLocation.latitude, deliveryLocation.longitude],
-        [customerLocation.latitude, customerLocation.longitude],
-      ]);
-      if (restaurantLocation) {
-        bounds.extend([restaurantLocation.latitude, restaurantLocation.longitude]);
-      }
-      map.fitBounds(bounds, { padding: [50, 50] });
     }
 
-    return () => {
-      map.remove();
-    };
+    // Always fit bounds to show all markers (not just when delivery location exists)
+    if (allLocations.length > 0 && !markersRef.current.boundsSet) {
+      console.log('🎯 Fitting bounds to locations:', allLocations);
+      const bounds = L.latLngBounds(allLocations);
+      map.fitBounds(bounds, { 
+        padding: [50, 50],
+        maxZoom: 15 // Prevent zooming in too much
+      });
+      markersRef.current.boundsSet = true;
+    }
   }, [mapLoaded, deliveryLocation, customerLocation, restaurantLocation]);
 
   return (

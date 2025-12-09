@@ -3,8 +3,174 @@ import { ObjectId } from 'mongodb';
 import { getDB } from '../config/db.js';
 import { authenticate, isAdmin, isAdminOrDeliveryBoy } from '../middleware/auth.js';
 import { sendOrderConfirmation, sendDeliveryAssignment } from '../services/emailService.js';
+import { printerService } from '../services/printerService.js';
 
 const router = express.Router();
+
+// Reverse geocode coordinates to address (to avoid CORS issues with Nominatim)
+router.post('/reverse-geocode', async (req, res) => {
+  try {
+    const { lat, lng } = req.body;
+    
+    if (!lat || !lng) {
+      return res.status(400).json({ error: 'Latitude and longitude are required' });
+    }
+
+    console.log('🔍 Backend reverse geocoding:', lat, lng);
+
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+      {
+        headers: {
+          'User-Agent': 'IndiyaRestaurant/1.0'
+        }
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error(`Reverse geocoding API returned ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('📡 Backend reverse geocoding response:', data.display_name);
+    
+    if (data && data.display_name) {
+      res.json({
+        address: data.display_name,
+        city: data.address?.city || data.address?.town || data.address?.village || '',
+        state: data.address?.state || '',
+        country: data.address?.country || '',
+        postcode: data.address?.postcode || ''
+      });
+    } else {
+      res.json({
+        address: `Location at ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+        city: '',
+        state: '',
+        country: '',
+        postcode: ''
+      });
+    }
+  } catch (error) {
+    console.error('❌ Backend reverse geocoding error:', error);
+    res.json({
+      address: `Location at ${req.body.lat.toFixed(6)}, ${req.body.lng.toFixed(6)}`,
+      city: '',
+      state: '',
+      country: '',
+      postcode: ''
+    });
+  }
+});
+
+// Geocode address endpoint (to avoid CORS issues with Nominatim)
+router.post('/geocode', async (req, res) => {
+  try {
+    const { address } = req.body;
+    
+    if (!address) {
+      return res.status(400).json({ error: 'Address is required' });
+    }
+
+    console.log('🔍 Backend geocoding address:', address);
+
+    // Try multiple geocoding strategies
+    let data = [];
+    
+    // Strategy 1: Try exact address
+    let geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
+    console.log('🌐 Trying exact address...');
+    
+    let response = await fetch(geocodeUrl, {
+      headers: {
+        'User-Agent': 'IndiyaRestaurant/1.0'
+      }
+    });
+    
+    if (response.ok) {
+      data = await response.json();
+    }
+    
+    // Strategy 2: If no results, try with structured query
+    if (!data || data.length === 0) {
+      console.log('⚠️ No results with exact address, trying structured query...');
+      
+      // Parse address components
+      const parts = address.split(',').map(p => p.trim());
+      if (parts.length >= 2) {
+        // Try with city and state
+        const city = parts[0];
+        const state = parts.length > 2 ? parts[parts.length - 2] : parts[parts.length - 1];
+        const country = parts[parts.length - 1];
+        
+        geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&country=${encodeURIComponent(country)}&limit=1`;
+        console.log('🌐 Trying structured query:', { city, state, country });
+        
+        response = await fetch(geocodeUrl, {
+          headers: {
+            'User-Agent': 'IndiyaRestaurant/1.0'
+          }
+        });
+        
+        if (response.ok) {
+          data = await response.json();
+        }
+      }
+    }
+    
+    // Strategy 3: Extract area/city and try that
+    if (!data || data.length === 0) {
+      console.log('⚠️ Still no results, trying to extract area...');
+      
+      // Try to extract recognizable area names (Rohini, Sector, etc.)
+      // Look for patterns like "Sector 16 Rohini", "Rohini", "Sector 16", etc.
+      const areaMatch = address.match(/(Sector\s+\d+\s+\w+|Rohini|Sector\s+\d+|Delhi)/i);
+      if (areaMatch) {
+        const area = `${areaMatch[0]}, Delhi, India`;
+        geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(area)}&limit=1`;
+        console.log('🌐 Trying area:', area);
+        
+        response = await fetch(geocodeUrl, {
+          headers: {
+            'User-Agent': 'IndiyaRestaurant/1.0'
+          }
+        });
+        
+        if (response.ok) {
+          data = await response.json();
+        }
+      }
+    }
+    
+    console.log('📡 Backend geocoding response:', data);
+    
+    if (data && data.length > 0) {
+      const location = {
+        latitude: parseFloat(data[0].lat),
+        longitude: parseFloat(data[0].lon),
+        displayName: data[0].display_name
+      };
+      console.log('✅ Backend geocoded location:', location);
+      res.json(location);
+    } else {
+      // Return a fallback location near the restaurant (Orpington area)
+      console.log('⚠️ No geocoding results after all strategies, returning fallback');
+      res.json({
+        latitude: 51.3750,
+        longitude: 0.1000,
+        displayName: `${address} (approximate location)`
+      });
+    }
+  } catch (error) {
+    console.error('❌ Backend geocoding error:', error);
+    // Return fallback on error
+    res.json({
+      latitude: 51.3750,
+      longitude: 0.1000,
+      displayName: 'Fallback location (geocoding failed)'
+    });
+  }
+});
 
 // Get all orders (admin)
 router.get('/all', authenticate, isAdmin, async (req, res) => {
@@ -240,6 +406,29 @@ router.post('/', authenticate, async (req, res) => {
         customerEmail: user.email,
       }).catch(err => console.error('Email failed:', err));
     }
+    
+    // 🖨️ AUTOMATIC PRINTING - Print to both kitchen and bill desk printers
+    // This runs asynchronously and won't block order creation
+    setImmediate(async () => {
+      try {
+        const orderWithId = { ...order, _id: result.insertedId };
+        const printResults = await printerService.printOrder(orderWithId);
+        
+        // Log results
+        const successCount = Object.values(printResults).filter(s => s === 'success').length;
+        if (successCount > 0) {
+          console.log(`✅ Order #${orderNumber} printing completed:`, printResults);
+        } else if (printResults.kitchen === 'disabled') {
+          console.log(`ℹ️  Printing disabled for order #${orderNumber}`);
+        } else {
+          console.log(`⚠️  Order #${orderNumber} printing had issues:`, printResults);
+        }
+      } catch (printError) {
+        // Printing errors should never break order creation
+        console.error(`❌ Printing error for order #${orderNumber}:`, printError.message);
+        console.log(`ℹ️  Order #${orderNumber} was created successfully despite printing error`);
+      }
+    });
     
     res.status(201).json({ 
       success: true,

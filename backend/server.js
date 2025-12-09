@@ -58,6 +58,7 @@ import voucherRoutes from './routes/vouchers.js';
 import blogRoutes from './routes/blog.js';
 import paymentRoutes from './routes/payment.js';
 import dabbaServicesRoutes from './routes/dabbaServices.js';
+import printerRoutes from './routes/printers.js';
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -76,6 +77,7 @@ app.use('/api/blog', blogRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/dabba-services', dabbaServicesRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/printers', printerRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

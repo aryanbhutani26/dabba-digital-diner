@@ -310,7 +310,9 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
         totalAmount: finalAmount,
         discount: discount,
         couponCode: appliedCoupon?.code || null,
-        deliveryAddress: addresses[selectedAddress],
+        deliveryAddress: typeof addresses[selectedAddress] === 'string' 
+          ? addresses[selectedAddress] 
+          : (addresses[selectedAddress] as any).address,
         customerName: profile.name || user.name,
         customerPhone: profile.phone || 'Not provided',
         paymentMethod: 'stripe',
@@ -443,7 +445,7 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                               : 'border-border hover:border-primary/50'
                           }`}
                         >
-                          <p className="text-sm">{address}</p>
+                          <p className="text-sm">{typeof address === 'string' ? address : (address as any).address}</p>
                         </div>
                       ))}
                       <Button asChild variant="ghost" size="sm" className="w-full">
