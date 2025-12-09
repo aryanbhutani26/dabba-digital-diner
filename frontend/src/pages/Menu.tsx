@@ -36,6 +36,7 @@ const Menu = () => {
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [lunchEnabled, setLunchEnabled] = useState(true);
 
   useEffect(() => {
     fetchMenuItems();
@@ -43,12 +44,28 @@ const Menu = () => {
 
   const fetchMenuItems = async () => {
     try {
-      const items = await api.getMenuItems();
-      setMenuItems(items);
+      const response = await api.getMenuItems();
+      const items = response.items || response;
+      const lunchEnabledStatus = response.lunchEnabled !== undefined ? response.lunchEnabled : true;
       
-      // Extract unique categories
-      const uniqueCategories = [...new Set(items.map((item: any) => item.category))];
-      setCategories(uniqueCategories);
+      setMenuItems(items);
+      setLunchEnabled(lunchEnabledStatus);
+      
+      // Define the 4 main categories in order
+      const mainCategories = ['Mains', 'Lunch', 'Drinks', 'Desserts'];
+      
+      // Extract unique categories from items and order them
+      const itemCategories = [...new Set(items.map((item: any) => item.category))];
+      const orderedCategories = mainCategories.filter(cat => 
+        itemCategories.some(itemCat => itemCat.toLowerCase() === cat.toLowerCase())
+      );
+      
+      // Add any additional categories not in main list
+      const additionalCategories = itemCategories.filter(cat => 
+        !mainCategories.some(mainCat => mainCat.toLowerCase() === cat.toLowerCase())
+      );
+      
+      setCategories([...orderedCategories, ...additionalCategories]);
     } catch (error) {
       console.error('Failed to fetch menu items:', error);
     } finally {
@@ -326,7 +343,17 @@ const Menu = () => {
 
   const handleAddToCart = (dish: Dish, quantity: number) => {
     setCartItems(prevItems => {
-      const existingItemIndex = prevItems.findIndex(item => item.name === dish.name);
+      // For items with variants, include size in the comparison
+      const itemKey = (dish as any).selectedSize 
+        ? `${dish.name}-${(dish as any).selectedSize}` 
+        : dish.name;
+      
+      const existingItemIndex = prevItems.findIndex(item => {
+        const existingKey = item.selectedSize 
+          ? `${item.name}-${item.selectedSize}` 
+          : item.name;
+        return existingKey === itemKey;
+      });
       
       if (existingItemIndex > -1) {
         const newItems = [...prevItems];
@@ -339,6 +366,8 @@ const Menu = () => {
         price: dish.price,
         quantity,
         image: dish.image,
+        selectedSize: (dish as any).selectedSize,
+        category: (dish as any).category,
       }];
     });
   };
@@ -443,9 +472,19 @@ const Menu = () => {
                               </h3>
                               <p className="text-sm md:text-base text-muted-foreground">{item.description}</p>
                             </div>
-                            <span className="text-xl md:text-2xl font-bold text-accent shrink-0">
-                              £{typeof item.price === 'number' ? item.price.toFixed(2) : item.price}
-                            </span>
+                            <div className="shrink-0">
+                              {item.hasVariants && item.variants ? (
+                                <div className="text-right">
+                                  <span className="text-xl md:text-2xl font-bold text-accent">
+                                    From £{Math.min(...item.variants.map((v: any) => v.price)).toFixed(2)}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-xl md:text-2xl font-bold text-accent">
+                                  £{typeof item.price === 'number' ? item.price.toFixed(2) : item.price}
+                                </span>
+                              )}
+                            </div>
                           </div>
                           {item.allergens && item.allergens.length > 0 && (
                             <div className="mt-3 pt-3 border-t border-border">
@@ -472,63 +511,120 @@ const Menu = () => {
           ) : (
             // Show tabs when not searching
             <Tabs defaultValue={categories[0]} className="w-full">
-              <TabsList className={`grid w-full mb-8 md:mb-12 bg-muted h-auto ${categories.length <= 4 ? `grid-cols-${categories.length}` : 'grid-cols-2 lg:grid-cols-4'}`}>
-                {categories.map((category) => (
-                  <TabsTrigger key={category} value={category} className="text-sm md:text-base py-3 capitalize">
-                    {category}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-
-              {Object.entries(menuCategories).map(([category, items]) => (
-              <TabsContent key={category} value={category} className="space-y-4">
-                <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
-                  {items.map((item, index) => (
-                    <Card 
-                      key={index} 
-                      className="hover:shadow-lg transition-all cursor-pointer group overflow-hidden"
-                      onClick={() => handleDishClick(item)}
+              <div className="flex justify-center mb-8 md:mb-12">
+                <TabsList className="inline-flex h-auto p-1.5 bg-card/50 backdrop-blur-sm rounded-full shadow-lg border border-border/30 gap-1">
+                  {categories.map((category) => (
+                    <TabsTrigger 
+                      key={category} 
+                      value={category} 
+                      className="px-6 py-3 text-sm md:text-base capitalize font-medium rounded-full transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted/50 data-[state=inactive]:text-muted-foreground"
                     >
-                      <div className="aspect-video w-full overflow-hidden">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <CardContent className="p-4 md:p-6">
-                        <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
-                          <div className="flex-1">
-                            <h3 className="text-xl md:text-2xl font-semibold mb-2 group-hover:text-primary transition-colors font-script">
-                              {item.name}
-                            </h3>
-                            <p className="text-sm md:text-base text-muted-foreground">{item.description}</p>
-                          </div>
-                          <span className="text-xl md:text-2xl font-bold text-accent shrink-0">
-                            £{typeof item.price === 'number' ? item.price.toFixed(2) : item.price}
-                          </span>
-                        </div>
-                        {item.allergens && item.allergens.length > 0 && (
-                          <div className="mt-3 pt-3 border-t border-border">
-                            <p className="text-xs text-muted-foreground mb-1.5">May contain allergens:</p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {item.allergens.map((allergen, idx) => (
-                                <span 
-                                  key={idx} 
-                                  className="text-xs px-2 py-0.5 bg-destructive/10 text-destructive rounded-full border border-destructive/20"
-                                >
-                                  {allergen}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
+                      {category}
+                    </TabsTrigger>
                   ))}
-                </div>
-              </TabsContent>
-            ))}
+                </TabsList>
+              </div>
+
+              {Object.entries(menuCategories).map(([category, items]) => {
+                const isLunchCategory = category.toLowerCase() === 'lunch';
+                const isLunchDisabled = isLunchCategory && !lunchEnabled;
+                
+                // Group items by subcategory
+                const itemsBySubcategory: Record<string, any[]> = {};
+                items.forEach(item => {
+                  const subcategory = item.subcategory || 'Other';
+                  if (!itemsBySubcategory[subcategory]) {
+                    itemsBySubcategory[subcategory] = [];
+                  }
+                  itemsBySubcategory[subcategory].push(item);
+                });
+                
+                return (
+                  <TabsContent key={category} value={category} className="space-y-6">
+                    {isLunchDisabled && (
+                      <div className="bg-muted/50 border-2 border-dashed border-muted-foreground/30 rounded-xl p-8 text-center backdrop-blur-sm">
+                        <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                          <span className="text-4xl opacity-50">🍱</span>
+                        </div>
+                        <h3 className="text-2xl font-semibold mb-2 text-muted-foreground">Lunch Service Unavailable</h3>
+                        <p className="text-muted-foreground max-w-md mx-auto">
+                          We're not currently serving lunch. Please check back during our lunch hours or explore our other delicious menu options.
+                        </p>
+                      </div>
+                    )}
+                    
+                    <div className={`space-y-8 ${isLunchDisabled ? 'opacity-40 pointer-events-none grayscale' : ''}`}>
+                      {Object.entries(itemsBySubcategory).map(([subcategory, subcategoryItems]) => (
+                        <div key={subcategory} className="space-y-4">
+                          {/* Subcategory Heading */}
+                          <div className="border-b-2 border-primary/20 pb-2">
+                            <h2 className="text-2xl md:text-3xl font-bold font-script bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                              {subcategory}
+                            </h2>
+                          </div>
+                          
+                          {/* Items Grid */}
+                          <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
+                            {subcategoryItems.map((item, index) => (
+                              <Card 
+                                key={index} 
+                                className="hover:shadow-lg transition-all cursor-pointer group overflow-hidden"
+                                onClick={() => !isLunchDisabled && handleDishClick(item)}
+                              >
+                                <div className="aspect-video w-full overflow-hidden">
+                                  <img
+                                    src={item.image}
+                                    alt={item.name}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  />
+                                </div>
+                                <CardContent className="p-4 md:p-6">
+                                  <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
+                                    <div className="flex-1">
+                                      <h3 className="text-xl md:text-2xl font-semibold mb-2 group-hover:text-primary transition-colors font-script">
+                                        {item.name}
+                                      </h3>
+                                      <p className="text-sm md:text-base text-muted-foreground">{item.description}</p>
+                                    </div>
+                                    <div className="shrink-0">
+                                      {item.hasVariants && item.variants ? (
+                                        <div className="text-right">
+                                          <span className="text-xl md:text-2xl font-bold text-accent">
+                                            From £{Math.min(...item.variants.map((v: any) => v.price)).toFixed(2)}
+                                          </span>
+                                        </div>
+                                      ) : (
+                                        <span className="text-xl md:text-2xl font-bold text-accent">
+                                          £{typeof item.price === 'number' ? item.price.toFixed(2) : item.price}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  {item.allergens && item.allergens.length > 0 && (
+                                    <div className="mt-3 pt-3 border-t border-border">
+                                      <p className="text-xs text-muted-foreground mb-1.5">May contain allergens:</p>
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {item.allergens.map((allergen, idx) => (
+                                          <span 
+                                            key={idx} 
+                                            className="text-xs px-2 py-0.5 bg-destructive/10 text-destructive rounded-full border border-destructive/20"
+                                          >
+                                            {allergen}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+                );
+              })}
             </Tabs>
           )}
         </div>

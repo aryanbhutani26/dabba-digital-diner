@@ -25,6 +25,7 @@ const TrackOrder = () => {
   const { toast } = useToast();
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [customerLocation, setCustomerLocation] = useState<{latitude: number, longitude: number} | null>(null);
   const orderId = searchParams.get('id');
 
   useEffect(() => {
@@ -37,6 +38,60 @@ const TrackOrder = () => {
     const interval = setInterval(fetchOrder, 10000);
     return () => clearInterval(interval);
   }, [orderId]);
+
+  // Geocode delivery address to get coordinates
+  useEffect(() => {
+    if (!order || !order.deliveryAddress) {
+      console.log('⚠️ No order or delivery address yet');
+      return;
+    }
+
+    const geocodeAddress = async () => {
+      try {
+        const address = typeof order.deliveryAddress === 'string' 
+          ? order.deliveryAddress 
+          : order.deliveryAddress.address;
+
+        console.log('🔍 Geocoding address:', address);
+        console.log('📦 Order ID:', order._id);
+
+        // Use backend geocoding endpoint to avoid CORS issues
+        const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/orders/geocode`;
+        console.log('🌐 Geocoding via backend:', apiUrl);
+        
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ address })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Backend geocoding returned ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        console.log('📡 Geocoding response:', data);
+        console.log('✅ Customer location set:', { latitude: data.latitude, longitude: data.longitude });
+        console.log('📍 Display name:', data.displayName);
+        
+        setCustomerLocation({
+          latitude: data.latitude,
+          longitude: data.longitude
+        });
+      } catch (error) {
+        console.error('❌ Geocoding error:', error);
+        // Fallback to a nearby location for testing
+        const fallbackLocation = { latitude: 51.3750, longitude: 0.1000 };
+        console.log('🔄 Error fallback location:', fallbackLocation);
+        setCustomerLocation(fallbackLocation);
+      }
+    };
+
+    geocodeAddress();
+  }, [order]);
 
   const fetchOrder = async () => {
     try {
@@ -103,10 +158,14 @@ const TrackOrder = () => {
   }
 
   const statusInfo = getStatusInfo(order.status);
-  const customerLocation = { latitude: 12.9716, longitude: 77.5946 }; // Default Bangalore
-  const restaurantLocation = { latitude: 12.9352, longitude: 77.6245 };
+  // Restaurant permanent location: 180 High Street, Orpington, BR6 0JW, United Kingdom
+  const restaurantLocation = { latitude: 51.3727, longitude: 0.0985 };
+  
+  // Use geocoded customer location or fallback to restaurant
+  const finalCustomerLocation = customerLocation || { latitude: 51.3727, longitude: 0.0985 };
+  
   const deliveryLocation = order.currentLocation || 
-    (order.status === 'out_for_delivery' ? { latitude: 12.9500, longitude: 77.6000 } : undefined);
+    (order.status === 'out_for_delivery' ? { latitude: 51.3750, longitude: 0.1000 } : undefined);
 
   return (
     <div className="min-h-screen bg-background">
@@ -132,12 +191,21 @@ const TrackOrder = () => {
             <div className="lg:col-span-2">
               <Card className="h-[500px]">
                 <CardContent className="p-0 h-full">
-                  <LiveMap
-                    deliveryLocation={deliveryLocation}
-                    customerLocation={customerLocation}
-                    restaurantLocation={restaurantLocation}
-                    orderStatus={order.status}
-                  />
+                  {!customerLocation ? (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="text-center">
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-primary" />
+                        <p className="text-sm text-muted-foreground">Loading map...</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <LiveMap
+                      deliveryLocation={deliveryLocation}
+                      customerLocation={finalCustomerLocation}
+                      restaurantLocation={restaurantLocation}
+                      orderStatus={order.status}
+                    />
+                  )}
                 </CardContent>
               </Card>
 

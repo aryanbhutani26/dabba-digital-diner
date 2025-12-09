@@ -13,6 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { Loader2, User, MapPin, Package, Plus, Trash2, Truck, FileText, IdCard } from "lucide-react";
 import { AddressInput } from "@/components/AddressInput";
+import { AddressMapPicker, AddressData } from "@/components/AddressMapPicker";
+import { Home, Briefcase, Clock } from "lucide-react";
 
 const Account = () => {
   const { user, loading: authLoading, isDeliveryBoy } = useAuth();
@@ -32,6 +34,7 @@ const Account = () => {
   });
   const [newAddress, setNewAddress] = useState('');
   const [addressCoordinates, setAddressCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [showAddressMap, setShowAddressMap] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -110,6 +113,57 @@ const Account = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleSaveMapAddress = async (addressData: AddressData) => {
+    try {
+      const fullAddress = [
+        addressData.flatNumber,
+        addressData.address,
+        addressData.landmark && `Near ${addressData.landmark}`
+      ].filter(Boolean).join(', ');
+
+      const newAddressData = {
+        label: addressData.label,
+        customLabel: addressData.customLabel,
+        address: fullAddress,
+        flatNumber: addressData.flatNumber,
+        landmark: addressData.landmark,
+        coordinates: addressData.coordinates
+      };
+
+      const addresses = [...(profile.addresses || []), newAddressData];
+      await api.updateUserProfile({ addresses });
+      
+      toast({
+        title: "Success",
+        description: "Address saved successfully",
+      });
+      
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save address",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getAddressIcon = (label: string) => {
+    switch (label) {
+      case 'Home':
+        return <Home className="h-5 w-5" />;
+      case 'Work':
+        return <Briefcase className="h-5 w-5" />;
+      default:
+        return <MapPin className="h-5 w-5" />;
+    }
+  };
+
+  const getAddressLabel = (address: any) => {
+    if (typeof address === 'string') return 'Other';
+    return address.customLabel || address.label || 'Other';
   };
 
   const handleDeleteAddress = async (index: number) => {
@@ -343,58 +397,103 @@ const Account = () => {
             {/* Addresses Tab */}
             {!isDeliveryBoy && (
               <TabsContent value="addresses">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Delivery Addresses</CardTitle>
-                  <CardDescription>Manage your saved addresses</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {profile?.addresses?.map((address: any, index: number) => {
-                    const addressText = typeof address === 'string' ? address : address.address;
-                    const hasCoordinates = typeof address === 'object' && address.coordinates;
-                    
-                    return (
-                      <div
-                        key={index}
-                        className="flex items-start justify-between p-4 border rounded-lg hover:border-primary/50 transition-colors"
-                      >
-                        <div className="flex items-start gap-3 flex-1">
-                          <MapPin className="h-5 w-5 text-primary mt-0.5" />
-                          <div className="flex-1">
-                            <p className="text-sm">{addressText}</p>
-                            {hasCoordinates && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                📍 GPS: {address.coordinates.lat.toFixed(6)}, {address.coordinates.lng.toFixed(6)}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteAddress(index)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    );
-                  })}
-
-                  <div className="pt-4 border-t">
-                    <AddressInput
-                      value={newAddress}
-                      onChange={(value, coordinates) => {
-                        setNewAddress(value);
-                        setAddressCoordinates(coordinates || null);
-                      }}
-                      onAdd={handleAddAddress}
-                      placeholder="Enter your delivery address"
-                      showAddButton={true}
-                    />
+                <div className="space-y-6">
+                  {/* Header */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold">Choose a delivery address</h2>
+                      <p className="text-muted-foreground">Multiple addresses in this location</p>
+                    </div>
+                    <Button onClick={() => setShowAddressMap(true)} size="lg">
+                      <Plus className="h-5 w-5 mr-2" />
+                      Add New Address
+                    </Button>
                   </div>
-                </CardContent>
-              </Card>
+
+                  {/* Addresses Grid */}
+                  {profile?.addresses && profile.addresses.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {profile.addresses.map((address: any, index: number) => {
+                        const addressText = typeof address === 'string' ? address : address.address;
+                        const label = getAddressLabel(address);
+                        const hasDetails = typeof address === 'object' && (address.flatNumber || address.landmark);
+                        
+                        return (
+                          <Card key={index} className="relative hover:shadow-lg transition-all">
+                            <CardContent className="p-6">
+                              {/* Label Icon & Name */}
+                              <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                    {getAddressIcon(typeof address === 'object' ? address.label : 'Other')}
+                                  </div>
+                                  <div>
+                                    <h3 className="font-semibold text-lg">{label}</h3>
+                                    {hasDetails && address.flatNumber && (
+                                      <p className="text-sm text-muted-foreground">{address.flatNumber}</p>
+                                    )}
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDeleteAddress(index)}
+                                  className="text-muted-foreground hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+
+                              {/* Address Text */}
+                              <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                                {addressText}
+                              </p>
+
+                              {/* Landmark */}
+                              {hasDetails && address.landmark && (
+                                <p className="text-xs text-muted-foreground mb-4">
+                                  📍 Near {address.landmark}
+                                </p>
+                              )}
+
+                              {/* Delivery Time Estimate */}
+                              <div className="flex items-center gap-2 text-sm font-medium text-primary mb-4">
+                                <Clock className="h-4 w-4" />
+                                <span>25-30 MINS</span>
+                              </div>
+
+                              {/* Deliver Here Button */}
+                              <Button className="w-full" variant="default">
+                                DELIVER HERE
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <Card>
+                      <CardContent className="py-12 text-center">
+                        <MapPin className="h-16 w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
+                        <h3 className="text-lg font-semibold mb-2">No saved addresses</h3>
+                        <p className="text-muted-foreground mb-6">
+                          Add your first delivery address to get started
+                        </p>
+                        <Button onClick={() => setShowAddressMap(true)} size="lg">
+                          <Plus className="h-5 w-5 mr-2" />
+                          Add Address
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+
+                {/* Address Map Picker Dialog */}
+                <AddressMapPicker
+                  open={showAddressMap}
+                  onClose={() => setShowAddressMap(false)}
+                  onSave={handleSaveMapAddress}
+                />
               </TabsContent>
             )}
 

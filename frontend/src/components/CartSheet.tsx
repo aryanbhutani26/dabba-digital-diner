@@ -17,6 +17,8 @@ interface CartItem {
   price: string;
   quantity: number;
   image: string;
+  selectedSize?: string;
+  category?: string;
 }
 
 interface CartSheetProps {
@@ -158,12 +160,34 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
     }
   };
 
+  // Check if coupon is applicable to current cart items
+  const isCouponApplicable = (coupon: any) => {
+    // If coupon applies to all categories, it's always applicable
+    if (coupon.applyToAll) {
+      return true;
+    }
+    
+    // Check if any cart item's category matches coupon's applicable categories
+    const cartCategories = items.map(item => (item as any).category).filter(Boolean);
+    return coupon.applicableCategories?.some((cat: string) => 
+      cartCategories.some((cartCat: string) => cartCat.toLowerCase() === cat.toLowerCase())
+    );
+  };
+
   const selectCoupon = async (coupon: any) => {
-    // Directly apply the selected coupon without validation
+    // Check if coupon is applicable
+    if (!isCouponApplicable(coupon)) {
+      toast({
+        title: "Coupon not applicable",
+        description: `This coupon is only valid for ${coupon.applicableCategories?.join(', ')} items`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      // Calculate discount
-      const discountMatch = coupon.title.match(/(\d+)%/);
-      const discountPercent = discountMatch ? parseInt(discountMatch[1]) : 10;
+      // Calculate discount using the stored discount percentage
+      const discountPercent = coupon.discountPercent || 10;
       const discountAmount = (totalPrice * discountPercent) / 100;
 
       setAppliedCoupon(coupon);
@@ -281,11 +305,14 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
           price: typeof item.price === 'number' ? item.price : parseFloat(String(item.price).replace(/[^0-9.]/g, '')),
           quantity: item.quantity,
           image: item.image,
+          selectedSize: item.selectedSize,
         })),
         totalAmount: finalAmount,
         discount: discount,
         couponCode: appliedCoupon?.code || null,
-        deliveryAddress: addresses[selectedAddress],
+        deliveryAddress: typeof addresses[selectedAddress] === 'string' 
+          ? addresses[selectedAddress] 
+          : (addresses[selectedAddress] as any).address,
         customerName: profile.name || user.name,
         customerPhone: profile.phone || 'Not provided',
         paymentMethod: 'stripe',
@@ -311,11 +338,18 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
   const handlePaymentSuccess = async (paymentIntentId: string) => {
     try {
       // Create the order after successful payment
-      const order = await api.createOrder({
+      // Include size information in order items
+      const orderData = {
         ...currentOrder,
+        items: currentOrder.items.map((item: any) => ({
+          ...item,
+          name: item.selectedSize ? `${item.name} (${item.selectedSize})` : item.name,
+        })),
         paymentIntentId,
         paymentStatus: 'completed',
-      });
+      };
+      
+      const order = await api.createOrder(orderData);
 
       toast({
         title: "Order placed successfully!",
@@ -411,7 +445,7 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                               : 'border-border hover:border-primary/50'
                           }`}
                         >
-                          <p className="text-sm">{address}</p>
+                          <p className="text-sm">{typeof address === 'string' ? address : (address as any).address}</p>
                         </div>
                       ))}
                       <Button asChild variant="ghost" size="sm" className="w-full">
@@ -454,7 +488,12 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                         className="w-20 h-20 object-cover rounded"
                       />
                       <div className="flex-1">
-                        <h4 className="font-semibold mb-2">{item.name}</h4>
+                        <h4 className="font-semibold mb-2">
+                          {item.name}
+                          {item.selectedSize && (
+                            <span className="text-sm text-muted-foreground ml-2">({item.selectedSize})</span>
+                          )}
+                        </h4>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <Button
@@ -480,10 +519,10 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8"
+                              className="h-8 w-8 hover:bg-destructive/10"
                               onClick={() => onRemoveItem(index)}
                             >
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                              <Trash2 className="h-4 w-4 text-red-600 hover:text-red-700" />
                             </Button>
                           </div>
                         </div>
@@ -526,7 +565,13 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                         <Badge className="bg-green-500">{appliedCoupon.code}</Badge>
                         <span className="text-sm text-green-700">-£{discount.toFixed(2)}</span>
                       </div>
-                      <Button onClick={removeCoupon} variant="ghost" size="sm" type="button">
+                      <Button 
+                        onClick={removeCoupon} 
+                        variant="outline" 
+                        size="sm" 
+                        type="button"
+                        className="bg-yellow-400 hover:bg-yellow-500 text-black border-yellow-500 font-semibold"
+                      >
                         Remove
                       </Button>
                     </div>
@@ -560,38 +605,59 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                             </div>
                           ) : (
                             <div className="space-y-3">
-                              {availableCoupons.map((coupon) => (
-                                <div 
-                                  key={coupon._id}
-                                  className="group relative p-4 border-2 rounded-xl bg-gradient-to-br from-primary/5 to-transparent hover:from-primary/10 hover:border-primary cursor-pointer transition-all duration-200 hover:shadow-md"
-                                  onClick={() => selectCoupon(coupon)}
-                                >
-                                  <div className="flex items-start justify-between gap-3 mb-2">
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <Badge variant="secondary" className="font-mono font-bold text-sm px-3 py-1">
-                                          {coupon.code}
-                                        </Badge>
+                              {availableCoupons.map((coupon) => {
+                                const isApplicable = isCouponApplicable(coupon);
+                                return (
+                                  <div 
+                                    key={coupon._id}
+                                    className={`group relative p-4 border-2 rounded-xl transition-all duration-200 ${
+                                      isApplicable 
+                                        ? 'bg-gradient-to-br from-primary/5 to-transparent hover:from-primary/10 hover:border-primary cursor-pointer hover:shadow-md' 
+                                        : 'bg-muted/30 border-muted opacity-50 cursor-not-allowed grayscale'
+                                    }`}
+                                    onClick={() => isApplicable && selectCoupon(coupon)}
+                                  >
+                                    <div className="flex items-start justify-between gap-3 mb-2">
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <Badge variant="secondary" className="font-mono font-bold text-sm px-3 py-1">
+                                            {coupon.code}
+                                          </Badge>
+                                          {!isApplicable && (
+                                            <Badge variant="outline" className="text-xs">
+                                              Not Applicable
+                                            </Badge>
+                                          )}
+                                        </div>
+                                        <h4 className={`font-semibold text-base transition-colors ${
+                                          isApplicable ? 'text-primary group-hover:text-primary/80' : 'text-muted-foreground'
+                                        }`}>
+                                          {coupon.title}
+                                        </h4>
                                       </div>
-                                      <h4 className="font-semibold text-base text-primary group-hover:text-primary/80 transition-colors">
-                                        {coupon.title}
-                                      </h4>
+                                      <div className="text-2xl">{isApplicable ? '🎉' : '🔒'}</div>
                                     </div>
-                                    <div className="text-2xl">🎉</div>
-                                  </div>
-                                  <p className="text-sm text-muted-foreground mb-2">
-                                    {coupon.subtitle}
-                                  </p>
-                                  {coupon.description && (
-                                    <p className="text-xs text-muted-foreground border-t pt-2 mt-2">
-                                      {coupon.description}
+                                    <p className="text-sm text-muted-foreground mb-2">
+                                      {coupon.subtitle}
                                     </p>
-                                  )}
-                                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <span className="text-xs font-medium text-primary">Click to apply →</span>
+                                    {!coupon.applyToAll && coupon.applicableCategories && (
+                                      <p className="text-xs text-muted-foreground mb-2">
+                                        Valid for: {coupon.applicableCategories.join(', ')}
+                                      </p>
+                                    )}
+                                    {coupon.description && (
+                                      <p className="text-xs text-muted-foreground border-t pt-2 mt-2">
+                                        {coupon.description}
+                                      </p>
+                                    )}
+                                    {isApplicable && (
+                                      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span className="text-xs font-medium text-primary">Click to apply →</span>
+                                      </div>
+                                    )}
                                   </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           )}
                         </div>

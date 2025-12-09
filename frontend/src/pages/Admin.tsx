@@ -54,6 +54,7 @@ const Admin = () => {
   const [menuSearchQuery, setMenuSearchQuery] = useState("");
   const [signatureDishes, setSignatureDishes] = useState<string[]>([]);
   const [deliveryFee, setDeliveryFee] = useState<number>(50);
+  const [lunchMenuEnabled, setLunchMenuEnabled] = useState<boolean>(true);
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -84,7 +85,7 @@ const Admin = () => {
     }
     
     try {
-      const [couponsData, navData, menuData, usersData, ordersData, deliveryBoysData, promotionsData, vouchersData, reservationsData, dabbaServicesData, servicesVisibilityData, signatureDishesData, deliveryFeeData] = await Promise.all([
+      const [couponsData, navData, menuData, usersData, ordersData, deliveryBoysData, promotionsData, vouchersData, reservationsData, dabbaServicesData, servicesVisibilityData, signatureDishesData, deliveryFeeData, lunchMenuData] = await Promise.all([
         api.getAllCoupons(),
         api.getAllNavbarItems(),
         api.getAllMenuItems(),
@@ -98,6 +99,7 @@ const Admin = () => {
         api.getServicesVisibility().catch(() => ({ enabled: false })),
         api.getSetting('signature_dishes').catch(() => ({ value: [] })),
         api.getSetting('delivery_fee').catch(() => ({ value: 50 })),
+        api.getSetting('lunch_menu_enabled').catch(() => ({ value: true })),
       ]);
 
       setCoupons(couponsData || []);
@@ -113,6 +115,7 @@ const Admin = () => {
       setReservations(reservationsData || []);
       setSignatureDishes(signatureDishesData?.value || []);
       setDeliveryFee(deliveryFeeData?.value || 50);
+      setLunchMenuEnabled(lunchMenuData?.value !== false);
       
       // Count new pending orders
       const pendingOrders = ordersData.filter((order: any) => order.status === 'pending');
@@ -343,70 +346,121 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <Navbar />
       <main className="pt-24 md:pt-32 pb-20 px-2 sm:px-4">
         <div className="container mx-auto max-w-7xl">
-          <div className="mb-6 md:mb-8">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">Admin Panel</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Manage your restaurant's content</p>
+          {/* Elegant Header */}
+          <div className="mb-6 md:mb-8 relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/5 rounded-3xl blur-3xl -z-10" />
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 md:p-6 bg-card/30 backdrop-blur-sm border rounded-2xl">
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg">
+                    <span className="text-2xl">👨‍💼</span>
+                  </div>
+                  <div>
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Admin Panel</h1>
+                    <p className="text-sm sm:text-base text-muted-foreground">Manage your restaurant's content</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-xl">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-sm font-medium text-green-600 dark:text-green-400">System Online</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <Tabs defaultValue="dashboard" className="space-y-4 md:space-y-6">
-            <div className="overflow-x-auto -mx-2 sm:mx-0">
-              <TabsList className="inline-flex w-full sm:w-auto min-w-full sm:min-w-0 flex-nowrap sm:flex-wrap justify-start sm:justify-center px-2 sm:px-0">
-                <TabsTrigger value="dashboard" className="whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">Dashboard</span>
-                  <span className="sm:hidden">🏠</span>
-                </TabsTrigger>
-                <TabsTrigger value="orders" className="relative whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">Orders</span>
-                  <span className="sm:hidden">📦</span>
-                  {newOrdersCount > 0 && (
-                    <Badge className="ml-1 sm:ml-2 bg-red-500 text-xs px-1 sm:px-2">{newOrdersCount}</Badge>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value="analytics" className="whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">Analytics</span>
-                  <span className="sm:hidden">📊</span>
-                </TabsTrigger>
-                <TabsTrigger value="general" className="whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">General</span>
-                  <span className="sm:hidden">⚙️</span>
-                </TabsTrigger>
-                <TabsTrigger value="users" className="whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">Users</span>
-                  <span className="sm:hidden">👥</span>
-                </TabsTrigger>
-                <TabsTrigger value="coupons" className="whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">Coupons</span>
-                  <span className="sm:hidden">🎫</span>
-                </TabsTrigger>
-                <TabsTrigger value="promotions" className="whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">Promotions</span>
-                  <span className="sm:hidden">🎉</span>
-                </TabsTrigger>
-                <TabsTrigger value="reservations" className="relative whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">Reservations</span>
-                  <span className="sm:hidden">📅</span>
-                  {newReservationsCount > 0 && (
-                    <Badge className="ml-1 sm:ml-2 bg-red-500 text-xs px-1 sm:px-2">{newReservationsCount}</Badge>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value="navigation" className="whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">Navigation</span>
-                  <span className="sm:hidden">🧭</span>
-                </TabsTrigger>
-                <TabsTrigger value="menu" className="whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">Menu</span>
-                  <span className="sm:hidden">🍽️</span>
-                </TabsTrigger>
-                <TabsTrigger value="services" className="whitespace-nowrap text-xs sm:text-sm">
-                  <span className="hidden sm:inline">Services</span>
-                  <span className="sm:hidden">🥡</span>
-                </TabsTrigger>
-              </TabsList>
-            </div>
+            {/* Clean Admin Navigation - Grid Layout */}
+            <TabsList className="grid grid-cols-6 lg:grid-cols-11 gap-2 h-auto bg-card/80 backdrop-blur-sm border rounded-xl p-3 shadow-sm">
+              <TabsTrigger 
+                value="dashboard" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">🏠</span>
+                <span>Home</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="orders" 
+                className="relative flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">📦</span>
+                <span>Orders</span>
+                {newOrdersCount > 0 && (
+                  <Badge className="absolute top-1 right-1 h-5 min-w-5 flex items-center justify-center p-0 bg-red-500 text-[10px] rounded-full">{newOrdersCount}</Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="analytics" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">📊</span>
+                <span>Stats</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="general" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">⚙️</span>
+                <span>Settings</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="users" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">👥</span>
+                <span>Users</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="coupons" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">🎫</span>
+                <span>Coupons</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="promotions" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">🎉</span>
+                <span>Promos</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="reservations" 
+                className="relative flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">📅</span>
+                <span>Bookings</span>
+                {newReservationsCount > 0 && (
+                  <Badge className="absolute top-1 right-1 h-5 min-w-5 flex items-center justify-center p-0 bg-red-500 text-[10px] rounded-full">{newReservationsCount}</Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="navigation" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">🧭</span>
+                <span>Nav</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="menu" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">🍽️</span>
+                <span>Menu</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="services" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">🥡</span>
+                <span>Services</span>
+              </TabsTrigger>
+            </TabsList>
 
             {/* Dashboard Tab */}
             <TabsContent value="dashboard">
@@ -964,6 +1018,57 @@ const Admin = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Lunch Menu Toggle Section */}
+                  <div className="space-y-4 pt-6 border-t">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Lunch Menu Availability</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Control whether customers can order from the lunch menu. When disabled, the lunch menu will be grayed out with a message indicating it's unavailable.
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
+                      <div className="flex-1">
+                        <Label htmlFor="lunch-menu-toggle" className="text-base font-medium cursor-pointer">
+                          Enable Lunch Menu Orders
+                        </Label>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {lunchMenuEnabled 
+                            ? "Customers can currently order from the lunch menu" 
+                            : "Lunch menu is currently disabled for orders"}
+                        </p>
+                      </div>
+                      <Switch
+                        id="lunch-menu-toggle"
+                        checked={lunchMenuEnabled}
+                        onCheckedChange={async (checked) => {
+                          try {
+                            await api.updateSetting('lunch_menu_enabled', checked);
+                            setLunchMenuEnabled(checked);
+                            toast({
+                              title: "Success",
+                              description: `Lunch menu ${checked ? 'enabled' : 'disabled'} successfully`,
+                            });
+                          } catch (error) {
+                            toast({
+                              title: "Error",
+                              description: "Failed to update lunch menu status",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                      />
+                    </div>
+                    
+                    {!lunchMenuEnabled && (
+                      <div className="p-4 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                        <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                          <strong>⚠️ Lunch menu is disabled.</strong> Customers will see a message that lunch is not currently being served, and items will be grayed out.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -1370,23 +1475,68 @@ const Admin = () => {
                               alt={item.name}
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                             />
-                            <div className="absolute top-2 right-2">
-                              <Badge variant="secondary" className="bg-background/90 backdrop-blur">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                            <div className="absolute top-2 left-2 right-2 flex items-start justify-between gap-2">
+                              <Badge className={`font-semibold shadow-lg ${
+                                item.category === 'Mains' ? 'bg-orange-500 hover:bg-orange-600 text-white' :
+                                item.category === 'Lunch' ? 'bg-green-500 hover:bg-green-600 text-white' :
+                                item.category === 'Drinks' ? 'bg-blue-500 hover:bg-blue-600 text-white' :
+                                item.category === 'Desserts' ? 'bg-pink-500 hover:bg-pink-600 text-white' :
+                                'bg-purple-500 hover:bg-purple-600 text-white'
+                              }`}>
                                 {item.category}
                               </Badge>
+                              {item.subcategory && (
+                                <Badge className="bg-slate-700 hover:bg-slate-800 text-white backdrop-blur text-xs font-medium shadow-md">
+                                  {item.subcategory}
+                                </Badge>
+                              )}
                             </div>
                           </div>
                         )}
 
                         {/* Menu Item Details */}
                         <div className="p-5">
+                          {/* Category badge if no image */}
+                          {!item.image && (
+                            <div className="flex items-center gap-2 mb-3">
+                              <Badge className={`font-semibold ${
+                                item.category === 'Mains' ? 'bg-orange-500 hover:bg-orange-600 text-white' :
+                                item.category === 'Lunch' ? 'bg-green-500 hover:bg-green-600 text-white' :
+                                item.category === 'Drinks' ? 'bg-blue-500 hover:bg-blue-600 text-white' :
+                                item.category === 'Desserts' ? 'bg-pink-500 hover:bg-pink-600 text-white' :
+                                'bg-purple-500 hover:bg-purple-600 text-white'
+                              }`}>
+                                {item.category}
+                              </Badge>
+                              {item.subcategory && (
+                                <Badge className="bg-slate-700 hover:bg-slate-800 text-white text-xs font-medium">
+                                  {item.subcategory}
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+                          
                           <h3 className="font-semibold text-lg mb-2 line-clamp-1">{item.name}</h3>
                           {item.description && (
                             <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{item.description}</p>
                           )}
                           
                           <div className="flex items-center justify-between mb-4">
-                            <span className="text-2xl font-bold text-primary">£{item.price}</span>
+                            {item.hasVariants && item.variants ? (
+                              <div className="space-y-1">
+                                {item.variants.map((variant: any, vIdx: number) => (
+                                  <div key={vIdx} className="flex items-center gap-2">
+                                    <span className="text-xs text-muted-foreground">{variant.size}:</span>
+                                    <span className="text-sm font-bold text-primary">
+                                      £{variant.price.toFixed(2)}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-2xl font-bold text-primary">£{item.price}</span>
+                            )}
                             {item.isVeg !== undefined && (
                               <Badge variant={item.isVeg ? "default" : "secondary"} className="text-xs">
                                 {item.isVeg ? '🌱 Veg' : '🍖 Non-Veg'}

@@ -34,18 +34,44 @@ export const AddMenuItemDialog = ({ onSuccess }: AddMenuItemDialogProps) => {
     description: "",
     price: "",
     category: "",
+    subcategory: "",
     allergens: "",
     image: "",
     isActive: true,
+    hasVariants: false,
   });
+  const [variants, setVariants] = useState([
+    { size: "Small", price: "" },
+    { size: "Medium", price: "" },
+    { size: "Large", price: "" },
+  ]);
   const [loading, setLoading] = useState(false);
   const [existingCategories, setExistingCategories] = useState<string[]>([]);
+  const [allSubcategories, setAllSubcategories] = useState<any[]>([]);
   const [showCustomCategory, setShowCustomCategory] = useState(false);
+  const [showCustomSubcategory, setShowCustomSubcategory] = useState(false);
   const [customCategory, setCustomCategory] = useState("");
+  const [customSubcategory, setCustomSubcategory] = useState("");
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Predefined subcategories by category
+  const predefinedSubcategories: Record<string, string[]> = {
+    "Mains": ["Tandoori Items", "Rice", "Curries", "Breads"],
+    "Lunch": ["Appetizers", "Lunch Specials"],
+    "Drinks": ["Hot Drinks", "Cold Drinks", "Beverages"],
+    "Desserts": []
+  };
+
+  // Get subcategories for selected category
+  const getSubcategoriesForCategory = (category: string) => {
+    const predefined = predefinedSubcategories[category] || [];
+    const existing = allSubcategories.find(s => s.category === category)?.subcategories || [];
+    const combined = [...new Set([...predefined, ...existing])];
+    return combined;
+  };
 
   useEffect(() => {
     if (open) {
@@ -57,7 +83,26 @@ export const AddMenuItemDialog = ({ onSuccess }: AddMenuItemDialogProps) => {
     try {
       const items = await api.getAllMenuItems();
       const categories = [...new Set(items.map((item: any) => item.category))].filter(Boolean);
+      
+      // Group subcategories by category
+      const subcategoriesMap = items.reduce((acc: any, item: any) => {
+        if (item.subcategory && item.category) {
+          if (!acc[item.category]) {
+            acc[item.category] = new Set();
+          }
+          acc[item.category].add(item.subcategory);
+        }
+        return acc;
+      }, {});
+      
+      // Convert to array format
+      const subcategoriesArray = Object.entries(subcategoriesMap).map(([category, subs]: [string, any]) => ({
+        category,
+        subcategories: Array.from(subs)
+      }));
+      
       setExistingCategories(categories);
+      setAllSubcategories(subcategoriesArray);
     } catch (error) {
       console.error('Failed to fetch categories:', error);
     }
@@ -66,10 +111,11 @@ export const AddMenuItemDialog = ({ onSuccess }: AddMenuItemDialogProps) => {
   const handleCategoryChange = (value: string) => {
     if (value === "other") {
       setShowCustomCategory(true);
-      setFormData({ ...formData, category: "" });
+      setFormData({ ...formData, category: "", subcategory: "" });
     } else {
       setShowCustomCategory(false);
-      setFormData({ ...formData, category: value });
+      // Reset subcategory when category changes
+      setFormData({ ...formData, category: value, subcategory: "" });
     }
   };
 
@@ -166,6 +212,7 @@ export const AddMenuItemDialog = ({ onSuccess }: AddMenuItemDialogProps) => {
     setLoading(true);
 
     const finalCategory = showCustomCategory ? customCategory : formData.category;
+    const finalSubcategory = showCustomSubcategory ? customSubcategory : formData.subcategory;
 
     if (!finalCategory) {
       toast({
@@ -177,16 +224,46 @@ export const AddMenuItemDialog = ({ onSuccess }: AddMenuItemDialogProps) => {
       return;
     }
 
+    // Validate variants if enabled
+    if (formData.hasVariants) {
+      const validVariants = variants.filter(v => v.price && parseFloat(v.price) > 0);
+      if (validVariants.length === 0) {
+        toast({
+          title: "Error",
+          description: "Please add at least one variant with a price",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
-      await api.createMenuItem({
+      const menuItemData: any = {
         name: formData.name,
         description: formData.description,
-        price: parseFloat(formData.price),
         category: finalCategory,
+        subcategory: finalSubcategory || null,
         allergens: formData.allergens.split(",").map((a) => a.trim()).filter(Boolean),
         image: formData.image || null,
         isActive: formData.isActive,
-      });
+      };
+
+      // Add price or variants based on selection
+      if (formData.hasVariants) {
+        menuItemData.hasVariants = true;
+        menuItemData.variants = variants
+          .filter(v => v.price && parseFloat(v.price) > 0)
+          .map(v => ({
+            size: v.size,
+            price: parseFloat(v.price)
+          }));
+      } else {
+        menuItemData.price = parseFloat(formData.price);
+        menuItemData.hasVariants = false;
+      }
+
+      await api.createMenuItem(menuItemData);
       toast({ title: "Success", description: "Menu item created successfully" });
       setOpen(false);
       setFormData({
@@ -194,12 +271,21 @@ export const AddMenuItemDialog = ({ onSuccess }: AddMenuItemDialogProps) => {
         description: "",
         price: "",
         category: "",
+        subcategory: "",
         allergens: "",
         image: "",
         isActive: true,
+        hasVariants: false,
       });
+      setVariants([
+        { size: "Small", price: "" },
+        { size: "Medium", price: "" },
+        { size: "Large", price: "" },
+      ]);
       setShowCustomCategory(false);
+      setShowCustomSubcategory(false);
       setCustomCategory("");
+      setCustomSubcategory("");
       setImagePreview(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -250,35 +336,99 @@ export const AddMenuItemDialog = ({ onSuccess }: AddMenuItemDialogProps) => {
               required
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="price">Price (£)</Label>
-              <Input
-                id="price"
-                type="number"
-                step="0.01"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                placeholder="e.g. 299.99"
-                required
+          {/* Pricing Section */}
+          <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="hasVariants" className="text-base font-semibold">Multiple Sizes/Variants</Label>
+                <p className="text-sm text-muted-foreground">Enable if this item has different sizes (Small, Medium, Large)</p>
+              </div>
+              <input
+                type="checkbox"
+                id="hasVariants"
+                checked={formData.hasVariants}
+                onChange={(e) => setFormData({ ...formData, hasVariants: e.target.checked })}
+                className="w-5 h-5"
               />
             </div>
-            <div>
-              <Label htmlFor="category">Category</Label>
-              <Select onValueChange={handleCategoryChange} value={showCustomCategory ? "other" : formData.category}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {existingCategories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                  <SelectItem value="other">+ Add New Category</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+
+            {!formData.hasVariants ? (
+              <div>
+                <Label htmlFor="price">Price (£)</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  step="0.01"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  placeholder="e.g. 12.99"
+                  required
+                />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <Label>Size Variants & Prices</Label>
+                {variants.map((variant, index) => (
+                  <div key={index} className="flex gap-3 items-center">
+                    <Input
+                      value={variant.size}
+                      onChange={(e) => {
+                        const newVariants = [...variants];
+                        newVariants[index].size = e.target.value;
+                        setVariants(newVariants);
+                      }}
+                      placeholder="Size name"
+                      className="flex-1"
+                    />
+                    <div className="flex items-center gap-2 flex-1">
+                      <span className="text-sm">£</span>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={variant.price}
+                        onChange={(e) => {
+                          const newVariants = [...variants];
+                          newVariants[index].price = e.target.value;
+                          setVariants(newVariants);
+                        }}
+                        placeholder="Price"
+                      />
+                    </div>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setVariants([...variants, { size: "", price: "" }])}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Another Size
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <Label htmlFor="category">Category</Label>
+            <Select onValueChange={handleCategoryChange} value={showCustomCategory ? "other" : formData.category}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Mains">Mains</SelectItem>
+                <SelectItem value="Lunch">Lunch</SelectItem>
+                <SelectItem value="Drinks">Drinks</SelectItem>
+                <SelectItem value="Desserts">Desserts</SelectItem>
+                {existingCategories.filter(cat => !['Mains', 'Lunch', 'Drinks', 'Desserts'].includes(cat)).map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat}
+                  </SelectItem>
+                ))}
+                <SelectItem value="other">+ Add New Category</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           {showCustomCategory && (
             <div>
@@ -289,6 +439,54 @@ export const AddMenuItemDialog = ({ onSuccess }: AddMenuItemDialogProps) => {
                 onChange={(e) => setCustomCategory(e.target.value)}
                 placeholder="e.g. Appetizers, Beverages"
                 required
+              />
+            </div>
+          )}
+          <div>
+            <Label htmlFor="subcategory">Subcategory (Optional)</Label>
+            <Select 
+              onValueChange={(value) => {
+                if (value === "other") {
+                  setShowCustomSubcategory(true);
+                  setFormData({ ...formData, subcategory: "" });
+                } else if (value === "none") {
+                  setShowCustomSubcategory(false);
+                  setFormData({ ...formData, subcategory: "" });
+                } else {
+                  setShowCustomSubcategory(false);
+                  setFormData({ ...formData, subcategory: value });
+                }
+              }} 
+              value={showCustomSubcategory ? "other" : (formData.subcategory || "none")}
+              disabled={!formData.category}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={formData.category ? "Select subcategory (optional)" : "Select category first"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {formData.category && getSubcategoriesForCategory(formData.category).map((sub) => (
+                  <SelectItem key={sub} value={sub}>
+                    {sub}
+                  </SelectItem>
+                ))}
+                <SelectItem value="other">+ Add New Subcategory</SelectItem>
+              </SelectContent>
+            </Select>
+            {formData.category && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Showing subcategories for: {formData.category}
+              </p>
+            )}
+          </div>
+          {showCustomSubcategory && (
+            <div>
+              <Label htmlFor="customSubcategory">New Subcategory Name</Label>
+              <Input
+                id="customSubcategory"
+                value={customSubcategory}
+                onChange={(e) => setCustomSubcategory(e.target.value)}
+                placeholder="e.g. Grilled Items, Soups"
               />
             </div>
           )}

@@ -12,7 +12,12 @@ router.get('/', async (req, res) => {
     const items = await db.collection('menu_items')
       .find({ isActive: true })
       .toArray();
-    res.json(items);
+    
+    // Get lunch menu status
+    const lunchSetting = await db.collection('site_settings').findOne({ key: 'lunch_menu_enabled' });
+    const lunchEnabled = lunchSetting?.value !== false;
+    
+    res.json({ items, lunchEnabled });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
