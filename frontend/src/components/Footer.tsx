@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import indiyaLogo from "@/assets/indiya-logo.jpg";
 
 const Footer = () => {
   const { toast } = useToast();
@@ -77,7 +78,7 @@ const Footer = () => {
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/30 shrink-0">
                 <img 
-                  src="/src/assets/indiya-logo.jpg" 
+                  src={indiyaLogo} 
                   alt="Indiya Restaurant Logo" 
                   className="w-full h-full object-cover"
                 />

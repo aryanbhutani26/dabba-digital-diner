@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Menu, X, Settings, LogOut, Package, User } from "lucide-react";
 import { useState, useEffect } from "react";
-// import indiyaLogo from "@/assets/indiya-logo.jpg";
+import indiyaLogo from "@/assets/indiya-logo.jpg";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
 
@@ -52,7 +52,7 @@ const Navbar = () => {
           <Link to="/" className="flex items-center gap-3">
             <div className="w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden border-2 border-primary/20 hover:border-primary/40 transition-colors shrink-0">
               <img 
-                src="/src/assets/indiya-logo.jpg" 
+                src={indiyaLogo} 
                 alt="Indiya Restaurant Logo" 
                 className="w-full h-full object-cover"
               />
