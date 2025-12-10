@@ -1,6 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import aboutImage from "@/assets/about-restaurant.jpg";
+import storefrontImage from "@/assets/indiya-storefront.jpg";
 import chefMaria from "@/assets/chef-maria.jpg";
 import chefJames from "@/assets/chef-james.jpg";
 import chefSophie from "@/assets/chef-sophie.jpg";
@@ -18,11 +18,10 @@ const About = () => {
           <div className="container mx-auto max-w-6xl">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
-                <h1 className="text-5xl font-bold mb-6">Why Choose Indiya Restaurant?</h1>
+                <h1 className="text-5xl font-bold mb-6">Welcome to Indiya Bar & Restaurant</h1>
                 <p className="text-lg text-muted-foreground mb-6">
-                  At Indiya, we bring the vibrant and diverse flavours of India to the heart of London. 
-                  Our philosophy is simple: exceptional food, heartfelt hospitality, and a strong sense 
-                  of community can turn every meal into a truly memorable experience.
+                  Located in the heart of Orpington, Indiya Bar & Restaurant brings you the finest Indian dining experience. 
+                  Our elegant storefront welcomes you into a world of authentic flavors, modern ambiance, and exceptional hospitality.
                 </p>
                 <p className="text-lg text-muted-foreground mb-6">
                   We take pride in serving authentic Indian cuisine, thoughtfully prepared with fresh, 
@@ -30,18 +29,31 @@ const About = () => {
                   each dish with stories and heritage that make it so special. From beloved classics 
                   to unique regional specialities, every plate reflects the richness and spirit of India.
                 </p>
+                <p className="text-lg text-muted-foreground mb-6">
+                  <strong>Visit us at:</strong><br />
+                  180 High Street, Orpington, BR6 0JW<br />
+                  Phone: 01689 451 403<br />
+                  Website: www.dineindiya.co.uk
+                </p>
                 <p className="text-lg text-muted-foreground">
-                  But Indiya is more than just a place to dine — it's a cultural hub. We actively support 
-                  local events, businesses, and initiatives that celebrate our diverse community, because 
-                  we believe food has the power to bring people together.
+                  More than just a restaurant, Indiya is a cultural destination where food brings people together. 
+                  Experience modern authentic dining in our beautifully designed space.
                 </p>
               </div>
               <div className="relative">
-                <img
-                  src={aboutImage}
-                  alt="Indiya Restaurant interior"
-                  className="rounded-2xl shadow-2xl w-full h-auto"
-                />
+                <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+                  <img
+                    src={storefrontImage}
+                    alt="Indiya Bar & Restaurant - Finest Indian Restaurant Storefront"
+                    className="w-full h-auto"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                  <div className="absolute bottom-4 left-4 text-white">
+                    <p className="text-sm font-medium bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">
+                      📍 180 High Street, Orpington
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
