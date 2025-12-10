@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import heroImage from "@/assets/hero-restaurant.jpg";
-import aboutRestaurant from "@/assets/about-restaurant.jpg";
+import storefrontImage from "@/assets/indiya-storefront.jpg";
 import { UtensilsCrossed, Award, Clock, Heart, Tag, Percent, Gift, Sparkles, ArrowRight } from "lucide-react";
 import tiffinHero from "@/assets/tiffin-hero.jpg";
 import { useState, useEffect } from "react";
@@ -339,16 +339,19 @@ const Index = () => {
         <div className="container mx-auto max-w-7xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1">
-              <h2 className="text-4xl sm:text-5xl font-bold mb-6">About Our Restaurant</h2>
+              <h2 className="text-4xl sm:text-5xl font-bold mb-6">Visit Our Restaurant</h2>
               <p className="text-lg text-muted-foreground mb-6">
-                Indiya Bar & Restaurant is where culinary excellence meets elegant ambiance. For over a decade, we've been 
-                delighting guests with our innovative approach to fine dining, combining traditional 
-                techniques with modern flair.
+                Located on High Street in Orpington, Indiya Bar & Restaurant offers the finest Indian dining experience. 
+                Our modern storefront welcomes you into a world of authentic flavors and elegant ambiance.
+              </p>
+              <p className="text-lg text-muted-foreground mb-6">
+                <strong>📍 180 High Street, Orpington, BR6 0JW</strong><br />
+                <strong>📞 01689 451 403</strong><br />
+                <strong>🌐 www.dineindiya.co.uk</strong>
               </p>
               <p className="text-lg text-muted-foreground mb-8">
-                Our award-winning chefs use only the finest, locally-sourced ingredients to create 
-                unforgettable dining experiences. Every dish tells a story, and every visit becomes 
-                a cherished memory.
+                Experience modern authentic dining where traditional recipes meet contemporary presentation. 
+                Every visit becomes a cherished memory.
               </p>
               <Button asChild variant="hero" size="lg">
                 <Link to="/about">Learn More About Us</Link>
@@ -357,10 +360,11 @@ const Index = () => {
             <div className="order-1 lg:order-2">
               <div className="relative rounded-lg overflow-hidden shadow-2xl">
                 <img
-                  src={aboutRestaurant}
-                  alt="Indiya Bar & Restaurant Interior"
+                  src={storefrontImage}
+                  alt="Indiya Bar & Restaurant - Finest Indian Restaurant Storefront"
                   className="w-full h-auto"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent" />
               </div>
             </div>
           </div>
