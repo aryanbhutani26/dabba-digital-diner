@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb';
 import { getDB } from '../config/db.js';
 import { authenticate, isAdmin, isAdminOrDeliveryBoy } from '../middleware/auth.js';
 import { sendOrderConfirmation, sendDeliveryAssignment } from '../services/emailService.js';
-import { printerService } from '../services/printerService.js';
+import { hybridPrintingService } from '../services/hybridPrintingService.js';
 
 const router = express.Router();
 
@@ -407,21 +407,20 @@ router.post('/', authenticate, async (req, res) => {
       }).catch(err => console.error('Email failed:', err));
     }
     
-    // 🖨️ AUTOMATIC PRINTING - Print to both kitchen and bill desk printers
+    // 🖨️ HYBRID THERMAL PRINTING - Works both locally and on Vercel
     // This runs asynchronously and won't block order creation
     setImmediate(async () => {
       try {
         const orderWithId = { ...order, _id: result.insertedId };
-        const printResults = await printerService.printOrder(orderWithId);
+        const printResult = await hybridPrintingService.printOrder(orderWithId, 'both');
         
-        // Log results
-        const successCount = Object.values(printResults).filter(s => s === 'success').length;
-        if (successCount > 0) {
-          console.log(`✅ Order #${orderNumber} printing completed:`, printResults);
-        } else if (printResults.kitchen === 'disabled') {
-          console.log(`ℹ️  Printing disabled for order #${orderNumber}`);
+        if (printResult.success) {
+          console.log(`✅ Order #${orderNumber} printing successful:`, printResult.message);
         } else {
-          console.log(`⚠️  Order #${orderNumber} printing had issues:`, printResults);
+          console.log(`⚠️  Order #${orderNumber} printing failed:`, printResult.error);
+          if (printResult.fallback) {
+            console.log(`📋 Fallback: ${printResult.fallback}`);
+          }
         }
       } catch (printError) {
         // Printing errors should never break order creation

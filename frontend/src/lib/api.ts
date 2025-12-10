@@ -400,6 +400,83 @@ class ApiClient {
       method: 'DELETE',
     });
   }
+
+  // Thermal Printers
+  async getThermalPrinterStatus() {
+    return this.request('/thermal-printers/status');
+  }
+
+  async testThermalPrint(printerId: string) {
+    return this.request(`/thermal-printers/test/${printerId}`, {
+      method: 'POST',
+    });
+  }
+
+  async toggleThermalPrinter(printerId: string, enabled: boolean) {
+    return this.request(`/thermal-printers/config/${printerId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ enabled }),
+    });
+  }
+
+  async processThermalPrintQueue() {
+    return this.request('/thermal-printers/queue/process', {
+      method: 'POST',
+    });
+  }
+
+  async clearThermalPrintQueue() {
+    return this.request('/thermal-printers/queue', {
+      method: 'DELETE',
+    });
+  }
+
+  // Invoices
+  async getInvoiceData(orderId: string) {
+    return this.request(`/invoices/${orderId}/data`);
+  }
+
+  async getOrdersWithInvoices(limit = 50, offset = 0, status = 'all') {
+    return this.request(`/invoices/list?limit=${limit}&offset=${offset}&status=${status}`);
+  }
+
+  async reprintOrder(orderId: string, printerType = 'both') {
+    return this.request(`/invoices/${orderId}/reprint`, {
+      method: 'POST',
+      body: JSON.stringify({ printerType }),
+    });
+  }
+
+  // Get invoice HTML with authentication
+  async getInvoiceHtml(orderId: string, type = 'bill') {
+    const endpoint = `/invoices/${orderId}/html${type === 'kitchen' ? '?type=kitchen' : ''}`;
+    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${endpoint}`, {
+      headers: {
+        'Authorization': `Bearer ${this.token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get invoice HTML: ${response.status}`);
+    }
+    
+    return response.text();
+  }
+
+  // Download invoice with authentication
+  async downloadInvoice(orderId: string, type = 'bill') {
+    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/invoices/${orderId}/download?type=${type}`, {
+      headers: {
+        'Authorization': `Bearer ${this.token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to download invoice: ${response.status}`);
+    }
+    
+    return response.blob();
+  }
 }
 
 export const api = new ApiClient();

@@ -22,6 +22,8 @@ import { AddDeliveryBoyDialog } from "@/components/admin/AddDeliveryBoyDialog";
 import { PromotionsManager } from "@/components/admin/PromotionsManager";
 import { AddDabbaServiceDialog } from "@/components/admin/AddDabbaServiceDialog";
 import { EditDabbaServiceDialog } from "@/components/admin/EditDabbaServiceDialog";
+import { ThermalPrinterDashboard } from "@/components/admin/ThermalPrinterDashboard";
+import { InvoiceManager } from "@/components/admin/InvoiceManager";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -376,7 +378,7 @@ const Admin = () => {
 
           <Tabs defaultValue="dashboard" className="space-y-4 md:space-y-6">
             {/* Clean Admin Navigation - Grid Layout */}
-            <TabsList className="grid grid-cols-6 lg:grid-cols-11 gap-2 h-auto bg-card/80 backdrop-blur-sm border rounded-xl p-3 shadow-sm">
+            <TabsList className="grid grid-cols-6 lg:grid-cols-12 gap-2 h-auto bg-card/80 backdrop-blur-sm border rounded-xl p-3 shadow-sm">
               <TabsTrigger 
                 value="dashboard" 
                 className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
@@ -459,6 +461,20 @@ const Admin = () => {
               >
                 <span className="text-xl">🥡</span>
                 <span>Services</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="printers" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">🖨️</span>
+                <span>Printers</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="invoices" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">📄</span>
+                <span>Invoices</span>
               </TabsTrigger>
             </TabsList>
 
@@ -1705,6 +1721,16 @@ const Admin = () => {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Thermal Printers Tab */}
+            <TabsContent value="printers">
+              <ThermalPrinterDashboard />
+            </TabsContent>
+
+            {/* Invoice Manager Tab */}
+            <TabsContent value="invoices">
+              <InvoiceManager />
             </TabsContent>
           </Tabs>
         </div>
