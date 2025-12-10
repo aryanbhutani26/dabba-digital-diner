@@ -100,53 +100,60 @@ const Auth = () => {
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
             <TabsContent value="signin">
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div>
-                  <label htmlFor="signin-email" className="block text-sm font-medium mb-2">
-                    Email
-                  </label>
-                  <Input
-                    id="signin-email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="signin-password" className="block text-sm font-medium mb-2">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <Input
-                      id="signin-password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className="pr-10"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
+              <div className="min-h-[280px]">
+                <form onSubmit={handleSignIn} className="space-y-4">
+                  {/* Hidden name field to match signup form height */}
+                  <div className="invisible h-0 overflow-hidden">
+                    <label className="block text-sm font-medium mb-2">Name</label>
+                    <Input />
                   </div>
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Signing in..." : "Sign In"}
-                </Button>
-              </form>
+                  <div>
+                    <label htmlFor="signin-email" className="block text-sm font-medium mb-2">
+                      Email
+                    </label>
+                    <Input
+                      id="signin-email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="signin-password" className="block text-sm font-medium mb-2">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <Input
+                        id="signin-password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Signing in..." : "Sign In"}
+                  </Button>
+                </form>
+              </div>
 
               <div className="relative my-6">
                 <Separator />
@@ -158,7 +165,8 @@ const Auth = () => {
               <GoogleSignInButton />
             </TabsContent>
             <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
+              <div className="min-h-[280px]">
+                <form onSubmit={handleSignUp} className="space-y-4">
                 <div>
                   <label htmlFor="signup-name" className="block text-sm font-medium mb-2">
                     Name
@@ -215,10 +223,11 @@ const Auth = () => {
                     </Button>
                   </div>
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Creating account..." : "Sign Up"}
-                </Button>
-              </form>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Creating account..." : "Sign Up"}
+                  </Button>
+                </form>
+              </div>
 
               <div className="relative my-6">
                 <Separator />

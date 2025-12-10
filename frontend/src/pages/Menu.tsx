@@ -9,6 +9,7 @@ import CartSheet from "@/components/CartSheet";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { Loader2, Search } from "lucide-react";
+import { useCart, CartItem } from "@/hooks/useCart";
 
 interface Dish {
   name: string;
@@ -21,17 +22,10 @@ interface Dish {
   allergens?: string[];
 }
 
-interface CartItem {
-  name: string;
-  price: string;
-  quantity: number;
-  image: string;
-}
-
 const Menu = () => {
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { cartItems, addToCart, updateQuantity, removeItem, clearCart, getTotalItems } = useCart();
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<string[]>([]);
@@ -342,46 +336,13 @@ const Menu = () => {
   };
 
   const handleAddToCart = (dish: Dish, quantity: number) => {
-    setCartItems(prevItems => {
-      // For items with variants, include size in the comparison
-      const itemKey = (dish as any).selectedSize 
-        ? `${dish.name}-${(dish as any).selectedSize}` 
-        : dish.name;
-      
-      const existingItemIndex = prevItems.findIndex(item => {
-        const existingKey = item.selectedSize 
-          ? `${item.name}-${item.selectedSize}` 
-          : item.name;
-        return existingKey === itemKey;
-      });
-      
-      if (existingItemIndex > -1) {
-        const newItems = [...prevItems];
-        newItems[existingItemIndex].quantity += quantity;
-        return newItems;
-      }
-      
-      return [...prevItems, {
-        name: dish.name,
-        price: dish.price,
-        quantity,
-        image: dish.image,
-        selectedSize: (dish as any).selectedSize,
-        category: (dish as any).category,
-      }];
-    });
-  };
-
-  const handleUpdateQuantity = (index: number, newQuantity: number) => {
-    setCartItems(prevItems => {
-      const newItems = [...prevItems];
-      newItems[index].quantity = newQuantity;
-      return newItems;
-    });
-  };
-
-  const handleRemoveItem = (index: number) => {
-    setCartItems(prevItems => prevItems.filter((_, i) => i !== index));
+    addToCart({
+      name: dish.name,
+      price: dish.price,
+      image: dish.image,
+      selectedSize: (dish as any).selectedSize,
+      category: (dish as any).category,
+    }, quantity);
   };
 
   return (
@@ -392,9 +353,9 @@ const Menu = () => {
       <div className="fixed bottom-8 right-8 z-50">
         <CartSheet 
           items={cartItems}
-          onUpdateQuantity={handleUpdateQuantity}
-          onRemoveItem={handleRemoveItem}
-          onClearCart={() => setCartItems([])}
+          onUpdateQuantity={updateQuantity}
+          onRemoveItem={removeItem}
+          onClearCart={clearCart}
         />
       </div>
 
