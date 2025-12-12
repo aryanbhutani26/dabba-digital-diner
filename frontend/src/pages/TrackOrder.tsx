@@ -115,7 +115,7 @@ const TrackOrder = () => {
     const statusMap: any = {
       pending: { label: 'Order Placed', color: 'bg-gray-500', step: 1 },
       assigned: { label: 'Assigned to Delivery Partner', color: 'bg-blue-500', step: 2 },
-      picked_up: { label: 'Picked Up', color: 'bg-yellow-500', step: 3 },
+      picked_up: { label: 'Picked Up', color: 'bg-[#c3a85c]', step: 3 },
       out_for_delivery: { label: 'Out for Delivery', color: 'bg-orange-500', step: 4 },
       delivered: { label: 'Delivered', color: 'bg-green-500', step: 5 },
     };

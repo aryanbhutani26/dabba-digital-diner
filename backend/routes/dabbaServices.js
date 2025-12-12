@@ -50,7 +50,7 @@ router.get('/admin', authenticate, isAdmin, async (req, res) => {
 // Create dabba service (admin)
 router.post('/', authenticate, isAdmin, async (req, res) => {
   try {
-    const { title, price, description, features, image, order } = req.body;
+    const { title, price, description, features, image, order, pricingPeriod } = req.body;
 
     if (!title || !price || !description || !features || !Array.isArray(features)) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -64,6 +64,7 @@ router.post('/', authenticate, isAdmin, async (req, res) => {
       features: features.filter(f => f.trim()),
       image: image || '',
       order: order || 0,
+      pricingPeriod: pricingPeriod || 'day',
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date()
@@ -80,7 +81,7 @@ router.post('/', authenticate, isAdmin, async (req, res) => {
 // Update dabba service (admin)
 router.put('/:id', authenticate, isAdmin, async (req, res) => {
   try {
-    const { title, price, description, features, image, isActive, order } = req.body;
+    const { title, price, description, features, image, isActive, order, pricingPeriod } = req.body;
     const db = getDB();
 
     const updateData = {
@@ -94,6 +95,7 @@ router.put('/:id', authenticate, isAdmin, async (req, res) => {
     if (image !== undefined) updateData.image = image;
     if (isActive !== undefined) updateData.isActive = isActive;
     if (order !== undefined) updateData.order = order;
+    if (pricingPeriod) updateData.pricingPeriod = pricingPeriod;
 
     const result = await db.collection('dabba_services').findOneAndUpdate(
       { _id: new ObjectId(req.params.id) },

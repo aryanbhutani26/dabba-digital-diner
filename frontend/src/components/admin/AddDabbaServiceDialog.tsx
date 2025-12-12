@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
@@ -32,6 +33,7 @@ export const AddDabbaServiceDialog = ({ onSuccess }: AddDabbaServiceDialogProps)
     description: '',
     image: '',
     order: 0,
+    pricingPeriod: 'day',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,7 +71,7 @@ export const AddDabbaServiceDialog = ({ onSuccess }: AddDabbaServiceDialogProps)
         description: "Dabba service created successfully",
       });
 
-      setFormData({ title: '', price: '', description: '', image: '', order: 0 });
+      setFormData({ title: '', price: '', description: '', image: '', order: 0, pricingPeriod: 'day' });
       setFeatures(['']);
       setOpen(false);
       onSuccess();
@@ -140,6 +142,19 @@ export const AddDabbaServiceDialog = ({ onSuccess }: AddDabbaServiceDialogProps)
                 required
               />
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="pricingPeriod">Pricing Period *</Label>
+            <Select value={formData.pricingPeriod} onValueChange={(value) => setFormData({ ...formData, pricingPeriod: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select pricing period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">Per Day</SelectItem>
+                <SelectItem value="month">Per Month</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

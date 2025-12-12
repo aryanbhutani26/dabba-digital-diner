@@ -16,6 +16,7 @@ const Index = () => {
   const [servicesVisible, setServicesVisible] = useState(true);
   const [activePromotion, setActivePromotion] = useState<any>(null);
   const [signatureDishes, setSignatureDishes] = useState<any[]>([]);
+  const [dabbaServices, setDabbaServices] = useState<any[]>([]);
 
   useEffect(() => {
     fetchData();
@@ -23,16 +24,18 @@ const Index = () => {
 
   const fetchData = async () => {
     try {
-      const [couponsData, settingsData, promotionsData, signatureDishesData, menuItemsData] = await Promise.all([
+      const [couponsData, settingsData, promotionsData, signatureDishesData, menuItemsData, dabbaServicesData] = await Promise.all([
         api.getCoupons(),
         api.getSetting('services_visible').catch(() => ({ value: true })),
         api.getActivePromotions().catch(() => []),
         api.getSetting('signature_dishes').catch(() => ({ value: [] })),
-        api.getMenuItems().catch(() => []),
+        api.getMenuItems().catch(() => ({ items: [] })),
+        api.getDabbaServices().catch(() => []),
       ]);
 
       setOffers(couponsData);
       setServicesVisible(settingsData.value === true);
+      setDabbaServices(dabbaServicesData || []);
       
       // Get the first active promotion for the banner
       if (promotionsData && promotionsData.length > 0) {
@@ -40,12 +43,23 @@ const Index = () => {
       }
 
       // Get signature dishes from menu items
-      if (signatureDishesData.value && signatureDishesData.value.length > 0 && Array.isArray(menuItemsData)) {
-        const dishes = signatureDishesData.value
-          .map((dishId: string) => menuItemsData.find((item: any) => (item._id || item.id) === dishId))
-          .filter(Boolean)
-          .slice(0, 3);
-        setSignatureDishes(dishes);
+      if (signatureDishesData.value && signatureDishesData.value.length > 0) {
+        // Extract menu items from the response structure
+        const menuItems = menuItemsData.items || [];
+        
+        if (Array.isArray(menuItems) && menuItems.length > 0) {
+          const dishes = signatureDishesData.value
+            .map((dishId: string) => menuItems.find((item: any) => (item._id || item.id) === dishId))
+            .filter(Boolean)
+            .slice(0, 3);
+          
+          if (dishes.length > 0) {
+            setSignatureDishes(dishes);
+          }
+        }
+      } else {
+        // If no signature dishes are set, clear the array to show fallback dishes
+        setSignatureDishes([]);
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -247,35 +261,57 @@ const Index = () => {
                   Experience the authentic taste of home-cooked meals, delivered fresh to your doorstep. 
                   Our dabba service brings you wholesome, nutritious meals prepared daily with premium ingredients.
                 </p>
-                <div className="space-y-4 mb-8">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
-                      <Clock className="w-4 h-4 text-primary" />
+                
+                {/* Dynamic Dabba Services or Default Features */}
+                {dabbaServices.length > 0 ? (
+                  <div className="space-y-4 mb-8">
+                    {dabbaServices.slice(0, 3).map((service, index) => (
+                      <div key={service._id || service.id || index} className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
+                          <Tag className="w-4 h-4 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold mb-1">{service.title || service.name}</h3>
+                          <p className="text-muted-foreground text-sm">{service.description}</p>
+                          <p className="text-primary font-semibold text-sm">
+                            £{typeof service.price === 'number' ? service.price.toFixed(2) : (service.price || '0.00')}/{service.pricingPeriod || 'day'}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-4 mb-8">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
+                        <Clock className="w-4 h-4 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1">Timely Delivery</h3>
+                        <p className="text-muted-foreground text-sm">Hot meals delivered right on time, every day</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold mb-1">Timely Delivery</h3>
-                      <p className="text-muted-foreground text-sm">Hot meals delivered right on time, every day</p>
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
+                        <Heart className="w-4 h-4 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1">Made Fresh Daily</h3>
+                        <p className="text-muted-foreground text-sm">Traditional recipes with authentic flavors</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
+                        <Tag className="w-4 h-4 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1">Affordable Plans</h3>
+                        <p className="text-muted-foreground text-sm">Starting from £299/day with various options</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
-                      <Heart className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-1">Made Fresh Daily</h3>
-                      <p className="text-muted-foreground text-sm">Traditional recipes with authentic flavors</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
-                      <Tag className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-1">Affordable Plans</h3>
-                      <p className="text-muted-foreground text-sm">Starting from £299/day with various options</p>
-                    </div>
-                  </div>
-                </div>
+                )}
+                
                 <Button asChild variant="hero" size="lg">
                   <Link to="/services">Explore Dabba Plans</Link>
                 </Button>
@@ -310,7 +346,7 @@ const Index = () => {
                 key={index}
                 className="overflow-hidden border-2 border-amber-600/20 hover:border-amber-500 transition-all duration-300 hover:shadow-2xl hover:shadow-amber-500/20 group"
               >
-                <div className="bg-gradient-to-br from-amber-500 via-yellow-500 to-amber-600 p-8 text-gray-900">
+                <div className="bg-gradient-to-br from-[#c3a85c] via-[#d4b96d] to-[#b8985a] p-8 text-black">
                   <div className="flex justify-center mb-4">{getIconComponent(offer.icon)}</div>
                   <h3 className="text-3xl font-bold mb-2 text-center">{offer.title}</h3>
                   <p className="text-xl text-center opacity-90">{offer.subtitle}</p>
@@ -377,7 +413,7 @@ const Index = () => {
           <p className="text-xl mb-8 text-primary-foreground/90">
             Book your table today and discover why Indiya Bar & Restaurant is the talk of the town
           </p>
-          <Button asChild size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-primary">
+          <Button asChild size="lg" className="border-2 border-black text-black bg-transparent hover:bg-black hover:text-[#c3a85c]">
             <Link to="/reservations">Make a Reservation</Link>
           </Button>
         </div>

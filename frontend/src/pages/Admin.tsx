@@ -24,6 +24,9 @@ import { AddDabbaServiceDialog } from "@/components/admin/AddDabbaServiceDialog"
 import { EditDabbaServiceDialog } from "@/components/admin/EditDabbaServiceDialog";
 import { ThermalPrinterDashboard } from "@/components/admin/ThermalPrinterDashboard";
 import { InvoiceManager } from "@/components/admin/InvoiceManager";
+import { DabbaSubscriptionsManager } from "@/components/admin/DabbaSubscriptionsManager";
+import { GalleryManager } from "@/components/admin/GalleryManager";
+import { BirthdayCouponsManager } from "@/components/admin/BirthdayCouponsManager";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -286,7 +289,7 @@ const Admin = () => {
 
   const getStatusColor = (status: string) => {
     const colors: any = {
-      pending: "bg-yellow-500",
+      pending: "bg-[#c3a85c]",
       assigned: "bg-blue-500",
       picked_up: "bg-purple-500",
       out_for_delivery: "bg-orange-500",
@@ -425,6 +428,13 @@ const Admin = () => {
                 <span>Coupons</span>
               </TabsTrigger>
               <TabsTrigger 
+                value="birthday-coupons" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">🎂</span>
+                <span>Birthday</span>
+              </TabsTrigger>
+              <TabsTrigger 
                 value="promotions" 
                 className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
               >
@@ -463,6 +473,13 @@ const Admin = () => {
                 <span>Services</span>
               </TabsTrigger>
               <TabsTrigger 
+                value="gallery" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">🖼️</span>
+                <span>Gallery</span>
+              </TabsTrigger>
+              <TabsTrigger 
                 value="printers" 
                 className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
               >
@@ -475,6 +492,13 @@ const Admin = () => {
               >
                 <span className="text-xl">📄</span>
                 <span>Invoices</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="subscriptions" 
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
+              >
+                <span className="text-xl">🥘</span>
+                <span>Subscriptions</span>
               </TabsTrigger>
             </TabsList>
 
@@ -540,17 +564,17 @@ const Admin = () => {
                   </Card>
 
                   {/* Pending Orders */}
-                  <Card className="relative overflow-hidden bg-gradient-to-br from-yellow-500/10 via-yellow-500/5 to-background border-yellow-500/20">
+                  <Card className="relative overflow-hidden bg-gradient-to-br from-[#c3a85c]/10 via-[#c3a85c]/5 to-background border-[#c3a85c]/20">
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-sm font-medium text-muted-foreground">Pending Orders</CardTitle>
-                        <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-[#c3a85c]/10 flex items-center justify-center">
                           <span className="text-xl">⏳</span>
                         </div>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-3xl font-bold text-yellow-600">{orders.filter(o => o.status === 'pending').length}</p>
+                      <p className="text-3xl font-bold text-[#c3a85c]">{orders.filter(o => o.status === 'pending').length}</p>
                       <p className="text-xs text-muted-foreground mt-1">Awaiting assignment</p>
                     </CardContent>
                   </Card>
@@ -787,14 +811,14 @@ const Admin = () => {
                   <CardContent>
                     <div className="space-y-4">
                       {/* Pending */}
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-[#c3a85c]/10 border border-[#c3a85c]/20">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                          <div className="w-10 h-10 rounded-full bg-[#c3a85c]/20 flex items-center justify-center">
                             <span className="text-lg">⏳</span>
                           </div>
                           <span className="font-medium">Pending</span>
                         </div>
-                        <span className="text-2xl font-bold text-yellow-600">{orders.filter(o => o.status === 'pending').length}</span>
+                        <span className="text-2xl font-bold text-[#c3a85c]">{orders.filter(o => o.status === 'pending').length}</span>
                       </div>
 
                       {/* Assigned */}
@@ -1078,8 +1102,8 @@ const Admin = () => {
                     </div>
                     
                     {!lunchMenuEnabled && (
-                      <div className="p-4 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                        <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                      <div className="p-4 bg-[#c3a85c]/5 border border-[#c3a85c]/20 rounded-lg">
+                        <p className="text-sm text-[#c3a85c]">
                           <strong>⚠️ Lunch menu is disabled.</strong> Customers will see a message that lunch is not currently being served, and items will be grayed out.
                         </p>
                       </div>
@@ -1183,6 +1207,11 @@ const Admin = () => {
               </Card>
             </TabsContent>
 
+            {/* Birthday Coupons Tab */}
+            <TabsContent value="birthday-coupons">
+              <BirthdayCouponsManager />
+            </TabsContent>
+
             <TabsContent value="promotions">
               <PromotionsManager promotions={promotions} onRefresh={fetchData} />
             </TabsContent>
@@ -1284,7 +1313,7 @@ const Admin = () => {
                         className={`group relative bg-gradient-to-br ${
                           reservation.status === 'confirmed' ? 'from-green-500/10 via-green-500/5 to-background/50 border-green-500/20' :
                           reservation.status === 'cancelled' ? 'from-red-500/10 via-red-500/5 to-background/50 border-red-500/20' :
-                          'from-yellow-500/10 via-yellow-500/5 to-background/50 border-yellow-500/20'
+                          'from-[#c3a85c]/10 via-[#c3a85c]/5 to-background/50 border-[#c3a85c]/20'
                         } border-2 rounded-xl p-5 hover:shadow-lg hover:border-opacity-40 transition-all duration-200 backdrop-blur-sm`}
                       >
                         {/* Reservation Icon */}
@@ -1304,7 +1333,7 @@ const Admin = () => {
                                 className={`text-xs ${
                                   reservation.status === 'confirmed' ? 'bg-green-500' :
                                   reservation.status === 'cancelled' ? 'bg-red-500' :
-                                  'bg-yellow-500'
+                                  'bg-[#c3a85c]'
                                 }`}
                               >
                                 {reservation.status === 'confirmed' ? '✓ Confirmed' :
@@ -1630,8 +1659,8 @@ const Admin = () => {
                 </CardHeader>
                 <CardContent>
                   {!servicesEnabled && (
-                    <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                      <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                    <div className="mb-6 p-4 bg-[#c3a85c]/5 border border-[#c3a85c]/20 rounded-lg">
+                      <p className="text-sm text-[#c3a85c]">
                         <strong>Services are currently disabled.</strong> Enable the toggle above to show the Services section in the navigation menu.
                       </p>
                     </div>
@@ -1723,6 +1752,11 @@ const Admin = () => {
               </Card>
             </TabsContent>
 
+            {/* Gallery Management Tab */}
+            <TabsContent value="gallery">
+              <GalleryManager />
+            </TabsContent>
+
             {/* Thermal Printers Tab */}
             <TabsContent value="printers">
               <ThermalPrinterDashboard />
@@ -1731,6 +1765,11 @@ const Admin = () => {
             {/* Invoice Manager Tab */}
             <TabsContent value="invoices">
               <InvoiceManager />
+            </TabsContent>
+
+            {/* Dabba Subscriptions Tab */}
+            <TabsContent value="subscriptions">
+              <DabbaSubscriptionsManager />
             </TabsContent>
           </Tabs>
         </div>

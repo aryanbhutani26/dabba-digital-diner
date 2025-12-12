@@ -62,7 +62,7 @@ export const Testimonials = () => {
       <Star
         key={index}
         className={`w-4 h-4 ${
-          index < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+          index < rating ? "fill-[#c3a85c] text-[#c3a85c]" : "text-gray-300"
         }`}
       />
     ));
@@ -75,6 +75,9 @@ export const Testimonials = () => {
           <h2 className="text-4xl sm:text-5xl font-bold mb-4">What Our Customers Say</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Don't just take our word for it - hear from our satisfied customers
+          </p>
+          <p className="text-sm text-muted-foreground/80 mt-2">
+            Feedback taken from Google reviews
           </p>
         </div>
 

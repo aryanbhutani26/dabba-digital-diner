@@ -112,18 +112,18 @@ export const AdminDashboard = () => {
           </Card>
 
           {/* Pending Orders */}
-          <Card className="relative overflow-hidden bg-gradient-to-br from-yellow-500/10 via-yellow-500/5 to-background border-yellow-500/20 hover:border-yellow-500/40 transition-all">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full -mr-16 -mt-16"></div>
+          <Card className="relative overflow-hidden bg-gradient-to-br from-[#c3a85c]/10 via-[#c3a85c]/5 to-background border-[#c3a85c]/20 hover:border-[#c3a85c]/40 transition-all">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#c3a85c]/5 rounded-full -mr-16 -mt-16"></div>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Pending Orders</CardTitle>
-                <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-yellow-600" />
+                <div className="w-10 h-10 rounded-full bg-[#c3a85c]/10 flex items-center justify-center">
+                  <Clock className="h-5 w-5 text-[#c3a85c]" />
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-yellow-600">{stats.pendingOrders}</p>
+              <p className="text-3xl font-bold text-[#c3a85c]">{stats.pendingOrders}</p>
               <p className="text-xs text-muted-foreground mt-1">Awaiting assignment</p>
             </CardContent>
           </Card>

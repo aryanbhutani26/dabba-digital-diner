@@ -9,12 +9,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
 interface PaymentFormProps {
+  clientSecret: string;
   amount: number;
-  onSuccess: (paymentIntentId: string) => void;
-  onError: (error: string) => void;
+  description?: string;
+  onSuccess: () => void;
+  onError?: (error: string) => void;
 }
 
-export const PaymentForm = ({ amount, onSuccess, onError }: PaymentFormProps) => {
+export const PaymentForm = ({ clientSecret, amount, description, onSuccess, onError }: PaymentFormProps) => {
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
@@ -39,7 +41,7 @@ export const PaymentForm = ({ amount, onSuccess, onError }: PaymentFormProps) =>
 
     if (error) {
       console.error('Payment error:', error);
-      onError(error.message || 'Payment failed');
+      if (onError) onError(error.message || 'Payment failed');
       toast({
         title: "Payment Failed",
         description: error.message || 'Something went wrong with your payment',
@@ -47,10 +49,10 @@ export const PaymentForm = ({ amount, onSuccess, onError }: PaymentFormProps) =>
       });
     } else if (paymentIntent && paymentIntent.status === 'succeeded') {
       console.log('Payment succeeded:', paymentIntent.id);
-      onSuccess(paymentIntent.id);
+      onSuccess();
       toast({
         title: "Payment Successful!",
-        description: `Payment of £${amount.toFixed(2)} completed successfully`,
+        description: description || `Payment of £${amount.toFixed(2)} completed successfully`,
       });
     }
 

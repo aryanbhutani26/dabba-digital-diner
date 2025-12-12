@@ -45,19 +45,19 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-sm border-b border-gray-800 shadow-sm">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-24">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden border-2 border-primary/20 hover:border-primary/40 transition-colors shrink-0">
+          <Link to="/" className="flex items-center gap-4">
+            <div className="w-16 h-16 md:w-18 md:h-18 lg:w-20 lg:h-20 rounded-full overflow-hidden border-2 border-white/20 hover:border-white/40 transition-colors shrink-0">
               <img 
                 src={indiyaLogo} 
                 alt="Indiya Restaurant Logo" 
                 className="w-full h-full object-cover"
               />
             </div>
-            <h1 className="text-xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-white">
               Indiya Bar & Restaurant
             </h1>
           </Link>
@@ -76,15 +76,15 @@ const Navbar = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`text-base font-medium transition-colors hover:text-primary ${
-                    isActive(item.path) ? "text-primary" : "text-foreground"
+                  className={`text-base font-medium transition-colors hover:text-[#c3a85c] ${
+                    isActive(item.path) ? "text-[#c3a85c]" : "text-white"
                   }`}
                 >
                   {item.name}
                 </Link>
               ))}
             {!isDeliveryBoy && (
-              <Button asChild variant="hero" size="default">
+              <Button asChild size="default" className="bg-[#c3a85c] hover:bg-[#b8985a] text-black font-medium">
                 <Link to="/reservations">Book a Table</Link>
               </Button>
             )}
@@ -117,7 +117,7 @@ const Navbar = () => {
               </>
             )}
             {!user && (
-              <Button asChild variant="outline">
+              <Button asChild className="bg-[#c3a85c] hover:bg-[#b8985a] text-black font-medium border-0">
                 <Link to="/auth">Sign In</Link>
               </Button>
             )}
@@ -125,7 +125,7 @@ const Navbar = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden"
+            className="md:hidden text-white"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -135,7 +135,7 @@ const Navbar = () => {
 
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
-          <div className="md:hidden py-4 space-y-3 animate-fade-in">
+          <div className="md:hidden py-4 space-y-3 animate-fade-in bg-black/95">
             {!isDeliveryBoy && navItems
               .filter(item => {
                 // Hide Services link if services are disabled
@@ -148,8 +148,8 @@ const Navbar = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`block py-2 text-base font-medium transition-colors hover:text-primary ${
-                    isActive(item.path) ? "text-primary" : "text-foreground"
+                  className={`block py-2 text-base font-medium transition-colors hover:text-[#c3a85c] ${
+                    isActive(item.path) ? "text-[#c3a85c]" : "text-white"
                   }`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -157,7 +157,7 @@ const Navbar = () => {
                 </Link>
               ))}
             {!isDeliveryBoy && (
-              <Button asChild variant="hero" size="default" className="w-full">
+              <Button asChild size="default" className="w-full bg-[#c3a85c] hover:bg-[#b8985a] text-black font-medium">
                 <Link to="/reservations" onClick={() => setIsMobileMenuOpen(false)}>
                   Book a Table
                 </Link>
@@ -199,7 +199,7 @@ const Navbar = () => {
               </>
             )}
             {!user && (
-              <Button asChild variant="outline" className="w-full">
+              <Button asChild className="w-full bg-[#c3a85c] hover:bg-[#b8985a] text-black font-medium border-0">
                 <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
                   Sign In
                 </Link>

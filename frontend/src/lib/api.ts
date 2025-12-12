@@ -383,6 +383,46 @@ class ApiClient {
     });
   }
 
+  // Dabba Subscriptions
+  async createDabbaSubscription(data: any) {
+    return this.request('/dabba-subscriptions', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getMyDabbaSubscriptions() {
+    return this.request('/dabba-subscriptions/my-subscriptions');
+  }
+
+  async updateSubscriptionPaymentStatus(id: string, paymentStatus: string, paymentIntentId?: string) {
+    return this.request(`/dabba-subscriptions/${id}/payment-status`, {
+      method: 'PUT',
+      body: JSON.stringify({ paymentStatus, paymentIntentId }),
+    });
+  }
+
+  async cancelDabbaSubscription(id: string) {
+    return this.request(`/dabba-subscriptions/${id}/cancel`, {
+      method: 'PUT',
+    });
+  }
+
+  async getAllDabbaSubscriptions() {
+    return this.request('/dabba-subscriptions/admin/all');
+  }
+
+  async getDabbaSubscriptionDetails(id: string) {
+    return this.request(`/dabba-subscriptions/admin/${id}`);
+  }
+
+  async updateDabbaSubscriptionStatus(id: string, status: string) {
+    return this.request(`/dabba-subscriptions/admin/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  }
+
   // Image Upload
   async getImageKitAuth() {
     return this.request('/upload/auth');
@@ -476,6 +516,75 @@ class ApiClient {
     }
     
     return response.blob();
+  }
+
+  // Gallery Management
+  async getGalleryItems() {
+    return this.request('/gallery');
+  }
+
+  async getGalleryItemsAdmin() {
+    return this.request('/gallery/admin/all');
+  }
+
+  async createGalleryItem(data: any) {
+    return this.request('/gallery', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateGalleryItem(id: string, data: any) {
+    return this.request(`/gallery/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteGalleryItem(id: string) {
+    return this.request(`/gallery/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async reorderGalleryItems(items: { id: string; order: number }[]) {
+    return this.request('/gallery/admin/reorder', {
+      method: 'PUT',
+      body: JSON.stringify({ items }),
+    });
+  }
+
+  // Birthday Coupons Management
+  async generateBirthdayCoupons(data: { discountPercentage: number; validDays?: number; message?: string }) {
+    return this.request('/birthday-coupons/generate', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getMyBirthdayCoupons() {
+    return this.request('/birthday-coupons/my-coupons');
+  }
+
+  async getAllBirthdayCoupons() {
+    return this.request('/birthday-coupons/admin/all');
+  }
+
+  async getUpcomingBirthdays(days = 7) {
+    return this.request(`/birthday-coupons/upcoming-birthdays?days=${days}`);
+  }
+
+  async autoGenerateBirthdayCoupons() {
+    return this.request('/birthday-coupons/auto-generate', {
+      method: 'POST',
+    });
+  }
+
+  async generateBirthdayCouponsRange(data: { discountPercentage: number; validDays: number; message?: string; maxDaysAhead: number }) {
+    return this.request('/birthday-coupons/generate-range', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   }
 }
 

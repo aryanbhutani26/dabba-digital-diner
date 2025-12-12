@@ -157,7 +157,7 @@ const Delivery = () => {
   const getStatusColor = (status: string) => {
     const colors: any = {
       assigned: "bg-blue-500",
-      picked_up: "bg-yellow-500",
+      picked_up: "bg-[#c3a85c]",
       out_for_delivery: "bg-orange-500",
       delivered: "bg-green-500",
     };
