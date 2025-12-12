@@ -2,15 +2,39 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { PackageCheck, Truck, Star, Users, Utensils, Calendar } from "lucide-react";
+import { PackageCheck, Truck, Star, Users, Utensils, Calendar, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
+import { DabbaSubscriptionDialog } from "@/components/DabbaSubscriptionDialog";
 import tiffinHero from "@/assets/tiffin-hero.jpg";
 import tiffinBox1 from "@/assets/tiffin-box-1.jpg";
 import tiffinBox2 from "@/assets/tiffin-box-2.jpg";
 import tiffinBox3 from "@/assets/tiffin-box-3.jpg";
 
 const Services = () => {
-  const tiffinPlans = [
+  const [dabbaServices, setDabbaServices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedService, setSelectedService] = useState<any>(null);
+  const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
+
+  useEffect(() => {
+    fetchDabbaServices();
+  }, []);
+
+  const fetchDabbaServices = async () => {
+    try {
+      const services = await api.getDabbaServices();
+      setDabbaServices(services);
+    } catch (error) {
+      console.error('Failed to fetch dabba services:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fallback static plans if no services are configured
+  const fallbackTiffinPlans = [
     {
       image: tiffinBox1,
       title: "Executive Dabba",
@@ -33,6 +57,8 @@ const Services = () => {
       features: ["5 Curries", "Rice & Roti", "Dal & Raita", "Sweet & Extras"],
     },
   ];
+
+  const tiffinPlans = dabbaServices.length > 0 ? dabbaServices : fallbackTiffinPlans;
 
   return (
     <div className="min-h-screen">
@@ -85,47 +111,59 @@ const Services = () => {
           </div>
 
           {/* Tiffin Plans */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {tiffinPlans.map((plan, index) => (
-              <Card
-                key={index}
-                className="bg-white/5 backdrop-blur-sm border-2 border-primary/30 hover:border-primary transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20 group overflow-hidden"
-              >
-                <div className="relative h-64 sm:h-72 overflow-hidden">
-                  <img
-                    src={plan.image}
-                    alt={plan.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h3 className="text-2xl sm:text-3xl font-bold text-primary mb-1">{plan.title}</h3>
-                    <p className="text-white/90 text-sm">{plan.description}</p>
+          {loading ? (
+            <div className="flex justify-center items-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {tiffinPlans.map((plan, index) => (
+                <Card
+                  key={plan._id || plan.id || index}
+                  className="bg-white/5 backdrop-blur-sm border-2 border-primary/30 hover:border-primary transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20 group overflow-hidden"
+                >
+                  <div className="relative h-64 sm:h-72 overflow-hidden">
+                    <img
+                      src={plan.image || fallbackTiffinPlans[index % fallbackTiffinPlans.length]?.image}
+                      alt={plan.title || plan.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <h3 className="text-2xl sm:text-3xl font-bold text-primary mb-1">{plan.title || plan.name}</h3>
+                      <p className="text-white/90 text-sm">{plan.description}</p>
+                    </div>
                   </div>
-                </div>
-                <CardContent className="pt-6 pb-6">
-                  <div className="flex items-baseline mb-4">
-                    <span className="text-4xl font-bold text-primary">{plan.price}</span>
-                    <span className="text-white/70 ml-2">/day</span>
-                  </div>
-                  <ul className="space-y-2 mb-6">
-                    {plan.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-center text-white/90 text-sm">
-                        <span className="w-1.5 h-1.5 bg-primary rounded-full mr-2" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  <Button 
-                    variant="outline" 
-                    className="w-full border-primary text-primary hover:bg-primary hover:text-black transition-all duration-300"
-                  >
-                    Subscribe Now
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  <CardContent className="pt-6 pb-6">
+                    <div className="flex items-baseline mb-4">
+                      <span className="text-4xl font-bold text-primary">
+                        £{typeof plan.price === 'number' ? plan.price.toFixed(2) : (plan.price || '0.00')}
+                      </span>
+                      <span className="text-white/70 ml-2">/{plan.pricingPeriod || 'day'}</span>
+                    </div>
+                    <ul className="space-y-2 mb-6">
+                      {(plan.features || []).map((feature, idx) => (
+                        <li key={idx} className="flex items-center text-white/90 text-sm">
+                          <span className="w-1.5 h-1.5 bg-primary rounded-full mr-2" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-primary text-primary hover:bg-primary hover:text-black transition-all duration-300"
+                      onClick={() => {
+                        setSelectedService(plan);
+                        setSubscriptionDialogOpen(true);
+                      }}
+                    >
+                      Subscribe Now
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
 
           {/* CTA */}
           <div className="text-center mt-12">
@@ -241,6 +279,15 @@ const Services = () => {
       </section>
 
       <Footer />
+
+      {/* Subscription Dialog */}
+      {selectedService && (
+        <DabbaSubscriptionDialog
+          service={selectedService}
+          open={subscriptionDialogOpen}
+          onOpenChange={setSubscriptionDialogOpen}
+        />
+      )}
     </div>
   );
 };

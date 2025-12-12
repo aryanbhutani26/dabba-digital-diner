@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Edit, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
@@ -35,6 +36,7 @@ export const EditDabbaServiceDialog = ({ service, onSuccess }: EditDabbaServiceD
     image: '',
     isActive: true,
     order: 0,
+    pricingPeriod: 'day',
   });
 
   useEffect(() => {
@@ -46,6 +48,7 @@ export const EditDabbaServiceDialog = ({ service, onSuccess }: EditDabbaServiceD
         image: service.image || '',
         isActive: service.isActive !== false,
         order: service.order || 0,
+        pricingPeriod: service.pricingPeriod || 'day',
       });
       setFeatures(service.features?.length > 0 ? service.features : ['']);
     }
@@ -155,6 +158,19 @@ export const EditDabbaServiceDialog = ({ service, onSuccess }: EditDabbaServiceD
                 required
               />
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="pricingPeriod">Pricing Period *</Label>
+            <Select value={formData.pricingPeriod} onValueChange={(value) => setFormData({ ...formData, pricingPeriod: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select pricing period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">Per Day</SelectItem>
+                <SelectItem value="month">Per Month</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

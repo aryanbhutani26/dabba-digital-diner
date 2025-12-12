@@ -58,9 +58,13 @@ import voucherRoutes from './routes/vouchers.js';
 import blogRoutes from './routes/blog.js';
 import paymentRoutes from './routes/payment.js';
 import dabbaServicesRoutes from './routes/dabbaServices.js';
+import dabbaSubscriptionsRoutes from './routes/dabbaSubscriptions.js';
 import printerRoutes from './routes/printers.js';
 import thermalPrinterRoutes from './routes/thermalPrinters.js';
 import invoiceRoutes from './routes/invoices.js';
+import posIntegrationRoutes from './routes/posIntegration.js';
+import galleryRoutes from './routes/gallery.js';
+import birthdayCouponsRoutes from './routes/birthdayCoupons.js';
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -78,10 +82,14 @@ app.use('/api/vouchers', voucherRoutes);
 app.use('/api/blog', blogRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/dabba-services', dabbaServicesRoutes);
+app.use('/api/dabba-subscriptions', dabbaSubscriptionsRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/printers', printerRoutes);
 app.use('/api/thermal-printers', thermalPrinterRoutes);
 app.use('/api/invoices', invoiceRoutes);
+app.use('/api/pos-integration', posIntegrationRoutes);
+app.use('/api/gallery', galleryRoutes);
+app.use('/api/birthday-coupons', birthdayCouponsRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

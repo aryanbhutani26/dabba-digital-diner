@@ -41,6 +41,7 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
   const [discount, setDiscount] = useState(0);
   const [showCoupons, setShowCoupons] = useState(false);
   const [availableCoupons, setAvailableCoupons] = useState<any[]>([]);
+  const [birthdayCoupons, setBirthdayCoupons] = useState<any[]>([]);
   const [showPayment, setShowPayment] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [currentOrder, setCurrentOrder] = useState<any>(null);
@@ -49,6 +50,7 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
   useEffect(() => {
     if (user) {
       fetchAddresses();
+      fetchBirthdayCoupons();
     }
     fetchDeliveryFee();
   }, [user]);
@@ -60,6 +62,23 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
     } catch (error) {
       console.error('Failed to fetch delivery fee:', error);
       setDeliveryFee(50); // Default fallback
+    }
+  };
+
+  const fetchBirthdayCoupons = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/birthday-coupons/my-coupons`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const coupons = await response.json();
+        setBirthdayCoupons(coupons);
+      }
+    } catch (error) {
+      console.error('Failed to fetch birthday coupons:', error);
     }
   };
 
@@ -92,35 +111,64 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
     }
 
     try {
-      // Find coupon from coupons list (you can also make an API call)
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/coupons`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        }
-      });
-      const coupons = await response.json();
-      const coupon = coupons.find((c: any) => c.code.toUpperCase() === couponCode.toUpperCase() && c.isActive);
+      // Check both regular coupons and birthday coupons
+      const [regularCouponsResponse, birthdayCouponsResponse] = await Promise.all([
+        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/coupons`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          }
+        }),
+        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/birthday-coupons/my-coupons`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          }
+        }).catch(() => ({ json: () => [] }))
+      ]);
+
+      const regularCoupons = await regularCouponsResponse.json();
+      const birthdayCoupons = await birthdayCouponsResponse.json();
+
+      // Find coupon in regular coupons
+      let coupon = regularCoupons.find((c: any) => c.code.toUpperCase() === couponCode.toUpperCase() && c.isActive);
+      let isBirthdayCoupon = false;
+
+      // If not found in regular coupons, check birthday coupons
+      if (!coupon) {
+        coupon = birthdayCoupons.find((c: any) => c.code.toUpperCase() === couponCode.toUpperCase());
+        isBirthdayCoupon = true;
+      }
 
       if (!coupon) {
         toast({
           title: "Invalid coupon",
-          description: "This coupon code is not valid",
+          description: "This coupon code is not valid or has expired",
           variant: "destructive",
         });
         return;
       }
 
-      // Calculate discount (simple percentage for coupons)
-      // Assuming coupons have a discount percentage in their title (e.g., "20% OFF")
-      const discountMatch = coupon.title.match(/(\d+)%/);
-      const discountPercent = discountMatch ? parseInt(discountMatch[1]) : 10; // Default 10%
+      // Calculate discount
+      let discountPercent;
+      if (isBirthdayCoupon) {
+        discountPercent = coupon.discountPercentage;
+      } else {
+        // For regular coupons, extract percentage from title
+        const discountMatch = coupon.title.match(/(\d+)%/);
+        discountPercent = discountMatch ? parseInt(discountMatch[1]) : 10;
+      }
+
       const discountAmount = (totalPrice * discountPercent) / 100;
 
-      setAppliedCoupon(coupon);
+      setAppliedCoupon({
+        ...coupon,
+        isBirthdayCoupon,
+        discountPercentage: discountPercent
+      });
       setDiscount(discountAmount);
+      
       toast({
-        title: "Coupon applied!",
-        description: `You saved £${discountAmount.toFixed(2)} with ${coupon.code}`,
+        title: isBirthdayCoupon ? "🎉 Birthday coupon applied!" : "Coupon applied!",
+        description: `You saved £${discountAmount.toFixed(2)} with ${coupon.code}${isBirthdayCoupon ? ' - Happy Birthday!' : ''}`,
       });
     } catch (error) {
       toast({
@@ -143,13 +191,20 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
 
   const fetchAvailableCoupons = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/coupons`, {
+      // Only fetch regular coupons for the available coupons modal
+      // Birthday coupons are handled separately and should not appear here
+      const regularCouponsResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/coupons`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
       });
-      const coupons = await response.json();
-      setAvailableCoupons(coupons.filter((c: any) => c.isActive));
+
+      const regularCoupons = await regularCouponsResponse.json();
+
+      // Only show regular coupons in the available coupons list
+      const allCoupons = regularCoupons.filter((c: any) => c.isActive);
+
+      setAvailableCoupons(allCoupons);
       setShowCoupons(true);
     } catch (error) {
       toast({
@@ -162,6 +217,11 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
 
   // Check if coupon is applicable to current cart items
   const isCouponApplicable = (coupon: any) => {
+    // Birthday coupons always apply to all items
+    if (coupon.isBirthdayCoupon) {
+      return true;
+    }
+    
     // If coupon applies to all categories, it's always applicable
     if (coupon.applyToAll) {
       return true;
@@ -175,8 +235,8 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
   };
 
   const selectCoupon = async (coupon: any) => {
-    // Check if coupon is applicable
-    if (!isCouponApplicable(coupon)) {
+    // Birthday coupons apply to all items, skip category check
+    if (!coupon.isBirthdayCoupon && !isCouponApplicable(coupon)) {
       toast({
         title: "Coupon not applicable",
         description: `This coupon is only valid for ${coupon.applicableCategories?.join(', ')} items`,
@@ -186,8 +246,10 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
     }
 
     try {
-      // Calculate discount using the stored discount percentage
-      const discountPercent = coupon.discountPercent || 10;
+      // Calculate discount using the appropriate percentage
+      const discountPercent = coupon.isBirthdayCoupon 
+        ? coupon.discountPercentage 
+        : (coupon.discountPercent || 10);
       const discountAmount = (totalPrice * discountPercent) / 100;
 
       setAppliedCoupon(coupon);
@@ -196,8 +258,8 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
       setShowCoupons(false);
       
       toast({
-        title: "Coupon applied!",
-        description: `You saved £${discountAmount.toFixed(2)} with ${coupon.code}`,
+        title: coupon.isBirthdayCoupon ? "🎉 Birthday coupon applied!" : "Coupon applied!",
+        description: `You saved £${discountAmount.toFixed(2)} with ${coupon.code}${coupon.isBirthdayCoupon ? ' - Happy Birthday!' : ''}`,
       });
     } catch (error) {
       toast({
@@ -532,6 +594,62 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                 })}
               </div>
               
+              {/* Birthday Coupons Section */}
+              {user && birthdayCoupons.length > 0 && (
+                <div className="border-t pt-4">
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-medium flex items-center gap-2">
+                      🎂 Your Birthday Coupons
+                      <Badge variant="secondary" className="bg-[#c3a85c] text-white">
+                        {birthdayCoupons.length}
+                      </Badge>
+                    </h3>
+                    <div className="space-y-2">
+                      {birthdayCoupons.map((coupon) => (
+                        <div
+                          key={coupon._id}
+                          onClick={() => {
+                            setCouponCode(coupon.code);
+                            setAppliedCoupon({
+                              ...coupon,
+                              isBirthdayCoupon: true,
+                              discountPercentage: coupon.discountPercentage
+                            });
+                            setDiscount((totalPrice * coupon.discountPercentage) / 100);
+                            toast({
+                              title: "🎉 Birthday coupon applied!",
+                              description: `You saved £${((totalPrice * coupon.discountPercentage) / 100).toFixed(2)} - Happy Birthday!`,
+                            });
+                          }}
+                          className="group relative p-3 border-2 border-[#c3a85c] rounded-xl bg-gradient-to-br from-[#c3a85c]/10 to-transparent hover:from-[#c3a85c]/20 cursor-pointer transition-all duration-200 hover:shadow-md"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge className="bg-[#c3a85c] text-white font-mono font-bold text-xs px-2 py-1">
+                                  {coupon.code}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">Birthday Special</span>
+                              </div>
+                              <h4 className="font-semibold text-sm text-[#c3a85c] group-hover:text-[#b8985a]">
+                                {coupon.discountPercentage}% OFF - Birthday Gift
+                              </h4>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Valid until: {new Date(coupon.expiryDate).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <div className="text-2xl">🎁</div>
+                          </div>
+                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span className="text-xs font-medium text-[#c3a85c]">Click to apply →</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Coupon Section */}
               <div className="border-t pt-4">
                 <div className="space-y-2">
@@ -570,7 +688,7 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                         variant="outline" 
                         size="sm" 
                         type="button"
-                        className="bg-yellow-400 hover:bg-yellow-500 text-black border-yellow-500 font-semibold"
+                        className="bg-[#c3a85c] hover:bg-[#b8985a] text-black border-[#c3a85c] font-semibold"
                       >
                         Remove
                       </Button>

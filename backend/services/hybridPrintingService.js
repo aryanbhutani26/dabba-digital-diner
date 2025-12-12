@@ -1,21 +1,32 @@
 import { thermalPrinterService } from './thermalPrinterService.js';
+import { posIntegrationService } from './posIntegrationService.js';
 
 class HybridPrintingService {
   constructor() {
     this.isVercelDeployment = process.env.VERCEL || process.env.NODE_ENV === 'production';
     this.localPrintServerUrl = process.env.LOCAL_PRINT_SERVER_URL || 'http://localhost:3001';
     this.webhookSecret = process.env.WEBHOOK_SECRET;
+    this.usePOSIntegration = process.env.ENABLE_POS_INTEGRATION === 'true';
   }
 
   async printOrder(order, printerType = 'both') {
     try {
-      if (this.isVercelDeployment) {
-        // Production: Send to local print server via webhook
-        return await this.sendToLocalPrintServer(order, printerType);
-      } else {
-        // Development: Use direct thermal printer service
-        return await thermalPrinterService.printOrder(order, printerType);
+      // Priority 1: Use existing POS system if configured
+      if (this.usePOSIntegration) {
+        console.log('🏪 Using existing POS system for printing');
+        return await posIntegrationService.printOrder(order, printerType);
       }
+      
+      // Priority 2: Vercel deployment with local print server
+      if (this.isVercelDeployment) {
+        console.log('🌐 Using local print server for Vercel deployment');
+        return await this.sendToLocalPrintServer(order, printerType);
+      } 
+      
+      // Priority 3: Development with direct thermal printer service
+      console.log('🔧 Using direct thermal printer service for development');
+      return await thermalPrinterService.printOrder(order, printerType);
+      
     } catch (error) {
       console.error('❌ Hybrid printing error:', error);
       return {

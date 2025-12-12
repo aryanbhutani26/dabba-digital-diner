@@ -5,12 +5,15 @@ import { authenticate, isAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get all active coupons (public)
+// Get all active coupons (public) - excludes birthday coupons
 router.get('/', async (req, res) => {
   try {
     const db = getDB();
     const coupons = await db.collection('coupons')
-      .find({ isActive: true })
+      .find({ 
+        isActive: true,
+        type: { $ne: 'birthday' } // Exclude birthday coupons
+      })
       .toArray();
     res.json(coupons);
   } catch (error) {

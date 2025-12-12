@@ -143,8 +143,34 @@ router.get('/profile', authenticate, async (req, res) => {
 // Update user profile
 router.patch('/profile', authenticate, async (req, res) => {
   try {
-    const { name, phone, addresses, licenseNumber, vehicleType, vehicleNumber, vehicleModel } = req.body;
+    const { name, phone, dateOfBirth, addresses, licenseNumber, vehicleType, vehicleNumber, vehicleModel } = req.body;
     const db = getDB();
+
+    // Validate date of birth if provided
+    if (dateOfBirth !== undefined) {
+      const dob = new Date(dateOfBirth);
+      const today = new Date();
+      const age = today.getFullYear() - dob.getFullYear();
+      
+      if (dob > today) {
+        return res.status(400).json({ error: 'Date of birth cannot be in the future' });
+      }
+      
+      if (age < 13) {
+        return res.status(400).json({ error: 'User must be at least 13 years old' });
+      }
+      
+      if (age > 120) {
+        return res.status(400).json({ error: 'Please enter a valid date of birth' });
+      }
+    }
+
+    // Validate phone number if provided
+    if (phone !== undefined && phone.length > 0) {
+      if (!/^\d{10}$/.test(phone)) {
+        return res.status(400).json({ error: 'Phone number must be exactly 10 digits' });
+      }
+    }
 
     const updateData = {
       updatedAt: new Date()
@@ -152,6 +178,7 @@ router.patch('/profile', authenticate, async (req, res) => {
 
     if (name !== undefined) updateData.name = name;
     if (phone !== undefined) updateData.phone = phone;
+    if (dateOfBirth !== undefined) updateData.dateOfBirth = new Date(dateOfBirth);
     if (addresses !== undefined) updateData.addresses = addresses;
     if (licenseNumber !== undefined) updateData.licenseNumber = licenseNumber;
     if (vehicleType !== undefined) updateData.vehicleType = vehicleType;
