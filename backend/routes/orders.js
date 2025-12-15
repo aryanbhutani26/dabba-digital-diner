@@ -401,7 +401,7 @@ router.patch('/:id/location', authenticate, async (req, res) => {
 router.post('/', authenticate, async (req, res) => {
   try {
     const db = getDB();
-    const { items, deliveryAddress, customerName, customerPhone, totalAmount, paymentMethod } = req.body;
+    const { items, deliveryAddress, customerName, customerPhone, totalAmount, paymentMethod, orderType = 'delivery' } = req.body;
 
     // Generate order number
     const orderCount = await db.collection('orders').countDocuments();
@@ -413,9 +413,10 @@ router.post('/', authenticate, async (req, res) => {
       customerName,
       customerPhone,
       deliveryAddress,
+      orderType,
       items,
       totalAmount,
-      deliveryFee: 50,
+      deliveryFee: orderType === 'delivery' ? 50 : 0,
       paymentMethod: paymentMethod || 'mock',
       paymentStatus: 'paid', // Mock payment always succeeds
       status: 'pending',

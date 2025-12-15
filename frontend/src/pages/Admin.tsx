@@ -61,6 +61,7 @@ const Admin = () => {
   const [signatureDishes, setSignatureDishes] = useState<string[]>([]);
   const [deliveryFee, setDeliveryFee] = useState<number>(50);
   const [lunchMenuEnabled, setLunchMenuEnabled] = useState<boolean>(true);
+  const [deliveryEnabled, setDeliveryEnabled] = useState<boolean>(true);
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('all');
@@ -96,7 +97,7 @@ const Admin = () => {
     }
     
     try {
-      const [couponsData, navData, menuData, usersData, ordersData, deliveryBoysData, promotionsData, reservationsData, dabbaServicesData, servicesVisibilityData, signatureDishesData, deliveryFeeData, lunchMenuData] = await Promise.all([
+      const [couponsData, navData, menuData, usersData, ordersData, deliveryBoysData, promotionsData, reservationsData, dabbaServicesData, servicesVisibilityData, signatureDishesData, deliveryFeeData, lunchMenuData, deliveryEnabledData] = await Promise.all([
         api.getAllCoupons(),
         api.getAllNavbarItems(),
         api.getAllMenuItems(),
@@ -110,6 +111,7 @@ const Admin = () => {
         api.getSetting('signature_dishes').catch(() => ({ value: [] })),
         api.getSetting('delivery_fee').catch(() => ({ value: 50 })),
         api.getSetting('lunch_menu_enabled').catch(() => ({ value: true })),
+        api.getSetting('delivery_enabled').catch(() => ({ value: true })),
       ]);
 
       setCoupons(couponsData || []);
@@ -125,6 +127,7 @@ const Admin = () => {
       setSignatureDishes(signatureDishesData?.value || []);
       setDeliveryFee(deliveryFeeData?.value || 50);
       setLunchMenuEnabled(lunchMenuData?.value !== false);
+      setDeliveryEnabled(deliveryEnabledData?.value !== false);
       
       // Count new pending orders
       const pendingOrders = ordersData.filter((order: any) => order.status === 'pending');
@@ -674,6 +677,9 @@ const Admin = () => {
                                 <Badge className={getStatusColor(order.status)}>
                                   {order.status.replace('_', ' ').toUpperCase()}
                                 </Badge>
+                                <Badge variant={order.orderType === 'pickup' ? 'secondary' : 'outline'}>
+                                  {order.orderType === 'pickup' ? '🏪 PICKUP' : '🚚 DELIVERY'}
+                                </Badge>
                                 {order.status === 'pending' && (
                                   <Badge variant="destructive">NEW</Badge>
                                 )}
@@ -681,7 +687,7 @@ const Admin = () => {
                               <div className="text-sm text-muted-foreground space-y-1">
                                 <p><strong>Customer:</strong> {order.customerName}</p>
                                 <p><strong>Phone:</strong> {order.customerPhone}</p>
-                                <p><strong>Address:</strong> {order.deliveryAddress}</p>
+                                <p><strong>{order.orderType === 'pickup' ? 'Pickup:' : 'Address:'}</strong> {order.deliveryAddress}</p>
                                 <p><strong>Items:</strong> {order.items?.length} items</p>
                                 <p><strong>Total:</strong> £{order.totalAmount}</p>
                                 <p><strong>Ordered:</strong> {new Date(order.createdAt).toLocaleString()}</p>
@@ -689,7 +695,7 @@ const Admin = () => {
                             </div>
                           </div>
                           
-                          {order.status === 'pending' && (
+                          {order.status === 'pending' && order.orderType === 'delivery' && (
                             <div className="pt-3 border-t">
                               <Label className="text-sm mb-2 block">Assign to Delivery Boy</Label>
                               <div className="flex gap-2">
@@ -711,7 +717,7 @@ const Admin = () => {
                             </div>
                           )}
                           
-                          {order.status !== 'pending' && order.deliveryBoyId && (
+                          {order.status !== 'pending' && order.orderType === 'delivery' && order.deliveryBoyId && (
                             <div className="pt-3 border-t">
                               <div className="flex items-center justify-between mb-2">
                                 <p className="text-sm text-muted-foreground">
@@ -762,6 +768,19 @@ const Admin = () => {
                                   }
                                 </p>
                               )}
+                            </div>
+                          )}
+                          
+                          {/* Pickup Order Message */}
+                          {order.orderType === 'pickup' && (
+                            <div className="pt-3 border-t">
+                              <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <span className="text-lg">🏪</span>
+                                <div>
+                                  <p className="text-sm font-medium text-green-800">Pickup Order</p>
+                                  <p className="text-xs text-green-600">Customer will collect from restaurant - no delivery needed</p>
+                                </div>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -1196,6 +1215,57 @@ const Admin = () => {
                         </Button>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Delivery Service Toggle Section */}
+                  <div className="space-y-4 pt-6 border-t">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Delivery Service Availability</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Control whether customers can order for delivery. When disabled, customers can only order for pickup from the restaurant.
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
+                      <div className="flex-1">
+                        <Label htmlFor="delivery-toggle" className="text-base font-medium cursor-pointer">
+                          Enable Delivery Service
+                        </Label>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {deliveryEnabled 
+                            ? "Customers can choose between delivery and pickup" 
+                            : "Only pickup orders are available - delivery is disabled"}
+                        </p>
+                      </div>
+                      <Switch
+                        id="delivery-toggle"
+                        checked={deliveryEnabled}
+                        onCheckedChange={async (checked) => {
+                          try {
+                            await api.updateSetting('delivery_enabled', checked);
+                            setDeliveryEnabled(checked);
+                            toast({
+                              title: "Success",
+                              description: `Delivery service ${checked ? 'enabled' : 'disabled'} successfully`,
+                            });
+                          } catch (error) {
+                            toast({
+                              title: "Error",
+                              description: "Failed to update delivery service status",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                      />
+                    </div>
+                    
+                    {!deliveryEnabled && (
+                      <div className="p-4 bg-orange-500/5 border border-orange-500/20 rounded-lg">
+                        <p className="text-sm text-orange-600">
+                          <strong>⚠️ Delivery service is disabled.</strong> Customers will only see pickup option and a message that delivery is not currently available.
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Lunch Menu Toggle Section */}

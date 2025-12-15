@@ -46,6 +46,8 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [currentOrder, setCurrentOrder] = useState<any>(null);
   const [deliveryFee, setDeliveryFee] = useState<number>(50);
+  const [orderType, setOrderType] = useState<'delivery' | 'pickup'>('delivery');
+  const [deliveryEnabled, setDeliveryEnabled] = useState<boolean>(true);
 
   useEffect(() => {
     if (user) {
@@ -57,11 +59,23 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
 
   const fetchDeliveryFee = async () => {
     try {
-      const response = await api.getSetting('delivery_fee');
-      setDeliveryFee(response.value || 50);
+      const [deliveryFeeResponse, deliveryEnabledResponse] = await Promise.all([
+        api.getSetting('delivery_fee'),
+        api.getSetting('delivery_enabled')
+      ]);
+      
+      setDeliveryFee(deliveryFeeResponse.value || 50);
+      const isDeliveryEnabled = deliveryEnabledResponse.value !== false;
+      setDeliveryEnabled(isDeliveryEnabled);
+      
+      // If delivery is disabled, automatically set to pickup
+      if (!isDeliveryEnabled) {
+        setOrderType('pickup');
+      }
     } catch (error) {
-      console.error('Failed to fetch delivery fee:', error);
+      console.error('Failed to fetch delivery settings:', error);
       setDeliveryFee(50); // Default fallback
+      setDeliveryEnabled(true); // Default fallback
     }
   };
 
@@ -310,7 +324,7 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
         return;
       }
 
-      if (!profile.addresses || profile.addresses.length === 0) {
+      if (orderType === 'delivery' && (!profile.addresses || profile.addresses.length === 0)) {
         toast({
           title: "Address required",
           description: "Please add a delivery address first",
@@ -328,7 +342,7 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
       return;
     }
 
-    if (addresses.length === 0) {
+    if (orderType === 'delivery' && addresses.length === 0) {
       toast({
         title: "Address required",
         description: "Please add a delivery address first",
@@ -344,7 +358,7 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
 
       // Get user profile for customer details
       const profile = await api.getUserProfile();
-      const finalAmount = totalPrice - discount + deliveryFee; // Subtract discount, add delivery fee
+      const finalAmount = totalPrice - discount + (orderType === 'delivery' ? deliveryFee : 0); // Subtract discount, add delivery fee only for delivery orders
       
       console.log('💰 Final amount:', finalAmount);
       console.log('📧 Customer email:', profile.email || user.email);
@@ -385,9 +399,12 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
         totalAmount: finalAmount,
         discount: discount,
         couponCode: appliedCoupon?.code || null,
-        deliveryAddress: typeof addresses[selectedAddress] === 'string' 
-          ? addresses[selectedAddress] 
-          : (addresses[selectedAddress] as any).address,
+        orderType: orderType,
+        deliveryAddress: orderType === 'delivery' 
+          ? (typeof addresses[selectedAddress] === 'string' 
+              ? addresses[selectedAddress] 
+              : (addresses[selectedAddress] as any).address)
+          : 'Pickup from restaurant',
         customerName: profile.name || user.name,
         customerPhone: profile.phone || 'Not provided',
         paymentMethod: 'stripe',
@@ -490,8 +507,66 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
             </div>
           ) : (
             <>
+              {/* Order Type Selection */}
+              <div className="bg-muted/50 rounded-lg p-4 border mb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xl">🚚</span>
+                  <h3 className="font-semibold">Order Type</h3>
+                </div>
+                
+                {!deliveryEnabled && (
+                  <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                    <p className="text-sm text-orange-700">
+                      <strong>📍 Delivery Not Available</strong><br />
+                      This restaurant is not currently delivering. You can still order and pickup from the store.
+                    </p>
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setOrderType('delivery')}
+                    disabled={!deliveryEnabled}
+                    className={`p-3 rounded-lg border-2 transition-all ${
+                      orderType === 'delivery' && deliveryEnabled
+                        ? 'border-primary bg-primary/5 text-primary'
+                        : deliveryEnabled
+                        ? 'border-border hover:border-primary/50'
+                        : 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <span className="text-2xl block mb-1">🚚</span>
+                      <span className="font-medium text-sm">Delivery</span>
+                      {deliveryEnabled && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          +£{deliveryFee.toFixed(2)} fee
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                  
+                  <button
+                    onClick={() => setOrderType('pickup')}
+                    className={`p-3 rounded-lg border-2 transition-all ${
+                      orderType === 'pickup'
+                        ? 'border-primary bg-primary/5 text-primary'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <span className="text-2xl block mb-1">🏪</span>
+                      <span className="font-medium text-sm">Pickup</span>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        From restaurant
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
               {/* Delivery Address Section */}
-              {user && (
+              {user && orderType === 'delivery' && (
                 <div className="bg-muted/50 rounded-lg p-4 border">
                   <div className="flex items-center gap-2 mb-3">
                     <MapPin className="h-5 w-5 text-primary" />
@@ -809,13 +884,21 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                     <span>-£{discount.toFixed(2)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-sm">
-                  <span>Delivery Fee:</span>
-                  <span>£{deliveryFee.toFixed(2)}</span>
-                </div>
+                {orderType === 'delivery' && (
+                  <div className="flex justify-between text-sm">
+                    <span>Delivery Fee:</span>
+                    <span>£{deliveryFee.toFixed(2)}</span>
+                  </div>
+                )}
+                {orderType === 'pickup' && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Pickup Discount:</span>
+                    <span>-£{deliveryFee.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center text-lg font-bold pt-2 border-t">
                   <span>Total:</span>
-                  <span className="text-2xl text-primary">£{(totalPrice - discount + deliveryFee).toFixed(2)}</span>
+                  <span className="text-2xl text-primary">£{(totalPrice - discount + (orderType === 'delivery' ? deliveryFee : 0)).toFixed(2)}</span>
                 </div>
               </div>
               
@@ -860,7 +943,7 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                         }}
                       >
                         <PaymentForm
-                          amount={totalPrice - discount + deliveryFee}
+                          amount={totalPrice - discount + (orderType === 'delivery' ? deliveryFee : 0)}
                           onSuccess={handlePaymentSuccess}
                           onError={handlePaymentError}
                         />
