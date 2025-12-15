@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
-import { Loader2, Trash2, Package, Search } from "lucide-react";
+import { Loader2, Trash2, Package, Search, Calendar, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EditMenuItemDialog } from "@/components/admin/EditMenuItemDialog";
@@ -18,7 +18,7 @@ import { EditNavItemDialog } from "@/components/admin/EditNavItemDialog";
 import { AddMenuItemDialog } from "@/components/admin/AddMenuItemDialog";
 import { AddCouponDialog } from "@/components/admin/AddCouponDialog";
 import { AddNavItemDialog } from "@/components/admin/AddNavItemDialog";
-import { AddDeliveryBoyDialog } from "@/components/admin/AddDeliveryBoyDialog";
+
 import { PromotionsManager } from "@/components/admin/PromotionsManager";
 import { AddDabbaServiceDialog } from "@/components/admin/AddDabbaServiceDialog";
 import { EditDabbaServiceDialog } from "@/components/admin/EditDabbaServiceDialog";
@@ -27,6 +27,7 @@ import { InvoiceManager } from "@/components/admin/InvoiceManager";
 import { DabbaSubscriptionsManager } from "@/components/admin/DabbaSubscriptionsManager";
 import { GalleryManager } from "@/components/admin/GalleryManager";
 import { BirthdayCouponsManager } from "@/components/admin/BirthdayCouponsManager";
+import { CustomerManager } from "@/components/admin/CustomerManager";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -60,6 +61,11 @@ const Admin = () => {
   const [signatureDishes, setSignatureDishes] = useState<string[]>([]);
   const [deliveryFee, setDeliveryFee] = useState<number>(50);
   const [lunchMenuEnabled, setLunchMenuEnabled] = useState<boolean>(true);
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState('all');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -242,33 +248,7 @@ const Admin = () => {
     }
   };
 
-  const updateUserRole = async (userId: string, newRole: string) => {
-    try {
-      await api.updateUserRole(userId, newRole);
-      toast({ title: "Success", description: "User role updated" });
-      fetchData();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update user role",
-        variant: "destructive",
-      });
-    }
-  };
 
-  const deleteUser = async (userId: string) => {
-    try {
-      await api.deleteUser(userId);
-      toast({ title: "Success", description: "User deleted" });
-      fetchData();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete user",
-        variant: "destructive",
-      });
-    }
-  };
 
   const assignDeliveryBoy = async (orderId: string, deliveryBoyId: string) => {
     try {
@@ -297,6 +277,35 @@ const Admin = () => {
     };
     return colors[status] || "bg-gray-500";
   };
+
+  const fetchAnalyticsData = async () => {
+    try {
+      setAnalyticsLoading(true);
+      const params: any = { period: selectedPeriod };
+      
+      if (selectedPeriod === 'custom' && customStartDate && customEndDate) {
+        params.startDate = customStartDate;
+        params.endDate = customEndDate;
+      }
+      
+      const data = await api.getAnalytics(params);
+      setAnalyticsData(data);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fetch analytics data",
+        variant: "destructive",
+      });
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchAnalyticsData();
+    }
+  }, [isAdmin, selectedPeriod, customStartDate, customEndDate]);
 
   const exportData = (type: string, data: any[]) => {
     let csvContent = "";
@@ -381,7 +390,7 @@ const Admin = () => {
 
           <Tabs defaultValue="dashboard" className="space-y-4 md:space-y-6">
             {/* Clean Admin Navigation - Grid Layout */}
-            <TabsList className="grid grid-cols-6 lg:grid-cols-12 gap-2 h-auto bg-card/80 backdrop-blur-sm border rounded-xl p-3 shadow-sm">
+            <TabsList className="flex flex-wrap gap-2 h-auto bg-card/80 backdrop-blur-sm border rounded-xl p-3 shadow-sm">
               <TabsTrigger 
                 value="dashboard" 
                 className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
@@ -414,11 +423,11 @@ const Admin = () => {
                 <span>Settings</span>
               </TabsTrigger>
               <TabsTrigger 
-                value="users" 
+                value="customers" 
                 className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
               >
                 <span className="text-xl">👥</span>
-                <span>Users</span>
+                <span>Customers</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="coupons" 
@@ -602,11 +611,11 @@ const Admin = () => {
                         <span className="text-sm font-medium">Edit Menu</span>
                       </button>
                       <button
-                        onClick={() => document.querySelector('[value="users"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))}
+                        onClick={() => document.querySelector('[value="customers"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))}
                         className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed hover:border-primary hover:bg-accent transition-colors"
                       >
                         <span className="text-3xl mb-2">👥</span>
-                        <span className="text-sm font-medium">Manage Users</span>
+                        <span className="text-sm font-medium">Manage Customers</span>
                       </button>
                       <button
                         onClick={() => document.querySelector('[value="analytics"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))}
@@ -1113,98 +1122,9 @@ const Admin = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="users">
-              <Card>
-                <CardHeader>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <CardTitle className="text-xl sm:text-2xl">User Management</CardTitle>
-                      <CardDescription className="text-sm">Manage users and delivery boys</CardDescription>
-                    </div>
-                    <AddDeliveryBoyDialog onSuccess={fetchData} />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {users.map((user) => (
-                      <div
-                        key={user._id}
-                        className="group relative bg-gradient-to-br from-background to-muted/20 border-2 rounded-xl p-5 hover:border-primary/50 hover:shadow-lg transition-all duration-200"
-                      >
-                        {/* User Avatar */}
-                        <div className="flex items-start gap-4 mb-4">
-                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg shrink-0">
-                            {user.name?.charAt(0).toUpperCase() || 'U'}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-base truncate mb-1">{user.name}</h3>
-                            <Badge 
-                              variant={
-                                user.role === 'admin' ? 'default' : 
-                                user.role === 'delivery_boy' ? 'secondary' : 
-                                'outline'
-                              }
-                              className="text-xs"
-                            >
-                              {user.role === 'delivery_boy' ? 'Delivery Boy' : 
-                               user.role === 'admin' ? 'Admin' : 'User'}
-                            </Badge>
-                          </div>
-                        </div>
-
-                        {/* User Details */}
-                        <div className="space-y-2 mb-4">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span className="text-xs">📧</span>
-                            <span className="truncate">{user.email}</span>
-                          </div>
-                          {user.phone && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <span className="text-xs">📞</span>
-                              <span>{user.phone}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex flex-col gap-2 pt-4 border-t">
-                          <Select
-                            value={user.role}
-                            onValueChange={(value) => updateUserRole(user._id, value)}
-                          >
-                            <SelectTrigger className="w-full text-sm">
-                              <SelectValue placeholder="Change role" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="user">👤 User</SelectItem>
-                              <SelectItem value="delivery_boy">🚚 Delivery Boy</SelectItem>
-                              <SelectItem value="admin">👑 Admin</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => deleteUser(user._id)}
-                            className="w-full"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete User
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {users.length === 0 && (
-                    <div className="text-center py-12">
-                      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span className="text-3xl">👥</span>
-                      </div>
-                      <p className="text-muted-foreground">No users yet</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+            {/* Customers Tab */}
+            <TabsContent value="customers">
+              <CustomerManager />
             </TabsContent>
 
             {/* Birthday Coupons Tab */}

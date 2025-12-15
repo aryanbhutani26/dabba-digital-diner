@@ -65,6 +65,7 @@ import invoiceRoutes from './routes/invoices.js';
 import posIntegrationRoutes from './routes/posIntegration.js';
 import galleryRoutes from './routes/gallery.js';
 import birthdayCouponsRoutes from './routes/birthdayCoupons.js';
+import customersRoutes from './routes/customers.js';
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -90,6 +91,7 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/pos-integration', posIntegrationRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/birthday-coupons', birthdayCouponsRoutes);
+app.use('/api/customers', customersRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

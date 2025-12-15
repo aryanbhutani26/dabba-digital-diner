@@ -112,17 +112,23 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
 
     try {
       // Check both regular coupons and birthday coupons
+      const authToken = localStorage.getItem('auth_token');
+      
       const [regularCouponsResponse, birthdayCouponsResponse] = await Promise.all([
-        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/coupons`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-          }
-        }),
-        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/birthday-coupons/my-coupons`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-          }
-        }).catch(() => ({ json: () => [] }))
+        authToken 
+          ? fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/coupons/my-coupons`, {
+              headers: {
+                'Authorization': `Bearer ${authToken}`
+              }
+            })
+          : fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/coupons`),
+        authToken 
+          ? fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/birthday-coupons/my-coupons`, {
+              headers: {
+                'Authorization': `Bearer ${authToken}`
+              }
+            }).catch(() => ({ json: () => [] }))
+          : Promise.resolve({ json: () => [] })
       ]);
 
       const regularCoupons = await regularCouponsResponse.json();
@@ -191,17 +197,24 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
 
   const fetchAvailableCoupons = async () => {
     try {
-      // Only fetch regular coupons for the available coupons modal
-      // Birthday coupons are handled separately and should not appear here
-      const regularCouponsResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/coupons`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        }
-      });
+      const authToken = localStorage.getItem('auth_token');
+      let regularCouponsResponse;
+
+      if (authToken) {
+        // Fetch user-specific coupons (includes general + special coupons for this user)
+        regularCouponsResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/coupons/my-coupons`, {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+      } else {
+        // Fallback to public coupons for unauthenticated users
+        regularCouponsResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/coupons`);
+      }
 
       const regularCoupons = await regularCouponsResponse.json();
 
-      // Only show regular coupons in the available coupons list
+      // Show all active coupons available to this user
       const allCoupons = regularCoupons.filter((c: any) => c.isActive);
 
       setAvailableCoupons(allCoupons);
