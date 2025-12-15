@@ -62,6 +62,15 @@ const Admin = () => {
   const [deliveryFee, setDeliveryFee] = useState<number>(50);
   const [lunchMenuEnabled, setLunchMenuEnabled] = useState<boolean>(true);
   const [deliveryEnabled, setDeliveryEnabled] = useState<boolean>(true);
+  const [openingHours, setOpeningHours] = useState<any>({
+    monday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+    tuesday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+    wednesday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+    thursday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+    friday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+    saturday: { open: '12:30', close: '22:30' },
+    sunday: { open: '12:30', close: '22:00' }
+  });
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('all');
@@ -97,7 +106,7 @@ const Admin = () => {
     }
     
     try {
-      const [couponsData, navData, menuData, usersData, ordersData, deliveryBoysData, promotionsData, reservationsData, dabbaServicesData, servicesVisibilityData, signatureDishesData, deliveryFeeData, lunchMenuData, deliveryEnabledData] = await Promise.all([
+      const [couponsData, navData, menuData, usersData, ordersData, deliveryBoysData, promotionsData, reservationsData, dabbaServicesData, servicesVisibilityData, signatureDishesData, deliveryFeeData, lunchMenuData, deliveryEnabledData, openingHoursData] = await Promise.all([
         api.getAllCoupons(),
         api.getAllNavbarItems(),
         api.getAllMenuItems(),
@@ -112,6 +121,17 @@ const Admin = () => {
         api.getSetting('delivery_fee').catch(() => ({ value: 50 })),
         api.getSetting('lunch_menu_enabled').catch(() => ({ value: true })),
         api.getSetting('delivery_enabled').catch(() => ({ value: true })),
+        api.getSetting('opening_hours').catch(() => ({ 
+          value: {
+            monday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            tuesday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            wednesday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            thursday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            friday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            saturday: { open: '12:30', close: '22:30' },
+            sunday: { open: '12:30', close: '22:00' }
+          }
+        })),
       ]);
 
       setCoupons(couponsData || []);
@@ -128,6 +148,15 @@ const Admin = () => {
       setDeliveryFee(deliveryFeeData?.value || 50);
       setLunchMenuEnabled(lunchMenuData?.value !== false);
       setDeliveryEnabled(deliveryEnabledData?.value !== false);
+      setOpeningHours(openingHoursData?.value || {
+        monday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+        tuesday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+        wednesday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+        thursday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+        friday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+        saturday: { open: '12:30', close: '22:30' },
+        sunday: { open: '12:30', close: '22:00' }
+      });
       
       // Count new pending orders
       const pendingOrders = ordersData.filter((order: any) => order.status === 'pending');
@@ -1317,6 +1346,183 @@ const Admin = () => {
                         </p>
                       </div>
                     )}
+                  </div>
+
+                  {/* Opening Hours Section */}
+                  <div className="space-y-4 pt-6 border-t">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Restaurant Opening Hours</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Configure automatic restaurant opening and closing times. The website will automatically enable/disable online ordering based on UK timezone (GMT/UTC+00:00). When closed, customers will see "Restaurant is currently closed. Please come back later."
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      {/* Monday to Friday */}
+                      {['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].map((day) => (
+                        <div key={day} className="p-4 border rounded-lg bg-muted/30">
+                          <h4 className="font-medium mb-3 capitalize">{day}</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Lunch Hours */}
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Lunch Service</Label>
+                              <div className="flex gap-2 items-center">
+                                <Input
+                                  type="time"
+                                  value={openingHours[day]?.lunch?.open || '12:00'}
+                                  onChange={(e) => {
+                                    const newHours = { ...openingHours };
+                                    if (!newHours[day]) newHours[day] = { lunch: {}, dinner: {} };
+                                    if (!newHours[day].lunch) newHours[day].lunch = {};
+                                    newHours[day].lunch.open = e.target.value;
+                                    setOpeningHours(newHours);
+                                  }}
+                                  className="flex-1"
+                                />
+                                <span className="text-sm text-muted-foreground">to</span>
+                                <Input
+                                  type="time"
+                                  value={openingHours[day]?.lunch?.close || '14:30'}
+                                  onChange={(e) => {
+                                    const newHours = { ...openingHours };
+                                    if (!newHours[day]) newHours[day] = { lunch: {}, dinner: {} };
+                                    if (!newHours[day].lunch) newHours[day].lunch = {};
+                                    newHours[day].lunch.close = e.target.value;
+                                    setOpeningHours(newHours);
+                                  }}
+                                  className="flex-1"
+                                />
+                              </div>
+                            </div>
+                            
+                            {/* Dinner Hours */}
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Dinner Service</Label>
+                              <div className="flex gap-2 items-center">
+                                <Input
+                                  type="time"
+                                  value={openingHours[day]?.dinner?.open || '17:30'}
+                                  onChange={(e) => {
+                                    const newHours = { ...openingHours };
+                                    if (!newHours[day]) newHours[day] = { lunch: {}, dinner: {} };
+                                    if (!newHours[day].dinner) newHours[day].dinner = {};
+                                    newHours[day].dinner.open = e.target.value;
+                                    setOpeningHours(newHours);
+                                  }}
+                                  className="flex-1"
+                                />
+                                <span className="text-sm text-muted-foreground">to</span>
+                                <Input
+                                  type="time"
+                                  value={openingHours[day]?.dinner?.close || '22:30'}
+                                  onChange={(e) => {
+                                    const newHours = { ...openingHours };
+                                    if (!newHours[day]) newHours[day] = { lunch: {}, dinner: {} };
+                                    if (!newHours[day].dinner) newHours[day].dinner = {};
+                                    newHours[day].dinner.close = e.target.value;
+                                    setOpeningHours(newHours);
+                                  }}
+                                  className="flex-1"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {/* Saturday */}
+                      <div className="p-4 border rounded-lg bg-muted/30">
+                        <h4 className="font-medium mb-3">Saturday</h4>
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Operating Hours</Label>
+                          <div className="flex gap-2 items-center max-w-md">
+                            <Input
+                              type="time"
+                              value={openingHours.saturday?.open || '12:30'}
+                              onChange={(e) => {
+                                const newHours = { ...openingHours };
+                                if (!newHours.saturday) newHours.saturday = {};
+                                newHours.saturday.open = e.target.value;
+                                setOpeningHours(newHours);
+                              }}
+                              className="flex-1"
+                            />
+                            <span className="text-sm text-muted-foreground">to</span>
+                            <Input
+                              type="time"
+                              value={openingHours.saturday?.close || '22:30'}
+                              onChange={(e) => {
+                                const newHours = { ...openingHours };
+                                if (!newHours.saturday) newHours.saturday = {};
+                                newHours.saturday.close = e.target.value;
+                                setOpeningHours(newHours);
+                              }}
+                              className="flex-1"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Sunday */}
+                      <div className="p-4 border rounded-lg bg-muted/30">
+                        <h4 className="font-medium mb-3">Sunday</h4>
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Operating Hours</Label>
+                          <div className="flex gap-2 items-center max-w-md">
+                            <Input
+                              type="time"
+                              value={openingHours.sunday?.open || '12:30'}
+                              onChange={(e) => {
+                                const newHours = { ...openingHours };
+                                if (!newHours.sunday) newHours.sunday = {};
+                                newHours.sunday.open = e.target.value;
+                                setOpeningHours(newHours);
+                              }}
+                              className="flex-1"
+                            />
+                            <span className="text-sm text-muted-foreground">to</span>
+                            <Input
+                              type="time"
+                              value={openingHours.sunday?.close || '22:00'}
+                              onChange={(e) => {
+                                const newHours = { ...openingHours };
+                                if (!newHours.sunday) newHours.sunday = {};
+                                newHours.sunday.close = e.target.value;
+                                setOpeningHours(newHours);
+                              }}
+                              className="flex-1"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      onClick={async () => {
+                        try {
+                          await api.updateSetting('opening_hours', openingHours);
+                          toast({
+                            title: "Success",
+                            description: "Opening hours updated successfully. The website will now automatically open/close based on these times.",
+                          });
+                        } catch (error) {
+                          toast({
+                            title: "Error",
+                            description: "Failed to update opening hours",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                      className="w-full md:w-auto"
+                    >
+                      Save Opening Hours
+                    </Button>
+                    
+                    <div className="p-4 bg-blue-500/5 border border-blue-500/20 rounded-lg">
+                      <p className="text-sm text-blue-600">
+                        <strong>ℹ️ Timezone Information:</strong> All times are automatically converted to UK timezone (GMT/UTC+00:00). The system will check every minute and automatically enable/disable online ordering based on these hours.
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

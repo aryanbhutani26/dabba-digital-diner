@@ -12,7 +12,7 @@ interface PaymentFormProps {
   clientSecret: string;
   amount: number;
   description?: string;
-  onSuccess: () => void;
+  onSuccess: (paymentIntentId: string) => void;
   onError?: (error: string) => void;
 }
 
@@ -49,7 +49,7 @@ export const PaymentForm = ({ clientSecret, amount, description, onSuccess, onEr
       });
     } else if (paymentIntent && paymentIntent.status === 'succeeded') {
       console.log('Payment succeeded:', paymentIntent.id);
-      onSuccess();
+      onSuccess(paymentIntent.id);
       toast({
         title: "Payment Successful!",
         description: description || `Payment of £${amount.toFixed(2)} completed successfully`,

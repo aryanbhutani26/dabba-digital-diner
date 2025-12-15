@@ -48,6 +48,7 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
   const [deliveryFee, setDeliveryFee] = useState<number>(50);
   const [orderType, setOrderType] = useState<'delivery' | 'pickup'>('delivery');
   const [deliveryEnabled, setDeliveryEnabled] = useState<boolean>(true);
+  const [restaurantOpen, setRestaurantOpen] = useState<boolean>(true);
 
   useEffect(() => {
     if (user) {
@@ -59,14 +60,34 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
 
   const fetchDeliveryFee = async () => {
     try {
-      const [deliveryFeeResponse, deliveryEnabledResponse] = await Promise.all([
+      const [deliveryFeeResponse, deliveryEnabledResponse, openingHoursResponse] = await Promise.all([
         api.getSetting('delivery_fee'),
-        api.getSetting('delivery_enabled')
+        api.getSetting('delivery_enabled'),
+        api.getSetting('opening_hours').catch(() => ({ 
+          value: {
+            monday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            tuesday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            wednesday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            thursday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            friday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            saturday: { open: '12:30', close: '22:30' },
+            sunday: { open: '12:30', close: '22:00' }
+          }
+        }))
       ]);
       
       setDeliveryFee(deliveryFeeResponse.value || 50);
       const isDeliveryEnabled = deliveryEnabledResponse.value !== false;
       setDeliveryEnabled(isDeliveryEnabled);
+      
+      // Check if restaurant is open
+      const openingHours = openingHoursResponse.value;
+      if (openingHours) {
+        // Import the function dynamically to avoid circular imports
+        const { isRestaurantOpen } = await import('@/utils/restaurantHours');
+        const isOpen = isRestaurantOpen(openingHours);
+        setRestaurantOpen(isOpen);
+      }
       
       // If delivery is disabled, automatically set to pickup
       if (!isDeliveryEnabled) {
@@ -76,6 +97,7 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
       console.error('Failed to fetch delivery settings:', error);
       setDeliveryFee(50); // Default fallback
       setDeliveryEnabled(true); // Default fallback
+      setRestaurantOpen(true); // Default fallback
     }
   };
 
@@ -507,6 +529,19 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
             </div>
           ) : (
             <>
+              {/* Restaurant Status */}
+              {!restaurantOpen && (
+                <div className="bg-red-500/10 border-2 border-red-500/20 rounded-lg p-4 mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xl">🕐</span>
+                    <h3 className="font-semibold text-red-600">Restaurant Closed</h3>
+                  </div>
+                  <p className="text-sm text-red-600">
+                    We're currently closed. Online ordering is temporarily disabled. Please check our opening hours and come back when we're open.
+                  </p>
+                </div>
+              )}
+
               {/* Order Type Selection */}
               <div className="bg-muted/50 rounded-lg p-4 border mb-4">
                 <div className="flex items-center gap-2 mb-3">
@@ -908,9 +943,9 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                     className="w-full" 
                     size="lg"
                     onClick={handleCheckout}
-                    disabled={processingOrder}
+                    disabled={processingOrder || !restaurantOpen}
                   >
-                    {processingOrder ? "Processing..." : "Proceed to Payment"}
+                    {!restaurantOpen ? "Restaurant Closed" : processingOrder ? "Processing..." : "Proceed to Payment"}
                   </Button>
                 ) : (
                   <div className="space-y-4">
@@ -943,6 +978,7 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                         }}
                       >
                         <PaymentForm
+                          clientSecret={clientSecret}
                           amount={totalPrice - discount + (orderType === 'delivery' ? deliveryFee : 0)}
                           onSuccess={handlePaymentSuccess}
                           onError={handlePaymentError}
