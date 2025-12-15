@@ -509,7 +509,7 @@ const Menu = () => {
                         </div>
                         <h3 className="text-2xl font-semibold mb-2 text-muted-foreground">Lunch Service Unavailable</h3>
                         <p className="text-muted-foreground max-w-md mx-auto">
-                          We're not currently serving lunch. Please check back during our lunch hours or explore our other delicious menu options.
+                          We're not currently serving lunch. Our lunch service is available between <strong className="text-foreground">12:00 PM to 2:20 PM</strong>. Please check back during our lunch hours or explore our other delicious menu options.
                         </p>
                       </div>
                     )}

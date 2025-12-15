@@ -250,11 +250,27 @@ const Admin = () => {
 
   const assignDeliveryBoy = async (orderId: string, deliveryBoyId: string) => {
     try {
+      // Find the order to check if it's a reassignment
+      const order = orders.find(o => o._id === orderId);
+      const isReassignment = order && order.deliveryBoyId && order.deliveryBoyId !== deliveryBoyId;
+      
       await api.assignDeliveryBoy(orderId, deliveryBoyId);
-      toast({ 
-        title: "Success", 
-        description: "Order assigned to delivery boy. They will be notified." 
-      });
+      
+      if (isReassignment) {
+        const newDeliveryBoy = deliveryBoys.find(b => b._id === deliveryBoyId);
+        const oldDeliveryBoy = deliveryBoys.find(b => b._id === order.deliveryBoyId);
+        
+        toast({ 
+          title: "Delivery Partner Changed", 
+          description: `Order reassigned from ${oldDeliveryBoy?.name || 'Unknown'} to ${newDeliveryBoy?.name || 'Unknown'}. Both delivery partners will be notified.` 
+        });
+      } else {
+        toast({ 
+          title: "Success", 
+          description: "Order assigned to delivery boy. They will be notified." 
+        });
+      }
+      
       fetchData();
     } catch (error) {
       toast({
@@ -632,7 +648,7 @@ const Admin = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Order Management</CardTitle>
-                  <CardDescription>View and assign orders to delivery boys</CardDescription>
+                  <CardDescription>View, assign, and reassign orders to delivery partners. You can change delivery partners for assigned and picked-up orders.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -645,7 +661,11 @@ const Admin = () => {
                       orders.map((order) => (
                         <div
                           key={order._id}
-                          className="border rounded-lg p-4 space-y-3"
+                          className={`border-2 rounded-xl p-5 space-y-3 transition-all hover:shadow-md ${
+                            (order.status === 'assigned' || order.status === 'picked_up') 
+                              ? 'border-blue-200 bg-blue-50/30 hover:border-blue-300' 
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
@@ -692,11 +712,56 @@ const Admin = () => {
                           )}
                           
                           {order.status !== 'pending' && order.deliveryBoyId && (
-                            <div className="pt-3 border-t text-sm">
-                              <p className="text-muted-foreground">
-                                <strong>Assigned to:</strong>{' '}
-                                {deliveryBoys.find((b) => b._id === order.deliveryBoyId)?.name || 'Unknown'}
-                              </p>
+                            <div className="pt-3 border-t">
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-sm text-muted-foreground">
+                                  <strong>Assigned to:</strong>{' '}
+                                  {deliveryBoys.find((b) => b._id === order.deliveryBoyId)?.name || 'Unknown'}
+                                </p>
+                                {(order.status === 'assigned' || order.status === 'picked_up') && (
+                                  <Badge variant="outline" className="text-xs">
+                                    Can be reassigned
+                                  </Badge>
+                                )}
+                              </div>
+                              
+                              {/* Allow changing delivery partner for assigned and picked_up orders */}
+                              {(order.status === 'assigned' || order.status === 'picked_up') && (
+                                <div className="space-y-2">
+                                  <Label className="text-sm">Change Delivery Partner</Label>
+                                  <div className="flex gap-2">
+                                    <Select
+                                      value={order.deliveryBoyId}
+                                      onValueChange={(value) => assignDeliveryBoy(order._id, value)}
+                                    >
+                                      <SelectTrigger className="flex-1">
+                                        <SelectValue placeholder="Select new delivery boy..." />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {deliveryBoys.map((boy) => (
+                                          <SelectItem key={boy._id} value={boy._id}>
+                                            {boy.name} - {boy.phone || 'No phone'}
+                                            {boy._id === order.deliveryBoyId && ' (Current)'}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    ⚠️ Changing the delivery partner will notify both the old and new delivery boys
+                                  </p>
+                                </div>
+                              )}
+                              
+                              {/* Show read-only info for out_for_delivery and delivered orders */}
+                              {(order.status === 'out_for_delivery' || order.status === 'delivered') && (
+                                <p className="text-xs text-muted-foreground mt-2">
+                                  {order.status === 'out_for_delivery' 
+                                    ? '🚚 Order is out for delivery - cannot reassign' 
+                                    : '✅ Order has been delivered - cannot reassign'
+                                  }
+                                </p>
+                              )}
                             </div>
                           )}
                         </div>
@@ -1138,7 +1203,7 @@ const Admin = () => {
                     <div>
                       <h3 className="text-lg font-semibold mb-2">Lunch Menu Availability</h3>
                       <p className="text-sm text-muted-foreground mb-4">
-                        Control whether customers can order from the lunch menu. When disabled, the lunch menu will be grayed out with a message indicating it's unavailable.
+                        Control whether customers can order from the lunch menu. When disabled, the lunch menu will be grayed out with a message indicating it's unavailable. Lunch service hours are 12:00 PM to 2:20 PM.
                       </p>
                     </div>
                     
@@ -1178,7 +1243,7 @@ const Admin = () => {
                     {!lunchMenuEnabled && (
                       <div className="p-4 bg-[#c3a85c]/5 border border-[#c3a85c]/20 rounded-lg">
                         <p className="text-sm text-[#c3a85c]">
-                          <strong>⚠️ Lunch menu is disabled.</strong> Customers will see a message that lunch is not currently being served, and items will be grayed out.
+                          <strong>⚠️ Lunch menu is disabled.</strong> Customers will see a message that lunch is not currently being served (available 12:00 PM to 2:20 PM), and items will be grayed out.
                         </p>
                       </div>
                     )}

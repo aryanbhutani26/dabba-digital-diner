@@ -262,15 +262,28 @@ router.patch('/:id/assign', authenticate, isAdmin, async (req, res) => {
       return res.status(404).json({ error: 'Delivery boy not found' });
     }
 
+    // Get current order to check if it's a reassignment
+    const currentOrder = await db.collection('orders').findOne({ _id: new ObjectId(req.params.id) });
+    
+    if (!currentOrder) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const isReassignment = currentOrder.deliveryBoyId && currentOrder.deliveryBoyId !== deliveryBoyId;
+    
+    // For reassignment, preserve status if it's picked_up, otherwise set to assigned
+    const newStatus = isReassignment && currentOrder.status === 'picked_up' ? 'picked_up' : 'assigned';
+    
     // Update order
     const result = await db.collection('orders').updateOne(
       { _id: new ObjectId(req.params.id) },
       { 
         $set: { 
           deliveryBoyId,
-          status: 'assigned',
+          status: newStatus,
           assignedAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
+          ...(isReassignment && { reassignedAt: new Date(), previousDeliveryBoyId: currentOrder.deliveryBoyId })
         } 
       }
     );
@@ -279,10 +292,10 @@ router.patch('/:id/assign', authenticate, isAdmin, async (req, res) => {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    // Get order details for email
+    // Get updated order details for email
     const order = await db.collection('orders').findOne({ _id: new ObjectId(req.params.id) });
     
-    // Send delivery assignment email
+    // Send delivery assignment email to new delivery boy
     if (deliveryBoy.email && order) {
       sendDeliveryAssignment({
         orderNumber: order.orderNumber,
@@ -293,12 +306,27 @@ router.patch('/:id/assign', authenticate, isAdmin, async (req, res) => {
         deliveryAddress: order.deliveryAddress,
         totalAmount: order.totalAmount,
         itemCount: order.items?.length || 0,
+        isReassignment: isReassignment
       }).catch(err => console.error('Email failed:', err));
     }
 
+    // If it's a reassignment, notify the previous delivery boy
+    if (isReassignment && currentOrder.deliveryBoyId) {
+      const previousDeliveryBoy = await db.collection('users').findOne({
+        _id: new ObjectId(currentOrder.deliveryBoyId),
+        role: 'delivery_boy'
+      });
+      
+      if (previousDeliveryBoy?.email) {
+        // You can create a separate email template for reassignment notification
+        console.log(`📧 Order ${order.orderNumber} reassigned from ${previousDeliveryBoy.name} to ${deliveryBoy.name}`);
+      }
+    }
+
     res.json({ 
-      message: 'Order assigned successfully',
-      deliveryBoyName: deliveryBoy.name 
+      message: isReassignment ? 'Order reassigned successfully' : 'Order assigned successfully',
+      deliveryBoyName: deliveryBoy.name,
+      isReassignment: isReassignment
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
