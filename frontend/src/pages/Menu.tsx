@@ -8,8 +8,9 @@ import DishDialog from "@/components/DishDialog";
 import CartSheet from "@/components/CartSheet";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, Clock } from "lucide-react";
 import { useCart, CartItem } from "@/hooks/useCart";
+import { isRestaurantOpen, getCurrentOpeningStatus, OpeningHours } from "@/utils/restaurantHours";
 
 interface Dish {
   name: string;
@@ -31,19 +32,65 @@ const Menu = () => {
   const [categories, setCategories] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [lunchEnabled, setLunchEnabled] = useState(true);
+  const [openingHours, setOpeningHours] = useState<OpeningHours | null>(null);
+  const [restaurantStatus, setRestaurantStatus] = useState<{ isOpen: boolean; nextOpening: string; message: string }>({
+    isOpen: true,
+    nextOpening: '',
+    message: ''
+  });
 
   useEffect(() => {
     fetchMenuItems();
   }, []);
 
+  // Check restaurant status every minute
+  useEffect(() => {
+    if (!openingHours) return;
+    
+    const checkStatus = () => {
+      const status = getCurrentOpeningStatus(openingHours);
+      setRestaurantStatus(status);
+    };
+    
+    // Check immediately
+    checkStatus();
+    
+    // Then check every minute
+    const interval = setInterval(checkStatus, 60000);
+    
+    return () => clearInterval(interval);
+  }, [openingHours]);
+
   const fetchMenuItems = async () => {
     try {
-      const response = await api.getMenuItems();
-      const items = response.items || response;
-      const lunchEnabledStatus = response.lunchEnabled !== undefined ? response.lunchEnabled : true;
+      const [menuResponse, openingHoursResponse] = await Promise.all([
+        api.getMenuItems(),
+        api.getSetting('opening_hours').catch(() => ({ 
+          value: {
+            monday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            tuesday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            wednesday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            thursday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            friday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            saturday: { open: '12:30', close: '22:30' },
+            sunday: { open: '12:30', close: '22:00' }
+          }
+        }))
+      ]);
+      
+      const items = menuResponse.items || menuResponse;
+      const lunchEnabledStatus = menuResponse.lunchEnabled !== undefined ? menuResponse.lunchEnabled : true;
+      const hours = openingHoursResponse.value;
       
       setMenuItems(items);
       setLunchEnabled(lunchEnabledStatus);
+      setOpeningHours(hours);
+      
+      // Check restaurant status
+      if (hours) {
+        const status = getCurrentOpeningStatus(hours);
+        setRestaurantStatus(status);
+      }
       
       // Define the 4 main categories in order
       const mainCategories = ['Mains', 'Lunch', 'Drinks', 'Desserts'];
@@ -367,6 +414,26 @@ const Menu = () => {
               Carefully curated dishes crafted with passion and precision
             </p>
             
+            {/* Restaurant Status Banner */}
+            {!restaurantStatus.isOpen && (
+              <div className="mb-6 mx-auto max-w-2xl">
+                <div className="bg-gradient-to-r from-red-500/10 via-red-500/5 to-red-500/10 border-2 border-red-500/20 rounded-xl p-6 backdrop-blur-sm">
+                  <div className="flex items-center justify-center gap-3 mb-3">
+                    <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
+                      <Clock className="w-6 h-6 text-red-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-red-600">Restaurant is Currently Closed</h3>
+                      <p className="text-sm text-red-500/80">Please come back later</p>
+                    </div>
+                  </div>
+                  <p className="text-center text-red-600 font-medium">
+                    {restaurantStatus.message}
+                  </p>
+                </div>
+              </div>
+            )}
+            
             {/* Search Bar */}
             <div className="max-w-md mx-auto relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -376,6 +443,7 @@ const Menu = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 pr-4 py-6 text-base"
+                disabled={!restaurantStatus.isOpen}
               />
             </div>
           </div>
@@ -509,12 +577,12 @@ const Menu = () => {
                         </div>
                         <h3 className="text-2xl font-semibold mb-2 text-muted-foreground">Lunch Service Unavailable</h3>
                         <p className="text-muted-foreground max-w-md mx-auto">
-                          We're not currently serving lunch. Please check back during our lunch hours or explore our other delicious menu options.
+                          We're not currently serving lunch. Our lunch service is available between <strong className="text-foreground">12:00 PM to 2:20 PM</strong>. Please check back during our lunch hours or explore our other delicious menu options.
                         </p>
                       </div>
                     )}
                     
-                    <div className={`space-y-8 ${isLunchDisabled ? 'opacity-40 pointer-events-none grayscale' : ''}`}>
+                    <div className={`space-y-8 ${isLunchDisabled || !restaurantStatus.isOpen ? 'opacity-40 pointer-events-none grayscale' : ''}`}>
                       {Object.entries(itemsBySubcategory).map(([subcategory, subcategoryItems]) => (
                         <div key={subcategory} className="space-y-4">
                           {/* Subcategory Heading */}
@@ -530,7 +598,7 @@ const Menu = () => {
                               <Card 
                                 key={index} 
                                 className="hover:shadow-lg transition-all cursor-pointer group overflow-hidden"
-                                onClick={() => !isLunchDisabled && handleDishClick(item)}
+                                onClick={() => !isLunchDisabled && restaurantStatus.isOpen && handleDishClick(item)}
                               >
                                 <div className="aspect-video w-full overflow-hidden">
                                   <img

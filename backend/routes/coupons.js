@@ -5,14 +5,44 @@ import { authenticate, isAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get all active coupons (public) - excludes birthday coupons
+// Get all active coupons (public) - excludes birthday and special coupons
 router.get('/', async (req, res) => {
   try {
     const db = getDB();
     const coupons = await db.collection('coupons')
       .find({ 
         isActive: true,
-        type: { $ne: 'birthday' } // Exclude birthday coupons
+        type: { $nin: ['birthday', 'special'] }, // Exclude birthday and special coupons
+        userId: { $exists: false } // Only show general coupons (not user-specific)
+      })
+      .toArray();
+    res.json(coupons);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get user-specific coupons (authenticated users) - includes birthday and special coupons for the user
+router.get('/my-coupons', authenticate, async (req, res) => {
+  try {
+    const db = getDB();
+    const userId = req.user.id;
+    
+    // Get general coupons + user-specific coupons
+    const coupons = await db.collection('coupons')
+      .find({ 
+        isActive: true,
+        $or: [
+          // General coupons (no userId and not birthday/special)
+          { 
+            type: { $nin: ['birthday', 'special'] },
+            userId: { $exists: false }
+          },
+          // User-specific coupons (birthday and special)
+          { 
+            userId: new ObjectId(userId)
+          }
+        ]
       })
       .toArray();
     res.json(coupons);

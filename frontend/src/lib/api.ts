@@ -89,6 +89,10 @@ class ApiClient {
     return this.request('/coupons');
   }
 
+  async getMyCoupons() {
+    return this.request('/coupons/my-coupons');
+  }
+
   async getAllCoupons() {
     return this.request('/coupons/all');
   }
@@ -267,6 +271,16 @@ class ApiClient {
   }
 
   // Analytics
+  async getAnalytics(params: { period?: string; startDate?: string; endDate?: string } = {}) {
+    const queryParams = new URLSearchParams();
+    if (params.period) queryParams.append('period', params.period);
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    
+    const queryString = queryParams.toString();
+    return this.request(`/analytics${queryString ? `?${queryString}` : ''}`);
+  }
+
   async getTopDishes(period: string = 'week') {
     return this.request(`/analytics/top-dishes?period=${period}`);
   }
@@ -585,6 +599,45 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  }
+
+  // Customer Management APIs
+  async getCustomers(params?: { page?: number; limit?: number; search?: string; sortBy?: string; sortOrder?: string }) {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
+    if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
+    
+    return this.request(`/customers?${queryParams.toString()}`);
+  }
+
+  async getTopCustomers(params?: { limit?: number; metric?: string }) {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.metric) queryParams.append('metric', params.metric);
+    
+    return this.request(`/customers/top?${queryParams.toString()}`);
+  }
+
+  async getCustomerDetails(customerId: string) {
+    return this.request(`/customers/${customerId}`);
+  }
+
+  async createSpecialCoupon(customerId: string, data: { discountPercentage: number; validDays?: number; message?: string; couponType?: string; usageLimit?: number }) {
+    return this.request(`/customers/${customerId}/coupon`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getNewsletterSubscribers(params?: { page?: number; limit?: number }) {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    
+    return this.request(`/customers/newsletter/subscribers?${queryParams.toString()}`);
   }
 }
 

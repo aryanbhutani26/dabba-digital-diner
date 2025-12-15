@@ -18,7 +18,7 @@ import { EditNavItemDialog } from "@/components/admin/EditNavItemDialog";
 import { AddMenuItemDialog } from "@/components/admin/AddMenuItemDialog";
 import { AddCouponDialog } from "@/components/admin/AddCouponDialog";
 import { AddNavItemDialog } from "@/components/admin/AddNavItemDialog";
-import { AddDeliveryBoyDialog } from "@/components/admin/AddDeliveryBoyDialog";
+
 import { PromotionsManager } from "@/components/admin/PromotionsManager";
 import { AddDabbaServiceDialog } from "@/components/admin/AddDabbaServiceDialog";
 import { EditDabbaServiceDialog } from "@/components/admin/EditDabbaServiceDialog";
@@ -27,6 +27,7 @@ import { InvoiceManager } from "@/components/admin/InvoiceManager";
 import { DabbaSubscriptionsManager } from "@/components/admin/DabbaSubscriptionsManager";
 import { GalleryManager } from "@/components/admin/GalleryManager";
 import { BirthdayCouponsManager } from "@/components/admin/BirthdayCouponsManager";
+import { CustomerManager } from "@/components/admin/CustomerManager";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -49,7 +50,7 @@ const Admin = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [deliveryBoys, setDeliveryBoys] = useState<any[]>([]);
   const [promotions, setPromotions] = useState<any[]>([]);
-  const [vouchers, setVouchers] = useState<any[]>([]);
+
   const [reservations, setReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [newOrdersCount, setNewOrdersCount] = useState(0);
@@ -60,6 +61,21 @@ const Admin = () => {
   const [signatureDishes, setSignatureDishes] = useState<string[]>([]);
   const [deliveryFee, setDeliveryFee] = useState<number>(50);
   const [lunchMenuEnabled, setLunchMenuEnabled] = useState<boolean>(true);
+  const [deliveryEnabled, setDeliveryEnabled] = useState<boolean>(true);
+  const [openingHours, setOpeningHours] = useState<any>({
+    monday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+    tuesday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+    wednesday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+    thursday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+    friday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+    saturday: { open: '12:30', close: '22:30' },
+    sunday: { open: '12:30', close: '22:00' }
+  });
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState('all');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -90,7 +106,7 @@ const Admin = () => {
     }
     
     try {
-      const [couponsData, navData, menuData, usersData, ordersData, deliveryBoysData, promotionsData, vouchersData, reservationsData, dabbaServicesData, servicesVisibilityData, signatureDishesData, deliveryFeeData, lunchMenuData] = await Promise.all([
+      const [couponsData, navData, menuData, usersData, ordersData, deliveryBoysData, promotionsData, reservationsData, dabbaServicesData, servicesVisibilityData, signatureDishesData, deliveryFeeData, lunchMenuData, deliveryEnabledData, openingHoursData] = await Promise.all([
         api.getAllCoupons(),
         api.getAllNavbarItems(),
         api.getAllMenuItems(),
@@ -98,13 +114,24 @@ const Admin = () => {
         api.getAllOrders(),
         api.getDeliveryBoys(),
         api.getAllPromotions(),
-        api.getAllVouchers(),
         api.getAllReservations(),
         api.getDabbaServicesAdmin().catch(() => []),
         api.getServicesVisibility().catch(() => ({ enabled: false })),
         api.getSetting('signature_dishes').catch(() => ({ value: [] })),
         api.getSetting('delivery_fee').catch(() => ({ value: 50 })),
         api.getSetting('lunch_menu_enabled').catch(() => ({ value: true })),
+        api.getSetting('delivery_enabled').catch(() => ({ value: true })),
+        api.getSetting('opening_hours').catch(() => ({ 
+          value: {
+            monday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            tuesday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            wednesday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            thursday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            friday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            saturday: { open: '12:30', close: '22:30' },
+            sunday: { open: '12:30', close: '22:00' }
+          }
+        })),
       ]);
 
       setCoupons(couponsData || []);
@@ -116,11 +143,20 @@ const Admin = () => {
       setOrders(ordersData || []);
       setDeliveryBoys(deliveryBoysData || []);
       setPromotions(promotionsData || []);
-      setVouchers(vouchersData || []);
       setReservations(reservationsData || []);
       setSignatureDishes(signatureDishesData?.value || []);
       setDeliveryFee(deliveryFeeData?.value || 50);
       setLunchMenuEnabled(lunchMenuData?.value !== false);
+      setDeliveryEnabled(deliveryEnabledData?.value !== false);
+      setOpeningHours(openingHoursData?.value || {
+        monday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+        tuesday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+        wednesday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+        thursday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+        friday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+        saturday: { open: '12:30', close: '22:30' },
+        sunday: { open: '12:30', close: '22:00' }
+      });
       
       // Count new pending orders
       const pendingOrders = ordersData.filter((order: any) => order.status === 'pending');
@@ -242,41 +278,31 @@ const Admin = () => {
     }
   };
 
-  const updateUserRole = async (userId: string, newRole: string) => {
-    try {
-      await api.updateUserRole(userId, newRole);
-      toast({ title: "Success", description: "User role updated" });
-      fetchData();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update user role",
-        variant: "destructive",
-      });
-    }
-  };
 
-  const deleteUser = async (userId: string) => {
-    try {
-      await api.deleteUser(userId);
-      toast({ title: "Success", description: "User deleted" });
-      fetchData();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete user",
-        variant: "destructive",
-      });
-    }
-  };
 
   const assignDeliveryBoy = async (orderId: string, deliveryBoyId: string) => {
     try {
+      // Find the order to check if it's a reassignment
+      const order = orders.find(o => o._id === orderId);
+      const isReassignment = order && order.deliveryBoyId && order.deliveryBoyId !== deliveryBoyId;
+      
       await api.assignDeliveryBoy(orderId, deliveryBoyId);
-      toast({ 
-        title: "Success", 
-        description: "Order assigned to delivery boy. They will be notified." 
-      });
+      
+      if (isReassignment) {
+        const newDeliveryBoy = deliveryBoys.find(b => b._id === deliveryBoyId);
+        const oldDeliveryBoy = deliveryBoys.find(b => b._id === order.deliveryBoyId);
+        
+        toast({ 
+          title: "Delivery Partner Changed", 
+          description: `Order reassigned from ${oldDeliveryBoy?.name || 'Unknown'} to ${newDeliveryBoy?.name || 'Unknown'}. Both delivery partners will be notified.` 
+        });
+      } else {
+        toast({ 
+          title: "Success", 
+          description: "Order assigned to delivery boy. They will be notified." 
+        });
+      }
+      
       fetchData();
     } catch (error) {
       toast({
@@ -297,6 +323,35 @@ const Admin = () => {
     };
     return colors[status] || "bg-gray-500";
   };
+
+  const fetchAnalyticsData = async () => {
+    try {
+      setAnalyticsLoading(true);
+      const params: any = { period: selectedPeriod };
+      
+      if (selectedPeriod === 'custom' && customStartDate && customEndDate) {
+        params.startDate = customStartDate;
+        params.endDate = customEndDate;
+      }
+      
+      const data = await api.getAnalytics(params);
+      setAnalyticsData(data);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fetch analytics data",
+        variant: "destructive",
+      });
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchAnalyticsData();
+    }
+  }, [isAdmin, selectedPeriod, customStartDate, customEndDate]);
 
   const exportData = (type: string, data: any[]) => {
     let csvContent = "";
@@ -381,7 +436,7 @@ const Admin = () => {
 
           <Tabs defaultValue="dashboard" className="space-y-4 md:space-y-6">
             {/* Clean Admin Navigation - Grid Layout */}
-            <TabsList className="grid grid-cols-6 lg:grid-cols-12 gap-2 h-auto bg-card/80 backdrop-blur-sm border rounded-xl p-3 shadow-sm">
+            <TabsList className="flex flex-wrap gap-2 h-auto bg-card/80 backdrop-blur-sm border rounded-xl p-3 shadow-sm">
               <TabsTrigger 
                 value="dashboard" 
                 className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
@@ -414,11 +469,11 @@ const Admin = () => {
                 <span>Settings</span>
               </TabsTrigger>
               <TabsTrigger 
-                value="users" 
+                value="customers" 
                 className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted"
               >
                 <span className="text-xl">👥</span>
-                <span>Users</span>
+                <span>Customers</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="coupons" 
@@ -602,11 +657,11 @@ const Admin = () => {
                         <span className="text-sm font-medium">Edit Menu</span>
                       </button>
                       <button
-                        onClick={() => document.querySelector('[value="users"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))}
+                        onClick={() => document.querySelector('[value="customers"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))}
                         className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed hover:border-primary hover:bg-accent transition-colors"
                       >
                         <span className="text-3xl mb-2">👥</span>
-                        <span className="text-sm font-medium">Manage Users</span>
+                        <span className="text-sm font-medium">Manage Customers</span>
                       </button>
                       <button
                         onClick={() => document.querySelector('[value="analytics"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))}
@@ -625,7 +680,7 @@ const Admin = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Order Management</CardTitle>
-                  <CardDescription>View and assign orders to delivery boys</CardDescription>
+                  <CardDescription>View, assign, and reassign orders to delivery partners. You can change delivery partners for assigned and picked-up orders.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -638,7 +693,11 @@ const Admin = () => {
                       orders.map((order) => (
                         <div
                           key={order._id}
-                          className="border rounded-lg p-4 space-y-3"
+                          className={`border-2 rounded-xl p-5 space-y-3 transition-all hover:shadow-md ${
+                            (order.status === 'assigned' || order.status === 'picked_up') 
+                              ? 'border-blue-200 bg-blue-50/30 hover:border-blue-300' 
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
@@ -647,6 +706,9 @@ const Admin = () => {
                                 <Badge className={getStatusColor(order.status)}>
                                   {order.status.replace('_', ' ').toUpperCase()}
                                 </Badge>
+                                <Badge variant={order.orderType === 'pickup' ? 'secondary' : 'outline'}>
+                                  {order.orderType === 'pickup' ? '🏪 PICKUP' : '🚚 DELIVERY'}
+                                </Badge>
                                 {order.status === 'pending' && (
                                   <Badge variant="destructive">NEW</Badge>
                                 )}
@@ -654,7 +716,7 @@ const Admin = () => {
                               <div className="text-sm text-muted-foreground space-y-1">
                                 <p><strong>Customer:</strong> {order.customerName}</p>
                                 <p><strong>Phone:</strong> {order.customerPhone}</p>
-                                <p><strong>Address:</strong> {order.deliveryAddress}</p>
+                                <p><strong>{order.orderType === 'pickup' ? 'Pickup:' : 'Address:'}</strong> {order.deliveryAddress}</p>
                                 <p><strong>Items:</strong> {order.items?.length} items</p>
                                 <p><strong>Total:</strong> £{order.totalAmount}</p>
                                 <p><strong>Ordered:</strong> {new Date(order.createdAt).toLocaleString()}</p>
@@ -662,7 +724,7 @@ const Admin = () => {
                             </div>
                           </div>
                           
-                          {order.status === 'pending' && (
+                          {order.status === 'pending' && order.orderType === 'delivery' && (
                             <div className="pt-3 border-t">
                               <Label className="text-sm mb-2 block">Assign to Delivery Boy</Label>
                               <div className="flex gap-2">
@@ -684,12 +746,70 @@ const Admin = () => {
                             </div>
                           )}
                           
-                          {order.status !== 'pending' && order.deliveryBoyId && (
-                            <div className="pt-3 border-t text-sm">
-                              <p className="text-muted-foreground">
-                                <strong>Assigned to:</strong>{' '}
-                                {deliveryBoys.find((b) => b._id === order.deliveryBoyId)?.name || 'Unknown'}
-                              </p>
+                          {order.status !== 'pending' && order.orderType === 'delivery' && order.deliveryBoyId && (
+                            <div className="pt-3 border-t">
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-sm text-muted-foreground">
+                                  <strong>Assigned to:</strong>{' '}
+                                  {deliveryBoys.find((b) => b._id === order.deliveryBoyId)?.name || 'Unknown'}
+                                </p>
+                                {(order.status === 'assigned' || order.status === 'picked_up') && (
+                                  <Badge variant="outline" className="text-xs">
+                                    Can be reassigned
+                                  </Badge>
+                                )}
+                              </div>
+                              
+                              {/* Allow changing delivery partner for assigned and picked_up orders */}
+                              {(order.status === 'assigned' || order.status === 'picked_up') && (
+                                <div className="space-y-2">
+                                  <Label className="text-sm">Change Delivery Partner</Label>
+                                  <div className="flex gap-2">
+                                    <Select
+                                      value={order.deliveryBoyId}
+                                      onValueChange={(value) => assignDeliveryBoy(order._id, value)}
+                                    >
+                                      <SelectTrigger className="flex-1">
+                                        <SelectValue placeholder="Select new delivery boy..." />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {deliveryBoys.map((boy) => (
+                                          <SelectItem key={boy._id} value={boy._id}>
+                                            {boy.name} - {boy.phone || 'No phone'}
+                                            {boy._id === order.deliveryBoyId && ' (Current)'}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    ⚠️ Changing the delivery partner will notify both the old and new delivery boys
+                                  </p>
+                                </div>
+                              )}
+                              
+                              {/* Show read-only info for out_for_delivery and delivered orders */}
+                              {(order.status === 'out_for_delivery' || order.status === 'delivered') && (
+                                <p className="text-xs text-muted-foreground mt-2">
+                                  {order.status === 'out_for_delivery' 
+                                    ? '🚚 Order is out for delivery - cannot reassign' 
+                                    : '✅ Order has been delivered - cannot reassign'
+                                  }
+                                </p>
+                              )}
+                            </div>
+                          )}
+                          
+                          {/* Pickup Order Message */}
+                          {order.orderType === 'pickup' && (
+                            <div className="pt-3 border-t">
+                              <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <span className="text-lg">🏪</span>
+                                <div>
+                                  <p className="text-sm font-medium text-green-800">Pickup Order</p>
+                                  <p className="text-xs text-green-600">Customer will collect from restaurant - no delivery needed</p>
+                                </div>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -701,217 +821,284 @@ const Admin = () => {
             </TabsContent>
 
             <TabsContent value="analytics">
-              {/* Key Metrics Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                {/* Total Orders */}
-                <Card className="relative overflow-hidden bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-background border-blue-500/20 hover:border-blue-500/40 transition-all">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full -mr-16 -mt-16"></div>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">Total Orders</CardTitle>
-                      <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                        <span className="text-xl">📦</span>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-blue-600">{orders.length}</p>
-                    <p className="text-xs text-muted-foreground mt-1">All time orders</p>
-                  </CardContent>
-                </Card>
-
-                {/* Total Revenue */}
-                <Card className="relative overflow-hidden bg-gradient-to-br from-green-500/10 via-green-500/5 to-background border-green-500/20 hover:border-green-500/40 transition-all">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full -mr-16 -mt-16"></div>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
-                      <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                        <span className="text-xl">💰</span>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-green-600">
-                      £{orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0).toFixed(2)}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">Total earnings</p>
-                  </CardContent>
-                </Card>
-
-                {/* Active Customers */}
-                <Card className="relative overflow-hidden bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-background border-purple-500/20 hover:border-purple-500/40 transition-all">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full -mr-16 -mt-16"></div>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">Customers</CardTitle>
-                      <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-                        <span className="text-xl">👥</span>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-purple-600">{users.filter(u => u.role === 'user').length}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Registered users</p>
-                  </CardContent>
-                </Card>
-
-                {/* Delivery Boys */}
-                <Card className="relative overflow-hidden bg-gradient-to-br from-orange-500/10 via-orange-500/5 to-background border-orange-500/20 hover:border-orange-500/40 transition-all">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full -mr-16 -mt-16"></div>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">Delivery Boys</CardTitle>
-                      <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
-                        <span className="text-xl">🚚</span>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-orange-600">{users.filter(u => u.role === 'delivery_boy').length}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Active drivers</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Export Section */}
-              <Card className="mb-6">
-                <CardHeader>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <CardTitle className="text-xl flex items-center gap-2">
-                        <span>📊</span> Reports & Export
-                      </CardTitle>
-                      <CardDescription className="text-sm">Download detailed reports in CSV format</CardDescription>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Button onClick={() => exportData('orders', orders)} variant="outline" size="sm" className="border-primary/20 hover:border-primary/40">
-                        <span className="mr-2">📦</span> Export Orders
-                      </Button>
-                      <Button onClick={() => exportData('users', users)} variant="outline" size="sm" className="border-primary/20 hover:border-primary/40">
-                        <span className="mr-2">👥</span> Export Users
-                      </Button>
-                      <Button onClick={() => exportData('revenue', orders)} variant="outline" size="sm" className="border-primary/20 hover:border-primary/40">
-                        <span className="mr-2">💰</span> Export Revenue
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-
-              {/* Statistics Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Order Statistics */}
-                <Card className="bg-gradient-to-br from-background to-muted/20">
+              <div className="space-y-6">
+                {/* Header with Filters */}
+                <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <span>📊</span> Order Statistics
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {/* Pending */}
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-[#c3a85c]/10 border border-[#c3a85c]/20">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-[#c3a85c]/20 flex items-center justify-center">
-                            <span className="text-lg">⏳</span>
-                          </div>
-                          <span className="font-medium">Pending</span>
-                        </div>
-                        <span className="text-2xl font-bold text-[#c3a85c]">{orders.filter(o => o.status === 'pending').length}</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <CardTitle className="text-xl flex items-center gap-2">
+                          <span>📊</span> Analytics Dashboard
+                        </CardTitle>
+                        <CardDescription>
+                          {analyticsData?.period && analyticsData.period !== 'all' 
+                            ? `Showing data for: ${selectedPeriod === 'today' ? 'Today' : selectedPeriod === 'week' ? 'Last 7 days' : selectedPeriod === 'month' ? 'This month' : selectedPeriod === 'year' ? 'This year' : 'Custom range'}`
+                            : 'Showing all-time data'
+                          }
+                        </CardDescription>
                       </div>
-
-                      {/* Assigned */}
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-                            <span className="text-lg">📋</span>
-                          </div>
-                          <span className="font-medium">Assigned</span>
-                        </div>
-                        <span className="text-2xl font-bold text-blue-600">{orders.filter(o => o.status === 'assigned').length}</span>
-                      </div>
-
-                      {/* Out for Delivery */}
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
-                            <span className="text-lg">🚚</span>
-                          </div>
-                          <span className="font-medium">Out for Delivery</span>
-                        </div>
-                        <span className="text-2xl font-bold text-orange-600">{orders.filter(o => o.status === 'out_for_delivery').length}</span>
-                      </div>
-
-                      {/* Delivered */}
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                            <span className="text-lg">✅</span>
-                          </div>
-                          <span className="font-medium">Delivered</span>
-                        </div>
-                        <span className="text-2xl font-bold text-green-600">{orders.filter(o => o.status === 'delivered').length}</span>
+                      
+                      {/* Time Period Filters */}
+                      <div className="flex flex-wrap gap-2">
+                        <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                          <SelectTrigger className="w-40">
+                            <SelectValue placeholder="Select period" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Time</SelectItem>
+                            <SelectItem value="today">Today</SelectItem>
+                            <SelectItem value="week">Last 7 Days</SelectItem>
+                            <SelectItem value="month">This Month</SelectItem>
+                            <SelectItem value="year">This Year</SelectItem>
+                            <SelectItem value="custom">Custom Range</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        
+                        {selectedPeriod === 'custom' && (
+                          <>
+                            <Input
+                              type="date"
+                              value={customStartDate}
+                              onChange={(e) => setCustomStartDate(e.target.value)}
+                              className="w-40"
+                            />
+                            <Input
+                              type="date"
+                              value={customEndDate}
+                              onChange={(e) => setCustomEndDate(e.target.value)}
+                              className="w-40"
+                            />
+                          </>
+                        )}
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-
-                {/* User Statistics */}
-                <Card className="bg-gradient-to-br from-background to-muted/20">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <span>👥</span> User Statistics
-                    </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {/* Customers */}
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
-                            <span className="text-lg">👤</span>
-                          </div>
-                          <span className="font-medium">Customers</span>
-                        </div>
-                        <span className="text-2xl font-bold text-purple-600">{users.filter(u => u.role === 'user').length}</span>
-                      </div>
-
-                      {/* Delivery Boys */}
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
-                            <span className="text-lg">🚚</span>
-                          </div>
-                          <span className="font-medium">Delivery Boys</span>
-                        </div>
-                        <span className="text-2xl font-bold text-orange-600">{users.filter(u => u.role === 'delivery_boy').length}</span>
-                      </div>
-
-                      {/* Admins */}
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
-                            <span className="text-lg">👑</span>
-                          </div>
-                          <span className="font-medium">Admins</span>
-                        </div>
-                        <span className="text-2xl font-bold text-red-600">{users.filter(u => u.role === 'admin').length}</span>
-                      </div>
-
-                      {/* Total Users */}
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-primary/10 border border-primary/20">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                            <span className="text-lg">📊</span>
-                          </div>
-                          <span className="font-medium">Total Users</span>
-                        </div>
-                        <span className="text-2xl font-bold text-primary">{users.length}</span>
-                      </div>
-                    </div>
-                  </CardContent>
                 </Card>
+
+                {analyticsLoading ? (
+                  <Card>
+                    <CardContent className="flex items-center justify-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                      <span className="ml-2">Loading analytics...</span>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <>
+                    {/* Key Metrics Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {/* Total Orders */}
+                      <Card className="relative overflow-hidden bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-background border-blue-500/20 hover:border-blue-500/40 transition-all">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full -mr-16 -mt-16"></div>
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Total Orders</CardTitle>
+                            <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                              <span className="text-xl">📦</span>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-3xl font-bold text-blue-600">
+                            {analyticsData?.orders?.total !== undefined ? analyticsData.orders.total : orders.length}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {selectedPeriod === 'all' ? 'All time orders' : `Orders in selected period`}
+                          </p>
+                        </CardContent>
+                      </Card>
+
+                      {/* Total Revenue */}
+                      <Card className="relative overflow-hidden bg-gradient-to-br from-green-500/10 via-green-500/5 to-background border-green-500/20 hover:border-green-500/40 transition-all">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full -mr-16 -mt-16"></div>
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
+                            <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                              <span className="text-xl">💰</span>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-3xl font-bold text-green-600">
+                            £{analyticsData?.revenue?.total !== undefined ? analyticsData.revenue.total.toFixed(2) : orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0).toFixed(2)}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {selectedPeriod === 'all' ? 'Total earnings' : `Revenue in selected period`}
+                          </p>
+                        </CardContent>
+                      </Card>
+
+                      {/* Average Order Value */}
+                      <Card className="relative overflow-hidden bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-background border-purple-500/20 hover:border-purple-500/40 transition-all">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full -mr-16 -mt-16"></div>
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Avg Order Value</CardTitle>
+                            <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+                              <span className="text-xl">💎</span>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-3xl font-bold text-purple-600">
+                            £{analyticsData?.revenue?.average !== undefined ? analyticsData.revenue.average.toFixed(2) : (orders.length > 0 ? (orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0) / orders.length).toFixed(2) : '0.00')}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">Per order average</p>
+                        </CardContent>
+                      </Card>
+
+                      {/* Active Customers */}
+                      <Card className="relative overflow-hidden bg-gradient-to-br from-orange-500/10 via-orange-500/5 to-background border-orange-500/20 hover:border-orange-500/40 transition-all">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full -mr-16 -mt-16"></div>
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Active Customers</CardTitle>
+                            <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
+                              <span className="text-xl">👥</span>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-3xl font-bold text-orange-600">
+                            {analyticsData?.customers?.activeCustomers !== undefined ? analyticsData.customers.activeCustomers : [...new Set(orders.map(o => o.userId))].length}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {selectedPeriod === 'all' ? 'Customers who ordered' : `Active in selected period`}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Order Status Breakdown */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Order Statistics */}
+                      <Card className="bg-gradient-to-br from-background to-muted/20">
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <span>📊</span> Order Status Breakdown
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            {/* Pending */}
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-[#c3a85c]/10 border border-[#c3a85c]/20">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-[#c3a85c]/20 flex items-center justify-center">
+                                  <span className="text-lg">⏳</span>
+                                </div>
+                                <span className="font-medium">Pending</span>
+                              </div>
+                              <span className="text-2xl font-bold text-[#c3a85c]">
+                                {analyticsData?.orders?.pending !== undefined ? analyticsData.orders.pending : orders.filter(o => o.status === 'pending').length}
+                              </span>
+                            </div>
+
+                            {/* Assigned */}
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                  <span className="text-lg">📋</span>
+                                </div>
+                                <span className="font-medium">Assigned</span>
+                              </div>
+                              <span className="text-2xl font-bold text-blue-600">
+                                {analyticsData?.orders?.assigned !== undefined ? analyticsData.orders.assigned : orders.filter(o => o.status === 'assigned').length}
+                              </span>
+                            </div>
+
+                            {/* Out for Delivery */}
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
+                                  <span className="text-lg">🚚</span>
+                                </div>
+                                <span className="font-medium">Out for Delivery</span>
+                              </div>
+                              <span className="text-2xl font-bold text-orange-600">
+                                {analyticsData?.orders?.out_for_delivery !== undefined ? analyticsData.orders.out_for_delivery : orders.filter(o => o.status === 'out_for_delivery').length}
+                              </span>
+                            </div>
+
+                            {/* Delivered */}
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                                  <span className="text-lg">✅</span>
+                                </div>
+                                <span className="font-medium">Delivered</span>
+                              </div>
+                              <span className="text-2xl font-bold text-green-600">
+                                {analyticsData?.orders?.delivered !== undefined ? analyticsData.orders.delivered : orders.filter(o => o.status === 'delivered').length}
+                              </span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Top Selling Items */}
+                      <Card className="bg-gradient-to-br from-background to-muted/20">
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <span>🏆</span> Top Selling Items
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {analyticsData?.topItems && analyticsData.topItems.length > 0 ? (
+                            <div className="space-y-3">
+                              {analyticsData.topItems.slice(0, 5).map((item: any, index: number) => (
+                                <div key={item._id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold">
+                                      {index + 1}
+                                    </div>
+                                    <div>
+                                      <p className="font-medium text-sm">{item._id}</p>
+                                      <p className="text-xs text-muted-foreground">£{item.totalRevenue?.toFixed(2)} revenue</p>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="font-bold text-primary">{item.totalQuantity}</p>
+                                    <p className="text-xs text-muted-foreground">sold</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-8 text-muted-foreground">
+                              <span className="text-3xl mb-2 block">📊</span>
+                              <p>No sales data available for selected period</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Export Section */}
+                    <Card>
+                      <CardHeader>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div>
+                            <CardTitle className="text-xl flex items-center gap-2">
+                              <span>📊</span> Reports & Export
+                            </CardTitle>
+                            <CardDescription className="text-sm">Download detailed reports in CSV format</CardDescription>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <Button onClick={() => exportData('orders', orders)} variant="outline" size="sm" className="border-primary/20 hover:border-primary/40">
+                              <span className="mr-2">📦</span> Export Orders
+                            </Button>
+                            <Button onClick={() => exportData('users', users)} variant="outline" size="sm" className="border-primary/20 hover:border-primary/40">
+                              <span className="mr-2">👥</span> Export Users
+                            </Button>
+                            <Button onClick={() => exportData('revenue', orders)} variant="outline" size="sm" className="border-primary/20 hover:border-primary/40">
+                              <span className="mr-2">💰</span> Export Revenue
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  </>
+                )}
               </div>
             </TabsContent>
 
@@ -1059,12 +1246,63 @@ const Admin = () => {
                     </div>
                   </div>
 
+                  {/* Delivery Service Toggle Section */}
+                  <div className="space-y-4 pt-6 border-t">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Delivery Service Availability</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Control whether customers can order for delivery. When disabled, customers can only order for pickup from the restaurant.
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
+                      <div className="flex-1">
+                        <Label htmlFor="delivery-toggle" className="text-base font-medium cursor-pointer">
+                          Enable Delivery Service
+                        </Label>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {deliveryEnabled 
+                            ? "Customers can choose between delivery and pickup" 
+                            : "Only pickup orders are available - delivery is disabled"}
+                        </p>
+                      </div>
+                      <Switch
+                        id="delivery-toggle"
+                        checked={deliveryEnabled}
+                        onCheckedChange={async (checked) => {
+                          try {
+                            await api.updateSetting('delivery_enabled', checked);
+                            setDeliveryEnabled(checked);
+                            toast({
+                              title: "Success",
+                              description: `Delivery service ${checked ? 'enabled' : 'disabled'} successfully`,
+                            });
+                          } catch (error) {
+                            toast({
+                              title: "Error",
+                              description: "Failed to update delivery service status",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                      />
+                    </div>
+                    
+                    {!deliveryEnabled && (
+                      <div className="p-4 bg-orange-500/5 border border-orange-500/20 rounded-lg">
+                        <p className="text-sm text-orange-600">
+                          <strong>⚠️ Delivery service is disabled.</strong> Customers will only see pickup option and a message that delivery is not currently available.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Lunch Menu Toggle Section */}
                   <div className="space-y-4 pt-6 border-t">
                     <div>
                       <h3 className="text-lg font-semibold mb-2">Lunch Menu Availability</h3>
                       <p className="text-sm text-muted-foreground mb-4">
-                        Control whether customers can order from the lunch menu. When disabled, the lunch menu will be grayed out with a message indicating it's unavailable.
+                        Control whether customers can order from the lunch menu. When disabled, the lunch menu will be grayed out with a message indicating it's unavailable. Lunch service hours are 12:00 PM to 2:20 PM.
                       </p>
                     </div>
                     
@@ -1104,107 +1342,195 @@ const Admin = () => {
                     {!lunchMenuEnabled && (
                       <div className="p-4 bg-[#c3a85c]/5 border border-[#c3a85c]/20 rounded-lg">
                         <p className="text-sm text-[#c3a85c]">
-                          <strong>⚠️ Lunch menu is disabled.</strong> Customers will see a message that lunch is not currently being served, and items will be grayed out.
+                          <strong>⚠️ Lunch menu is disabled.</strong> Customers will see a message that lunch is not currently being served (available 12:00 PM to 2:20 PM), and items will be grayed out.
                         </p>
                       </div>
                     )}
+                  </div>
+
+                  {/* Opening Hours Section */}
+                  <div className="space-y-4 pt-6 border-t">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Restaurant Opening Hours</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Configure automatic restaurant opening and closing times. The website will automatically enable/disable online ordering based on UK timezone (GMT/UTC+00:00). When closed, customers will see "Restaurant is currently closed. Please come back later."
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      {/* Monday to Friday */}
+                      {['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].map((day) => (
+                        <div key={day} className="p-4 border rounded-lg bg-muted/30">
+                          <h4 className="font-medium mb-3 capitalize">{day}</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Lunch Hours */}
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Lunch Service</Label>
+                              <div className="flex gap-2 items-center">
+                                <Input
+                                  type="time"
+                                  value={openingHours[day]?.lunch?.open || '12:00'}
+                                  onChange={(e) => {
+                                    const newHours = { ...openingHours };
+                                    if (!newHours[day]) newHours[day] = { lunch: {}, dinner: {} };
+                                    if (!newHours[day].lunch) newHours[day].lunch = {};
+                                    newHours[day].lunch.open = e.target.value;
+                                    setOpeningHours(newHours);
+                                  }}
+                                  className="flex-1"
+                                />
+                                <span className="text-sm text-muted-foreground">to</span>
+                                <Input
+                                  type="time"
+                                  value={openingHours[day]?.lunch?.close || '14:30'}
+                                  onChange={(e) => {
+                                    const newHours = { ...openingHours };
+                                    if (!newHours[day]) newHours[day] = { lunch: {}, dinner: {} };
+                                    if (!newHours[day].lunch) newHours[day].lunch = {};
+                                    newHours[day].lunch.close = e.target.value;
+                                    setOpeningHours(newHours);
+                                  }}
+                                  className="flex-1"
+                                />
+                              </div>
+                            </div>
+                            
+                            {/* Dinner Hours */}
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Dinner Service</Label>
+                              <div className="flex gap-2 items-center">
+                                <Input
+                                  type="time"
+                                  value={openingHours[day]?.dinner?.open || '17:30'}
+                                  onChange={(e) => {
+                                    const newHours = { ...openingHours };
+                                    if (!newHours[day]) newHours[day] = { lunch: {}, dinner: {} };
+                                    if (!newHours[day].dinner) newHours[day].dinner = {};
+                                    newHours[day].dinner.open = e.target.value;
+                                    setOpeningHours(newHours);
+                                  }}
+                                  className="flex-1"
+                                />
+                                <span className="text-sm text-muted-foreground">to</span>
+                                <Input
+                                  type="time"
+                                  value={openingHours[day]?.dinner?.close || '22:30'}
+                                  onChange={(e) => {
+                                    const newHours = { ...openingHours };
+                                    if (!newHours[day]) newHours[day] = { lunch: {}, dinner: {} };
+                                    if (!newHours[day].dinner) newHours[day].dinner = {};
+                                    newHours[day].dinner.close = e.target.value;
+                                    setOpeningHours(newHours);
+                                  }}
+                                  className="flex-1"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {/* Saturday */}
+                      <div className="p-4 border rounded-lg bg-muted/30">
+                        <h4 className="font-medium mb-3">Saturday</h4>
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Operating Hours</Label>
+                          <div className="flex gap-2 items-center max-w-md">
+                            <Input
+                              type="time"
+                              value={openingHours.saturday?.open || '12:30'}
+                              onChange={(e) => {
+                                const newHours = { ...openingHours };
+                                if (!newHours.saturday) newHours.saturday = {};
+                                newHours.saturday.open = e.target.value;
+                                setOpeningHours(newHours);
+                              }}
+                              className="flex-1"
+                            />
+                            <span className="text-sm text-muted-foreground">to</span>
+                            <Input
+                              type="time"
+                              value={openingHours.saturday?.close || '22:30'}
+                              onChange={(e) => {
+                                const newHours = { ...openingHours };
+                                if (!newHours.saturday) newHours.saturday = {};
+                                newHours.saturday.close = e.target.value;
+                                setOpeningHours(newHours);
+                              }}
+                              className="flex-1"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Sunday */}
+                      <div className="p-4 border rounded-lg bg-muted/30">
+                        <h4 className="font-medium mb-3">Sunday</h4>
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Operating Hours</Label>
+                          <div className="flex gap-2 items-center max-w-md">
+                            <Input
+                              type="time"
+                              value={openingHours.sunday?.open || '12:30'}
+                              onChange={(e) => {
+                                const newHours = { ...openingHours };
+                                if (!newHours.sunday) newHours.sunday = {};
+                                newHours.sunday.open = e.target.value;
+                                setOpeningHours(newHours);
+                              }}
+                              className="flex-1"
+                            />
+                            <span className="text-sm text-muted-foreground">to</span>
+                            <Input
+                              type="time"
+                              value={openingHours.sunday?.close || '22:00'}
+                              onChange={(e) => {
+                                const newHours = { ...openingHours };
+                                if (!newHours.sunday) newHours.sunday = {};
+                                newHours.sunday.close = e.target.value;
+                                setOpeningHours(newHours);
+                              }}
+                              className="flex-1"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      onClick={async () => {
+                        try {
+                          await api.updateSetting('opening_hours', openingHours);
+                          toast({
+                            title: "Success",
+                            description: "Opening hours updated successfully. The website will now automatically open/close based on these times.",
+                          });
+                        } catch (error) {
+                          toast({
+                            title: "Error",
+                            description: "Failed to update opening hours",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                      className="w-full md:w-auto"
+                    >
+                      Save Opening Hours
+                    </Button>
+                    
+                    <div className="p-4 bg-blue-500/5 border border-blue-500/20 rounded-lg">
+                      <p className="text-sm text-blue-600">
+                        <strong>ℹ️ Timezone Information:</strong> All times are automatically converted to UK timezone (GMT/UTC+00:00). The system will check every minute and automatically enable/disable online ordering based on these hours.
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="users">
-              <Card>
-                <CardHeader>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <CardTitle className="text-xl sm:text-2xl">User Management</CardTitle>
-                      <CardDescription className="text-sm">Manage users and delivery boys</CardDescription>
-                    </div>
-                    <AddDeliveryBoyDialog onSuccess={fetchData} />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {users.map((user) => (
-                      <div
-                        key={user._id}
-                        className="group relative bg-gradient-to-br from-background to-muted/20 border-2 rounded-xl p-5 hover:border-primary/50 hover:shadow-lg transition-all duration-200"
-                      >
-                        {/* User Avatar */}
-                        <div className="flex items-start gap-4 mb-4">
-                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg shrink-0">
-                            {user.name?.charAt(0).toUpperCase() || 'U'}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-base truncate mb-1">{user.name}</h3>
-                            <Badge 
-                              variant={
-                                user.role === 'admin' ? 'default' : 
-                                user.role === 'delivery_boy' ? 'secondary' : 
-                                'outline'
-                              }
-                              className="text-xs"
-                            >
-                              {user.role === 'delivery_boy' ? 'Delivery Boy' : 
-                               user.role === 'admin' ? 'Admin' : 'User'}
-                            </Badge>
-                          </div>
-                        </div>
-
-                        {/* User Details */}
-                        <div className="space-y-2 mb-4">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span className="text-xs">📧</span>
-                            <span className="truncate">{user.email}</span>
-                          </div>
-                          {user.phone && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <span className="text-xs">📞</span>
-                              <span>{user.phone}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex flex-col gap-2 pt-4 border-t">
-                          <Select
-                            value={user.role}
-                            onValueChange={(value) => updateUserRole(user._id, value)}
-                          >
-                            <SelectTrigger className="w-full text-sm">
-                              <SelectValue placeholder="Change role" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="user">👤 User</SelectItem>
-                              <SelectItem value="delivery_boy">🚚 Delivery Boy</SelectItem>
-                              <SelectItem value="admin">👑 Admin</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => deleteUser(user._id)}
-                            className="w-full"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete User
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {users.length === 0 && (
-                    <div className="text-center py-12">
-                      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span className="text-3xl">👥</span>
-                      </div>
-                      <p className="text-muted-foreground">No users yet</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+            {/* Customers Tab */}
+            <TabsContent value="customers">
+              <CustomerManager />
             </TabsContent>
 
             {/* Birthday Coupons Tab */}

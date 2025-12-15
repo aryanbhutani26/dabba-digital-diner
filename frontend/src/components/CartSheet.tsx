@@ -46,6 +46,9 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [currentOrder, setCurrentOrder] = useState<any>(null);
   const [deliveryFee, setDeliveryFee] = useState<number>(50);
+  const [orderType, setOrderType] = useState<'delivery' | 'pickup'>('delivery');
+  const [deliveryEnabled, setDeliveryEnabled] = useState<boolean>(true);
+  const [restaurantOpen, setRestaurantOpen] = useState<boolean>(true);
 
   useEffect(() => {
     if (user) {
@@ -57,11 +60,44 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
 
   const fetchDeliveryFee = async () => {
     try {
-      const response = await api.getSetting('delivery_fee');
-      setDeliveryFee(response.value || 50);
+      const [deliveryFeeResponse, deliveryEnabledResponse, openingHoursResponse] = await Promise.all([
+        api.getSetting('delivery_fee'),
+        api.getSetting('delivery_enabled'),
+        api.getSetting('opening_hours').catch(() => ({ 
+          value: {
+            monday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            tuesday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            wednesday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            thursday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            friday: { lunch: { open: '12:00', close: '14:30' }, dinner: { open: '17:30', close: '22:30' } },
+            saturday: { open: '12:30', close: '22:30' },
+            sunday: { open: '12:30', close: '22:00' }
+          }
+        }))
+      ]);
+      
+      setDeliveryFee(deliveryFeeResponse.value || 50);
+      const isDeliveryEnabled = deliveryEnabledResponse.value !== false;
+      setDeliveryEnabled(isDeliveryEnabled);
+      
+      // Check if restaurant is open
+      const openingHours = openingHoursResponse.value;
+      if (openingHours) {
+        // Import the function dynamically to avoid circular imports
+        const { isRestaurantOpen } = await import('@/utils/restaurantHours');
+        const isOpen = isRestaurantOpen(openingHours);
+        setRestaurantOpen(isOpen);
+      }
+      
+      // If delivery is disabled, automatically set to pickup
+      if (!isDeliveryEnabled) {
+        setOrderType('pickup');
+      }
     } catch (error) {
-      console.error('Failed to fetch delivery fee:', error);
+      console.error('Failed to fetch delivery settings:', error);
       setDeliveryFee(50); // Default fallback
+      setDeliveryEnabled(true); // Default fallback
+      setRestaurantOpen(true); // Default fallback
     }
   };
 
@@ -112,17 +148,23 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
 
     try {
       // Check both regular coupons and birthday coupons
+      const authToken = localStorage.getItem('auth_token');
+      
       const [regularCouponsResponse, birthdayCouponsResponse] = await Promise.all([
-        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/coupons`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-          }
-        }),
-        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/birthday-coupons/my-coupons`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-          }
-        }).catch(() => ({ json: () => [] }))
+        authToken 
+          ? fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/coupons/my-coupons`, {
+              headers: {
+                'Authorization': `Bearer ${authToken}`
+              }
+            })
+          : fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/coupons`),
+        authToken 
+          ? fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/birthday-coupons/my-coupons`, {
+              headers: {
+                'Authorization': `Bearer ${authToken}`
+              }
+            }).catch(() => ({ json: () => [] }))
+          : Promise.resolve({ json: () => [] })
       ]);
 
       const regularCoupons = await regularCouponsResponse.json();
@@ -191,17 +233,24 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
 
   const fetchAvailableCoupons = async () => {
     try {
-      // Only fetch regular coupons for the available coupons modal
-      // Birthday coupons are handled separately and should not appear here
-      const regularCouponsResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/coupons`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        }
-      });
+      const authToken = localStorage.getItem('auth_token');
+      let regularCouponsResponse;
+
+      if (authToken) {
+        // Fetch user-specific coupons (includes general + special coupons for this user)
+        regularCouponsResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/coupons/my-coupons`, {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+      } else {
+        // Fallback to public coupons for unauthenticated users
+        regularCouponsResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/coupons`);
+      }
 
       const regularCoupons = await regularCouponsResponse.json();
 
-      // Only show regular coupons in the available coupons list
+      // Show all active coupons available to this user
       const allCoupons = regularCoupons.filter((c: any) => c.isActive);
 
       setAvailableCoupons(allCoupons);
@@ -297,7 +346,7 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
         return;
       }
 
-      if (!profile.addresses || profile.addresses.length === 0) {
+      if (orderType === 'delivery' && (!profile.addresses || profile.addresses.length === 0)) {
         toast({
           title: "Address required",
           description: "Please add a delivery address first",
@@ -315,7 +364,7 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
       return;
     }
 
-    if (addresses.length === 0) {
+    if (orderType === 'delivery' && addresses.length === 0) {
       toast({
         title: "Address required",
         description: "Please add a delivery address first",
@@ -331,7 +380,7 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
 
       // Get user profile for customer details
       const profile = await api.getUserProfile();
-      const finalAmount = totalPrice - discount + deliveryFee; // Subtract discount, add delivery fee
+      const finalAmount = totalPrice - discount + (orderType === 'delivery' ? deliveryFee : 0); // Subtract discount, add delivery fee only for delivery orders
       
       console.log('💰 Final amount:', finalAmount);
       console.log('📧 Customer email:', profile.email || user.email);
@@ -372,9 +421,12 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
         totalAmount: finalAmount,
         discount: discount,
         couponCode: appliedCoupon?.code || null,
-        deliveryAddress: typeof addresses[selectedAddress] === 'string' 
-          ? addresses[selectedAddress] 
-          : (addresses[selectedAddress] as any).address,
+        orderType: orderType,
+        deliveryAddress: orderType === 'delivery' 
+          ? (typeof addresses[selectedAddress] === 'string' 
+              ? addresses[selectedAddress] 
+              : (addresses[selectedAddress] as any).address)
+          : 'Pickup from restaurant',
         customerName: profile.name || user.name,
         customerPhone: profile.phone || 'Not provided',
         paymentMethod: 'stripe',
@@ -477,8 +529,79 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
             </div>
           ) : (
             <>
+              {/* Restaurant Status */}
+              {!restaurantOpen && (
+                <div className="bg-red-500/10 border-2 border-red-500/20 rounded-lg p-4 mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xl">🕐</span>
+                    <h3 className="font-semibold text-red-600">Restaurant Closed</h3>
+                  </div>
+                  <p className="text-sm text-red-600">
+                    We're currently closed. Online ordering is temporarily disabled. Please check our opening hours and come back when we're open.
+                  </p>
+                </div>
+              )}
+
+              {/* Order Type Selection */}
+              <div className="bg-muted/50 rounded-lg p-4 border mb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xl">🚚</span>
+                  <h3 className="font-semibold">Order Type</h3>
+                </div>
+                
+                {!deliveryEnabled && (
+                  <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                    <p className="text-sm text-orange-700">
+                      <strong>📍 Delivery Not Available</strong><br />
+                      This restaurant is not currently delivering. You can still order and pickup from the store.
+                    </p>
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setOrderType('delivery')}
+                    disabled={!deliveryEnabled}
+                    className={`p-3 rounded-lg border-2 transition-all ${
+                      orderType === 'delivery' && deliveryEnabled
+                        ? 'border-primary bg-primary/5 text-primary'
+                        : deliveryEnabled
+                        ? 'border-border hover:border-primary/50'
+                        : 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <span className="text-2xl block mb-1">🚚</span>
+                      <span className="font-medium text-sm">Delivery</span>
+                      {deliveryEnabled && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          +£{deliveryFee.toFixed(2)} fee
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                  
+                  <button
+                    onClick={() => setOrderType('pickup')}
+                    className={`p-3 rounded-lg border-2 transition-all ${
+                      orderType === 'pickup'
+                        ? 'border-primary bg-primary/5 text-primary'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <span className="text-2xl block mb-1">🏪</span>
+                      <span className="font-medium text-sm">Pickup</span>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        From restaurant
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
               {/* Delivery Address Section */}
-              {user && (
+              {user && orderType === 'delivery' && (
                 <div className="bg-muted/50 rounded-lg p-4 border">
                   <div className="flex items-center gap-2 mb-3">
                     <MapPin className="h-5 w-5 text-primary" />
@@ -796,13 +919,21 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                     <span>-£{discount.toFixed(2)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-sm">
-                  <span>Delivery Fee:</span>
-                  <span>£{deliveryFee.toFixed(2)}</span>
-                </div>
+                {orderType === 'delivery' && (
+                  <div className="flex justify-between text-sm">
+                    <span>Delivery Fee:</span>
+                    <span>£{deliveryFee.toFixed(2)}</span>
+                  </div>
+                )}
+                {orderType === 'pickup' && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Pickup Discount:</span>
+                    <span>-£{deliveryFee.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center text-lg font-bold pt-2 border-t">
                   <span>Total:</span>
-                  <span className="text-2xl text-primary">£{(totalPrice - discount + deliveryFee).toFixed(2)}</span>
+                  <span className="text-2xl text-primary">£{(totalPrice - discount + (orderType === 'delivery' ? deliveryFee : 0)).toFixed(2)}</span>
                 </div>
               </div>
               
@@ -812,9 +943,9 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                     className="w-full" 
                     size="lg"
                     onClick={handleCheckout}
-                    disabled={processingOrder}
+                    disabled={processingOrder || !restaurantOpen}
                   >
-                    {processingOrder ? "Processing..." : "Proceed to Payment"}
+                    {!restaurantOpen ? "Restaurant Closed" : processingOrder ? "Processing..." : "Proceed to Payment"}
                   </Button>
                 ) : (
                   <div className="space-y-4">
@@ -847,7 +978,8 @@ const CartSheet = ({ items, onUpdateQuantity, onRemoveItem, onClearCart }: CartS
                         }}
                       >
                         <PaymentForm
-                          amount={totalPrice - discount + deliveryFee}
+                          clientSecret={clientSecret}
+                          amount={totalPrice - discount + (orderType === 'delivery' ? deliveryFee : 0)}
                           onSuccess={handlePaymentSuccess}
                           onError={handlePaymentError}
                         />
