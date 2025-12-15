@@ -465,57 +465,74 @@ export const CustomerManager = () => {
                     return (
                       <div
                         key={customer._id}
-                        className={`border rounded-lg p-4 transition-all ${
-                          index < 3 ? 'bg-gradient-to-r from-yellow-50 to-transparent border-yellow-200' : ''
+                        className={`group relative bg-gradient-to-br from-background to-muted/20 border-2 rounded-xl p-5 hover:border-primary/50 hover:shadow-lg transition-all duration-200 ${
+                          index < 3 ? 'border-[#c3a85c]/30 bg-gradient-to-br from-[#c3a85c]/5 via-[#c3a85c]/2 to-background' : ''
                         }`}
                       >
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            {getRankIcon(index)}
-                            <div>
-                              <h3 className="font-semibold text-lg">{customer.name}</h3>
-                              <p className="text-sm text-muted-foreground">{customer.email}</p>
-                            </div>
-                            <Badge className={`${tier.color} text-white`}>
-                              {tier.tier}
-                            </Badge>
+                        {/* Rank Badge */}
+                        <div className="absolute top-4 right-4 opacity-20 group-hover:opacity-40 transition-opacity">
+                          {getRankIcon(index)}
+                        </div>
+
+                        {/* Customer Info */}
+                        <div className="flex items-start gap-4 mb-4">
+                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg shrink-0">
+                            {customer.name?.charAt(0).toUpperCase() || 'C'}
                           </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewCustomer(customer._id)}
-                            >
-                              <Eye className="h-4 w-4 mr-1" />
-                              View
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="bg-[#c3a85c] hover:bg-[#b8985a] text-white"
-                              onClick={() => {
-                                setSelectedCustomer(customer);
-                                setShowCouponDialog(true);
-                              }}
-                            >
-                              <Gift className="h-4 w-4 mr-1" />
-                              Send Coupon
-                            </Button>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="font-semibold text-lg truncate">{customer.name}</h3>
+                              <Badge className={`${tier.color} text-white text-xs`}>
+                                {tier.tier}
+                              </Badge>
+                              {index < 3 && (
+                                <Badge variant="outline" className="text-[#c3a85c] border-[#c3a85c] text-xs">
+                                  Top {index + 1}
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground truncate">{customer.email}</p>
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-4 text-sm">
-                          <div className="text-center">
-                            <p className="font-medium text-muted-foreground">Total Orders</p>
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-3 gap-4 mb-4">
+                          <div className="text-center p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                            <p className="text-xs font-medium text-muted-foreground mb-1">Total Orders</p>
                             <p className="text-xl font-bold text-blue-600">{customer.totalOrders}</p>
                           </div>
-                          <div className="text-center">
-                            <p className="font-medium text-muted-foreground">Total Spent</p>
+                          <div className="text-center p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                            <p className="text-xs font-medium text-muted-foreground mb-1">Total Spent</p>
                             <p className="text-xl font-bold text-green-600">£{(customer.totalSpent || 0).toFixed(2)}</p>
                           </div>
-                          <div className="text-center">
-                            <p className="font-medium text-muted-foreground">Avg Order</p>
+                          <div className="text-center p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                            <p className="text-xs font-medium text-muted-foreground mb-1">Avg Order</p>
                             <p className="text-xl font-bold text-purple-600">£{(customer.avgOrderValue || 0).toFixed(2)}</p>
                           </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-2 pt-4 border-t">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewCustomer(customer._id)}
+                            className="flex-1"
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="bg-[#c3a85c] hover:bg-[#b8985a] text-white flex-1"
+                            onClick={() => {
+                              setSelectedCustomer(customer);
+                              setShowCouponDialog(true);
+                            }}
+                          >
+                            <Gift className="h-4 w-4 mr-2" />
+                            Send Coupon
+                          </Button>
                         </div>
                       </div>
                     );
