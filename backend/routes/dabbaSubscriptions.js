@@ -15,28 +15,18 @@ router.post('/', authenticate, async (req, res) => {
       startDate,
       deliveryTime,
       phoneNumber,
-      fulfillmentType,
-      deliveryAddress,
       pickupLocation,
       specialInstructions
     } = req.body;
 
     // Validate required fields
-    if (!serviceId || !startDate || !deliveryTime || !phoneNumber) {
+    if (!serviceId || !startDate || !deliveryTime || !phoneNumber || !pickupLocation) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
     // Validate phone number (exactly 10 digits)
     if (!/^\d{10}$/.test(phoneNumber)) {
       return res.status(400).json({ error: 'Phone number must be exactly 10 digits' });
-    }
-
-    // Validate fulfillment details
-    if (fulfillmentType === 'delivery' && !deliveryAddress) {
-      return res.status(400).json({ error: 'Delivery address is required for delivery option' });
-    }
-    if (fulfillmentType === 'pickup' && !pickupLocation) {
-      return res.status(400).json({ error: 'Pickup location is required for pickup option' });
     }
 
     const db = getDB();
@@ -72,9 +62,9 @@ router.post('/', authenticate, async (req, res) => {
       startDate: new Date(startDate),
       deliveryTime,
       phoneNumber,
-      fulfillmentType,
-      deliveryAddress: fulfillmentType === 'delivery' ? deliveryAddress : null,
-      pickupLocation: fulfillmentType === 'pickup' ? pickupLocation : null,
+      fulfillmentType: 'pickup', // All dabba services are pickup only
+      deliveryAddress: null,
+      pickupLocation: pickupLocation,
       specialInstructions: specialInstructions || null,
       status: 'pending', // pending, active, paused, cancelled
       paymentStatus: 'pending', // pending, paid, failed
