@@ -252,6 +252,8 @@ router.patch('/:id/assign', authenticate, isAdmin, async (req, res) => {
     const { deliveryBoyId } = req.body;
     const db = getDB();
 
+    console.log(`📦 Assignment request: Order ${req.params.id} to delivery boy ${deliveryBoyId}`);
+
     // Verify delivery boy exists
     const deliveryBoy = await db.collection('users').findOne({
       _id: new ObjectId(deliveryBoyId),
@@ -259,6 +261,7 @@ router.patch('/:id/assign', authenticate, isAdmin, async (req, res) => {
     });
 
     if (!deliveryBoy) {
+      console.log(`❌ Delivery boy not found: ${deliveryBoyId}`);
       return res.status(404).json({ error: 'Delivery boy not found' });
     }
 
@@ -266,10 +269,12 @@ router.patch('/:id/assign', authenticate, isAdmin, async (req, res) => {
     const currentOrder = await db.collection('orders').findOne({ _id: new ObjectId(req.params.id) });
     
     if (!currentOrder) {
+      console.log(`❌ Order not found: ${req.params.id}`);
       return res.status(404).json({ error: 'Order not found' });
     }
 
     const isReassignment = currentOrder.deliveryBoyId && currentOrder.deliveryBoyId !== deliveryBoyId;
+    console.log(`🔄 Is reassignment: ${isReassignment}, Current: ${currentOrder.deliveryBoyId}, New: ${deliveryBoyId}`);
     
     // For reassignment, preserve status if it's picked_up, otherwise set to assigned
     const newStatus = isReassignment && currentOrder.status === 'picked_up' ? 'picked_up' : 'assigned';
@@ -287,6 +292,8 @@ router.patch('/:id/assign', authenticate, isAdmin, async (req, res) => {
         } 
       }
     );
+
+    console.log(`✅ Order updated successfully: ${result.modifiedCount} document(s) modified`);
 
     if (result.matchedCount === 0) {
       return res.status(404).json({ error: 'Order not found' });

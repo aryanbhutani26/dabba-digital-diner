@@ -28,6 +28,8 @@ import { DabbaSubscriptionsManager } from "@/components/admin/DabbaSubscriptions
 import { GalleryManager } from "@/components/admin/GalleryManager";
 import { BirthdayCouponsManager } from "@/components/admin/BirthdayCouponsManager";
 import { CustomerManager } from "@/components/admin/CustomerManager";
+import { DabbaPickupLocationsManager } from "@/components/admin/DabbaPickupLocationsManager";
+import { AddDeliveryBoyDialog } from "@/components/admin/AddDeliveryBoyDialog";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -286,6 +288,18 @@ const Admin = () => {
       const order = orders.find(o => o._id === orderId);
       const isReassignment = order && order.deliveryBoyId && order.deliveryBoyId !== deliveryBoyId;
       
+      // Prevent assignment to the same delivery boy
+      if (order && order.deliveryBoyId === deliveryBoyId) {
+        toast({
+          title: "No Change",
+          description: "This order is already assigned to the selected delivery partner",
+          variant: "default",
+        });
+        return;
+      }
+      
+      console.log('Assigning delivery boy:', { orderId, deliveryBoyId, isReassignment });
+      
       await api.assignDeliveryBoy(orderId, deliveryBoyId);
       
       if (isReassignment) {
@@ -303,11 +317,13 @@ const Admin = () => {
         });
       }
       
-      fetchData();
-    } catch (error) {
+      // Force refresh the data to ensure UI updates
+      await fetchData();
+    } catch (error: any) {
+      console.error('Error assigning delivery boy:', error);
       toast({
         title: "Error",
-        description: "Failed to assign delivery boy",
+        description: error.message || "Failed to assign delivery boy",
         variant: "destructive",
       });
     }
@@ -720,34 +736,56 @@ const Admin = () => {
                                 <p><strong>Items:</strong> {order.items?.length} items</p>
                                 <p><strong>Total:</strong> £{order.totalAmount}</p>
                                 <p><strong>Ordered:</strong> {new Date(order.createdAt).toLocaleString()}</p>
+                                {/* Debug info - remove in production */}
+
                               </div>
                             </div>
                           </div>
                           
-                          {order.status === 'pending' && order.orderType === 'delivery' && (
+
+
+                          {((order.status === 'pending') || (order.status === 'assigned' && !order.deliveryBoyId)) && (order.orderType === 'delivery' || !order.orderType) && (
                             <div className="pt-3 border-t">
-                              <Label className="text-sm mb-2 block">Assign to Delivery Boy</Label>
-                              <div className="flex gap-2">
-                                <Select
-                                  onValueChange={(value) => assignDeliveryBoy(order._id, value)}
-                                >
-                                  <SelectTrigger className="flex-1">
-                                    <SelectValue placeholder="Select delivery boy..." />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {deliveryBoys.map((boy) => (
-                                      <SelectItem key={boy._id} value={boy._id}>
-                                        {boy.name} - {boy.phone || 'No phone'}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                              <Label className="text-sm mb-2 block">
+                                {order.status === 'pending' ? 'Assign to Delivery Boy' : 'Fix Assignment - Assign to Delivery Boy'}
+                              </Label>
+                              {order.status === 'assigned' && !order.deliveryBoyId && (
+                                <div className="p-2 bg-yellow-50 border border-yellow-200 rounded text-xs mb-2">
+                                  <strong>⚠️ Data Issue:</strong> This order is marked as "assigned" but has no delivery partner. Please assign one to fix this.
+                                </div>
+                              )}
+                              {deliveryBoys.length === 0 ? (
+                                <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                                  <p className="text-sm text-orange-700">
+                                    <strong>⚠️ No delivery boys available</strong><br />
+                                    Please add delivery boys in the system to assign orders.
+                                  </p>
+                                </div>
+                              ) : (
+                                <div className="flex gap-2">
+                                  <Select
+                                    onValueChange={(value) => assignDeliveryBoy(order._id, value)}
+                                  >
+                                    <SelectTrigger className="flex-1">
+                                      <SelectValue placeholder="Select delivery boy..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {deliveryBoys.map((boy) => (
+                                        <SelectItem key={boy._id} value={boy._id}>
+                                          {boy.name} - {boy.phone || 'No phone'}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              )}
                             </div>
                           )}
                           
-                          {order.status !== 'pending' && order.orderType === 'delivery' && order.deliveryBoyId && (
+                          {order.status !== 'pending' && (order.orderType === 'delivery' || !order.orderType) && order.deliveryBoyId && (
                             <div className="pt-3 border-t">
+
+
                               <div className="flex items-center justify-between mb-2">
                                 <p className="text-sm text-muted-foreground">
                                   <strong>Assigned to:</strong>{' '}
@@ -766,8 +804,13 @@ const Admin = () => {
                                   <Label className="text-sm">Change Delivery Partner</Label>
                                   <div className="flex gap-2">
                                     <Select
-                                      value={order.deliveryBoyId}
-                                      onValueChange={(value) => assignDeliveryBoy(order._id, value)}
+                                      key={`${order._id}-${order.deliveryBoyId}-${order.updatedAt}`}
+                                      value={order.deliveryBoyId || ''}
+                                      onValueChange={(value) => {
+                                        if (value && value !== order.deliveryBoyId) {
+                                          assignDeliveryBoy(order._id, value);
+                                        }
+                                      }}
                                     >
                                       <SelectTrigger className="flex-1">
                                         <SelectValue placeholder="Select new delivery boy..." />
@@ -1522,6 +1565,73 @@ const Admin = () => {
                       <p className="text-sm text-blue-600">
                         <strong>ℹ️ Timezone Information:</strong> All times are automatically converted to UK timezone (GMT/UTC+00:00). The system will check every minute and automatically enable/disable online ordering based on these hours.
                       </p>
+                    </div>
+                  </div>
+
+                  {/* Dabba Pickup Locations Section */}
+                  <div className="space-y-4 pt-6 border-t">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Dabba Service Pickup Locations</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Manage pickup locations available for dabba service subscriptions. These locations will be shown to customers when they subscribe to dabba services.
+                      </p>
+                    </div>
+                    
+                    <DabbaPickupLocationsManager />
+                  </div>
+
+                  {/* Delivery Boys Management Section */}
+                  <div className="space-y-4 pt-6 border-t">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Delivery Partners Management</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Manage delivery partners who will handle order deliveries. You need at least one delivery partner to assign delivery orders.
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium">Current Delivery Partners: {deliveryBoys.length}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {deliveryBoys.length === 0 ? 'No delivery partners available - add one to assign orders' : 'Active delivery partners in the system'}
+                          </p>
+                        </div>
+                        <AddDeliveryBoyDialog onSuccess={fetchData} />
+                      </div>
+                      
+                      {deliveryBoys.length > 0 && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {deliveryBoys.map((boy) => (
+                            <div key={boy._id} className="p-4 border rounded-lg bg-muted/30">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                  <span className="text-lg">🏍️</span>
+                                </div>
+                                <div className="flex-1">
+                                  <h4 className="font-semibold">{boy.name}</h4>
+                                  <p className="text-sm text-muted-foreground">{boy.email}</p>
+                                  {boy.phone && (
+                                    <p className="text-xs text-muted-foreground">{boy.phone}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {deliveryBoys.length === 0 && (
+                        <div className="p-6 bg-orange-50 border border-orange-200 rounded-lg text-center">
+                          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span className="text-3xl">🏍️</span>
+                          </div>
+                          <h3 className="font-semibold text-orange-800 mb-2">No Delivery Partners</h3>
+                          <p className="text-sm text-orange-700 mb-4">
+                            You need to add delivery partners to assign delivery orders. Click the button above to add your first delivery partner.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
